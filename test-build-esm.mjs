@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-// Simple test to verify the build works
-import { Interface, SchemaHelpers } from './dist/index.js';
+// ES Module test to verify the build works
+import { Interface, SchemaHelpers as SH} from './dist/esm/index.js';
 
-console.log('🧪 Testing built package...');
+console.log('🧪 Testing ES Module build...');
 
 try {
   // Test basic interface
@@ -11,8 +11,8 @@ try {
     id: "number",
     name: "string",
     email: "email",
-    status: SchemaHelpers.union("active", "inactive"),
-    role: SchemaHelpers.const("user")
+    status: SH.union("active", "inactive"),
+    role: SH.const("user")
   });
 
   // Test validation
@@ -47,9 +47,9 @@ try {
     process.exit(1);
   }
 
-  console.log('🎉 All tests passed! Package is ready for publishing.');
+  console.log('🎉 ES Module tests passed!');
 
 } catch (error) {
-  console.error('❌ Test failed:', error.message);
+  console.error('❌ ES Module test failed:', error.message);
   process.exit(1);
 }

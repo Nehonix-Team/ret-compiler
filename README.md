@@ -29,14 +29,14 @@ const UserSchema = z.object({
 });
 
 // ✅ Fortify Schema (clean and intuitive)
-import { Interface, SchemaHelpers } from 'fortify-schema';
+import { Interface, SchemaHelpers as SH} from 'fortify-schema';
 
 const UserSchema = Interface({
   id: "number",
   email: "email", 
   name: "string",
-  status: SchemaHelpers.union("active", "inactive"),
-  role: SchemaHelpers.const("admin")
+  status: SH.union("active", "inactive"),
+  role: SH.const("admin")
 });
 ```
 
@@ -51,7 +51,7 @@ npm install fortify-schema
 ## 🔥 Quick Start
 
 ```typescript
-import { Interface, SchemaHelpers } from 'fortify-schema';
+import { Interface, SchemaHelpers as SH } from 'fortify-schema';
 
 // Define schema like a TypeScript interface
 const UserSchema = Interface({
@@ -61,8 +61,8 @@ const UserSchema = Interface({
   age: "number?",                        // Optional
   isActive: "boolean?",                  // Optional
   tags: "string[]?",                     // Optional array
-  status: SchemaHelpers.union("active", "inactive", "pending"),
-  role: SchemaHelpers.const("user")      // Safe constant
+  status: SH.union("active", "inactive", "pending"),
+  role: SH.const("user")      // Safe constant
 });
 
 // Validate data
