@@ -133,10 +133,27 @@ type InferSchemaFieldType<T> =
     // Fallback
     any;
 
-// Main type to infer the complete schema type
-type InferSchemaType<T extends SchemaInterface> = {
-    [K in keyof T]: InferSchemaFieldType<T[K]>
-};
+// Helper to check if a field is optional
+type IsOptionalField<T> =
+    T extends string ? (T extends `${string}?` ? true : false) :
+    false;
+
+// Helper to get required fields
+type RequiredFields<T extends SchemaInterface> = {
+    [K in keyof T]: IsOptionalField<T[K]> extends true ? never : K
+}[keyof T];
+
+// Helper to get optional fields
+type OptionalFields<T extends SchemaInterface> = {
+    [K in keyof T]: IsOptionalField<T[K]> extends true ? K : never
+}[keyof T];
+
+// Main type to infer the complete schema type with proper optional handling
+type InferSchemaType<T extends SchemaInterface> =
+    // Required fields
+    { [K in RequiredFields<T>]: InferSchemaFieldType<T[K]> } &
+    // Optional fields
+    { [K in OptionalFields<T>]?: InferSchemaFieldType<T[K]> };
 
 /**
  * Create a schema using TypeScript interface-like syntax with full type inference
@@ -577,7 +594,7 @@ export const Mod = {
             ...definition,
             ...extension
         };
- 
+
         return new InterfaceSchema<T & InferSchemaType<U>>(extendedDefinition, options);
     }
 };
