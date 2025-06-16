@@ -1,0 +1,743 @@
+/**
+ * TypeScript Interface-like Schema Definition System
+ *
+ * Allows defining schemas using TypeScript-like syntax with string literals
+ * that feel natural and are much easier to read and write.
+ */
+
+import {
+    ConstantValue,
+    OptionalConstantValue,
+    SchemaInterface,
+    SchemaFieldType,
+    OptionalSchemaInterface,
+    SchemaOptions,
+} from "./types/SchemaValidator.type";
+import { SchemaValidationResult } from "./types/types";
+
+/**
+ * Interface Schema class for TypeScript-like schema definitions
+ */
+export class InterfaceSchema<T = any> {
+    constructor(
+        private definition: SchemaInterface,
+        private options: SchemaOptions = {}
+    ) {}
+
+    /**
+     * Validate data against the interface schema
+     */
+    validate(data: any): SchemaValidationResult<T> {
+        const result: SchemaValidationResult<T> = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: undefined,
+        };
+
+        if (typeof data !== "object" || data === null || Array.isArray(data)) {
+            result.success = false;
+            result.errors.push("Expected object");
+            return result;
+        }
+
+        const validatedData: any = {};
+        const inputKeys = Object.keys(data);
+        const schemaKeys = Object.keys(this.definition);
+
+        // Validate each field in the schema
+        for (const [key, fieldType] of Object.entries(this.definition)) {
+            const fieldResult = this.validateField(key, fieldType, data[key]);
+
+            if (!fieldResult.success) {
+                result.success = false;
+                result.errors.push(
+                    ...fieldResult.errors.map((err) => `${key}: ${err}`)
+                );
+            } else if (fieldResult.data !== undefined) {
+                validatedData[key] = fieldResult.data;
+            }
+
+            result.warnings.push(
+                ...fieldResult.warnings.map((warn) => `${key}: ${warn}`)
+            );
+        }
+
+        // Handle extra properties
+        if (this.options.strict) {
+            const extraKeys = inputKeys.filter(
+                (key) => !schemaKeys.includes(key)
+            );
+            if (extraKeys.length > 0) {
+                result.success = false;
+                result.errors.push(
+                    `Unexpected properties: ${extraKeys.join(", ")}`
+                );
+            }
+        } else if (this.options.allowUnknown !== false) {
+            // Include unknown properties by default
+            for (const key of inputKeys) {
+                if (!schemaKeys.includes(key)) {
+                    validatedData[key] = data[key];
+                }
+            }
+        }
+
+        if (result.success) {
+            result.data = validatedData as T;
+        }
+
+        return result;
+    }
+
+    /**
+     * Validate individual field
+     */
+    private validateField(
+        _key: string,
+        fieldType: SchemaFieldType,
+        value: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        // Handle constant values
+        if (this.isConstantValue(fieldType)) {
+            const expectedValue = fieldType.const;
+            const isOptional = "optional" in fieldType && fieldType.optional;
+
+            if (value === undefined && isOptional) {
+                result.data = this.options.default;
+                return result;
+            }
+
+            if (value !== expectedValue) {
+                result.success = false;
+                result.errors.push(
+                    `Expected constant value ${expectedValue}, got ${value}`
+                );
+            }
+            return result;
+        }
+
+        // Handle optional nested schemas
+        if (this.isOptionalSchemaInterface(fieldType)) {
+            if (value === undefined) {
+                result.data = this.options.default;
+                return result;
+            }
+            const nestedSchema = new InterfaceSchema(
+                fieldType.schema,
+                this.options
+            );
+            return nestedSchema.validate(value);
+        }
+
+        // Handle nested objects
+        if (this.isSchemaInterface(fieldType)) {
+            const nestedSchema = new InterfaceSchema(fieldType, this.options);
+            return nestedSchema.validate(value);
+        }
+
+        // Handle array of schemas
+        if (Array.isArray(fieldType) && fieldType.length === 1) {
+            if (!Array.isArray(value)) {
+                result.success = false;
+                result.errors.push("Expected array");
+                return result;
+            }
+
+            const validatedArray: any[] = [];
+            const itemSchema = fieldType[0];
+
+            for (let i = 0; i < value.length; i++) {
+                const elementResult = this.validateField(
+                    `[${i}]`,
+                    itemSchema,
+                    value[i]
+                );
+                if (!elementResult.success) {
+                    result.success = false;
+                    result.errors.push(
+                        `Element ${i}: ${elementResult.errors.join(", ")}`
+                    );
+                } else {
+                    validatedArray.push(elementResult.data);
+                }
+            }
+
+            if (result.success) {
+                result.data = validatedArray;
+            }
+            return result;
+        }
+
+        // Handle string field types
+        if (typeof fieldType === "string") {
+            return this.validateStringFieldType(fieldType, value);
+        }
+
+        result.success = false;
+        result.errors.push(`Unknown field type: ${typeof fieldType}`);
+        return result;
+    }
+
+    /**
+     * Validate string-based field types
+     */
+    private validateStringFieldType(
+        fieldType: string,
+        value: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        const isOptional = fieldType.endsWith("?");
+        const baseType = isOptional ? fieldType.slice(0, -1) : fieldType;
+        const isArray = baseType.endsWith("[]");
+        const elementType = isArray ? baseType.slice(0, -2) : baseType;
+
+        // Handle undefined values
+        if (value === undefined) {
+            if (isOptional) {
+                result.data = this.options.default;
+                return result;
+            }
+            result.success = false;
+            result.errors.push("Required field is missing");
+            return result;
+        }
+
+        // Handle null values
+        if (value === null) {
+            if (isOptional) {
+                result.data = null;
+                return result;
+            }
+            result.success = false;
+            result.errors.push("Field cannot be null");
+            return result;
+        }
+
+        // Handle array types
+        if (isArray) {
+            if (!Array.isArray(value)) {
+                result.success = false;
+                result.errors.push("Expected array");
+                return result;
+            }
+
+            // Check array constraints
+            if (
+                this.options.minItems !== undefined &&
+                value.length < this.options.minItems
+            ) {
+                result.success = false;
+                result.errors.push(
+                    `Array must have at least ${this.options.minItems} items`
+                );
+                return result;
+            }
+
+            if (
+                this.options.maxItems !== undefined &&
+                value.length > this.options.maxItems
+            ) {
+                result.success = false;
+                result.errors.push(
+                    `Array must have at most ${this.options.maxItems} items`
+                );
+                return result;
+            }
+
+            const validatedArray: any[] = [];
+            for (let i = 0; i < value.length; i++) {
+                const elementResult = this.validateStringFieldType(
+                    elementType,
+                    value[i]
+                );
+                if (!elementResult.success) {
+                    result.success = false;
+                    result.errors.push(
+                        `Element ${i}: ${elementResult.errors.join(", ")}`
+                    );
+                } else {
+                    validatedArray.push(elementResult.data);
+                }
+            }
+
+            // Check uniqueness if required
+            if (this.options.unique && result.success) {
+                const uniqueValues = new Set(validatedArray);
+                if (uniqueValues.size !== validatedArray.length) {
+                    result.success = false;
+                    result.errors.push("Array values must be unique");
+                }
+            }
+
+            if (result.success) {
+                result.data = validatedArray;
+            }
+            return result;
+        }
+
+        // Handle union types (e.g., "pending|accepted|rejected")
+        if (elementType.includes("|")) {
+            return this.validateUnionType(elementType, value);
+        }
+
+        // Handle basic types
+        return this.validateBasicType(elementType, value);
+    }
+
+    /**
+     * Validate union types (e.g., "pending|accepted|rejected")
+     */
+    private validateUnionType(
+        unionType: string,
+        value: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        const allowedValues = unionType.split("|").map((v) => v.trim());
+
+        if (!allowedValues.includes(String(value))) {
+            result.success = false;
+            result.errors.push(
+                `Expected one of: ${allowedValues.join(", ")}, got ${value}`
+            );
+        }
+
+        return result;
+    }
+
+    /**
+     * Validate basic types with enhanced constraints
+     */
+    private validateBasicType(
+        type: string,
+        value: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        switch (type) {
+            case "string":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string");
+                    break;
+                }
+
+                // Apply string constraints
+                if (
+                    this.options.minLength !== undefined &&
+                    value.length < this.options.minLength
+                ) {
+                    result.success = false;
+                    result.errors.push(
+                        `String must be at least ${this.options.minLength} characters`
+                    );
+                }
+
+                if (
+                    this.options.maxLength !== undefined &&
+                    value.length > this.options.maxLength
+                ) {
+                    result.success = false;
+                    result.errors.push(
+                        `String must be at most ${this.options.maxLength} characters`
+                    );
+                }
+
+                if (this.options.pattern && !this.options.pattern.test(value)) {
+                    result.success = false;
+                    result.errors.push(
+                        "String does not match required pattern"
+                    );
+                }
+                break;
+
+            case "number":
+            case "float":
+                if (typeof value === "string" && !isNaN(Number(value))) {
+                    const num = parseFloat(value);
+                    result.data = num;
+                    result.warnings.push("String converted to number");
+                    value = num;
+                } else if (typeof value !== "number" || !isFinite(value)) {
+                    result.success = false;
+                    result.errors.push("Expected number");
+                    break;
+                }
+
+                // Apply number constraints
+                if (
+                    this.options.min !== undefined &&
+                    value < this.options.min
+                ) {
+                    result.success = false;
+                    result.errors.push(
+                        `Number must be at least ${this.options.min}`
+                    );
+                }
+
+                if (
+                    this.options.max !== undefined &&
+                    value > this.options.max
+                ) {
+                    result.success = false;
+                    result.errors.push(
+                        `Number must be at most ${this.options.max}`
+                    );
+                }
+                break;
+
+            case "int":
+            case "positive":
+                if (typeof value === "string" && !isNaN(Number(value))) {
+                    const num = parseInt(value, 10);
+                    result.data = num;
+                    result.warnings.push("String converted to integer");
+                    value = num;
+                } else if (
+                    typeof value !== "number" ||
+                    !isFinite(value) ||
+                    value % 1 !== 0
+                ) {
+                    result.success = false;
+                    result.errors.push("Expected integer");
+                    break;
+                }
+
+                if (type === "positive" && value <= 0) {
+                    result.success = false;
+                    result.errors.push("Expected positive number");
+                }
+
+                // Apply number constraints
+                if (
+                    this.options.min !== undefined &&
+                    value < this.options.min
+                ) {
+                    result.success = false;
+                    result.errors.push(
+                        `Integer must be at least ${this.options.min}`
+                    );
+                }
+
+                if (
+                    this.options.max !== undefined &&
+                    value > this.options.max
+                ) {
+                    result.success = false;
+                    result.errors.push(
+                        `Integer must be at most ${this.options.max}`
+                    );
+                }
+                break;
+
+            case "boolean":
+                if (typeof value === "boolean") {
+                    result.data = value;
+                } else if (typeof value === "string") {
+                    const lower = value.toLowerCase();
+                    if (["true", "1", "yes", "on"].includes(lower)) {
+                        result.data = true;
+                        result.warnings.push("String converted to boolean");
+                    } else if (["false", "0", "no", "off"].includes(lower)) {
+                        result.data = false;
+                        result.warnings.push("String converted to boolean");
+                    } else {
+                        result.success = false;
+                        result.errors.push("Expected boolean");
+                    }
+                } else if (typeof value === "number") {
+                    result.data = Boolean(value);
+                    result.warnings.push("Number converted to boolean");
+                } else {
+                    result.success = false;
+                    result.errors.push("Expected boolean");
+                }
+                break;
+
+            case "email":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string for email");
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    result.success = false;
+                    result.errors.push("Invalid email format");
+                }
+                break;
+
+            case "url":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string for URL");
+                } else {
+                    try {
+                        new URL(value);
+                    } catch {
+                        result.success = false;
+                        result.errors.push("Invalid URL format");
+                    }
+                }
+                break;
+
+            case "uuid":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string for UUID");
+                } else if (
+                    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                        value
+                    )
+                ) {
+                    result.success = false;
+                    result.errors.push("Invalid UUID format");
+                }
+                break;
+
+            case "phone":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string for phone");
+                } else {
+                    const cleanPhone = value.replace(/[\s\-\(\)\.+]/g, "");
+                    if (!/^[1-9]\d{6,14}$/.test(cleanPhone)) {
+                        result.success = false;
+                        result.errors.push("Invalid phone format");
+                    }
+                }
+                break;
+
+            case "slug":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string for slug");
+                } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+                    result.success = false;
+                    result.errors.push(
+                        "Invalid slug format (use lowercase letters, numbers, and hyphens)"
+                    );
+                }
+                break;
+
+            case "username":
+                if (typeof value !== "string") {
+                    result.success = false;
+                    result.errors.push("Expected string for username");
+                } else if (!/^[a-zA-Z0-9_-]{3,20}$/.test(value)) {
+                    result.success = false;
+                    result.errors.push(
+                        "Invalid username format (3-20 chars, letters, numbers, underscore, hyphen)"
+                    );
+                }
+                break;
+
+            case "date":
+                if (value instanceof Date) {
+                    if (isNaN(value.getTime())) {
+                        result.success = false;
+                        result.errors.push("Invalid date");
+                    }
+                } else if (typeof value === "string") {
+                    const date = new Date(value);
+                    if (isNaN(date.getTime())) {
+                        result.success = false;
+                        result.errors.push("Invalid date string");
+                    } else {
+                        result.data = date;
+                        result.warnings.push("String converted to Date");
+                    }
+                } else if (typeof value === "number") {
+                    const date = new Date(value);
+                    if (isNaN(date.getTime())) {
+                        result.success = false;
+                        result.errors.push("Invalid timestamp");
+                    } else {
+                        result.data = date;
+                        result.warnings.push("Timestamp converted to Date");
+                    }
+                } else {
+                    result.success = false;
+                    result.errors.push(
+                        "Expected Date object, date string, or timestamp"
+                    );
+                }
+                break;
+
+            case "any":
+                // Accept any value
+                break;
+
+            default:
+                result.success = false;
+                result.errors.push(`Unknown type: ${type}`);
+        }
+
+        return result;
+    }
+
+    /**
+     * Type guards
+     */
+    private isConstantValue(
+        value: any
+    ): value is ConstantValue | OptionalConstantValue {
+        return (
+            typeof value === "object" &&
+            value !== null &&
+            !Array.isArray(value) &&
+            "const" in value
+        );
+    }
+
+    private isOptionalSchemaInterface(
+        value: any
+    ): value is OptionalSchemaInterface {
+        return (
+            typeof value === "object" &&
+            value !== null &&
+            !Array.isArray(value) &&
+            "optional" in value &&
+            value.optional === true &&
+            "schema" in value
+        );
+    }
+
+    private isSchemaInterface(value: any): value is SchemaInterface {
+        return (
+            typeof value === "object" &&
+            value !== null &&
+            !Array.isArray(value) &&
+            !this.isConstantValue(value) &&
+            !this.isOptionalSchemaInterface(value)
+        );
+    }
+
+    /**
+     * Parse and validate (throws on error)
+     */
+    parse(data: any): T {
+        const result = this.validate(data);
+        if (!result.success) {
+            throw new SchemaValidationError(
+                `Schema validation failed: ${result.errors.join(", ")}`,
+                result.errors,
+                result.warnings
+            );
+        }
+        return result.data!;
+    }
+
+    /**
+     * Safe parse (returns result object)
+     */
+    safeParse(data: any): SchemaValidationResult<T> {
+        return this.validate(data);
+    }
+
+    /**
+     * Set schema options
+     */
+    withOptions(opts: SchemaOptions): InterfaceSchema<T> {
+        return new InterfaceSchema(this.definition, {
+            ...this.options,
+            ...opts,
+        });
+    }
+
+    /**
+     * Enable strict mode (no unknown properties allowed)
+     */
+    strict(): InterfaceSchema<T> {
+        return this.withOptions({ strict: true });
+    }
+
+    /**
+     * Set minimum constraints
+     */
+    min(value: number): InterfaceSchema<T> {
+        return this.withOptions({
+            min: value,
+            minLength: value,
+            minItems: value,
+        });
+    }
+
+    /**
+     * Set maximum constraints
+     */
+    max(value: number): InterfaceSchema<T> {
+        return this.withOptions({
+            max: value,
+            maxLength: value,
+            maxItems: value,
+        });
+    }
+
+    /**
+     * Require unique array values
+     */
+    unique(): InterfaceSchema<T> {
+        return this.withOptions({ unique: true });
+    }
+
+    /**
+     * Set pattern for string validation
+     */
+    pattern(regex: RegExp): InterfaceSchema<T> {
+        return this.withOptions({ pattern: regex });
+    }
+
+    /**
+     * Set default value
+     */
+    default(value: any): InterfaceSchema<T> {
+        return this.withOptions({ default: value });
+    }
+}
+
+/**
+ * Custom error class for schema validation
+ */
+export class SchemaValidationError extends Error {
+    constructor(
+        message: string,
+        public errors: string[],
+        public warnings: string[]
+    ) {
+        super(message);
+        this.name = "SchemaValidationError";
+    }
+}
+
+/**
+ * Factory function for creating schemas
+ */
+export function createSchema<T = any>(
+    definition: SchemaInterface,
+    options?: SchemaOptions
+): InterfaceSchema<T> {
+    return new InterfaceSchema<T>(definition, options);
+}
+
