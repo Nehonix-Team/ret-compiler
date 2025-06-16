@@ -1,4 +1,4 @@
-# Fortify Schema - Complete Field Types Reference
+hi# Fortify Schema - Complete Field Types Reference
 
 A comprehensive guide to all available field types in Fortify Schema's Interface syntax.
 
@@ -384,5 +384,3 @@ Make.union("a", "b")  // Multiple options
 "boolean"             // true/false
 "date"                // Date object
 ```
-
-This comprehensive reference should help developers understand all available field types in Fortify Schema! 🎉
