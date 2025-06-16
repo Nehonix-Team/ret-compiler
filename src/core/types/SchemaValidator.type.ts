@@ -121,4 +121,5 @@ export interface SchemaOptions {
     // General options
     required?: boolean;
     default?: any;
+    loose?: boolean; // Allow type coercion (opposite of strict)
 }

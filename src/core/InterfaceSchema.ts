@@ -342,7 +342,7 @@ export class InterfaceSchema<T = any> {
             case "string":
                 if (typeof value !== "string") {
                     result.success = false;
-                    result.errors.push("Expected string");
+                    result.errors.push(`Expected string, got ${typeof value}`);
                     break;
                 }
 
@@ -377,14 +377,20 @@ export class InterfaceSchema<T = any> {
 
             case "number":
             case "float":
-                if (typeof value === "string" && !isNaN(Number(value))) {
-                    const num = parseFloat(value);
-                    result.data = num;
-                    result.warnings.push("String converted to number");
-                    value = num;
+                if (typeof value === "string" && this.options.loose) {
+                    if (!isNaN(Number(value))) {
+                        const num = parseFloat(value);
+                        result.data = num;
+                        result.warnings.push("String converted to number (loose mode)");
+                        value = num;
+                    } else {
+                        result.success = false;
+                        result.errors.push("Expected number");
+                        break;
+                    }
                 } else if (typeof value !== "number" || !isFinite(value)) {
                     result.success = false;
-                    result.errors.push("Expected number");
+                    result.errors.push(`Expected number, got ${typeof value}`);
                     break;
                 }
 
@@ -412,18 +418,20 @@ export class InterfaceSchema<T = any> {
 
             case "int":
             case "positive":
-                if (typeof value === "string" && !isNaN(Number(value))) {
-                    const num = parseInt(value, 10);
-                    result.data = num;
-                    result.warnings.push("String converted to integer");
-                    value = num;
-                } else if (
-                    typeof value !== "number" ||
-                    !isFinite(value) ||
-                    value % 1 !== 0
-                ) {
+                if (typeof value === "string" && this.options.loose) {
+                    if (!isNaN(Number(value))) {
+                        const num = parseInt(value, 10);
+                        result.data = num;
+                        result.warnings.push("String converted to integer (loose mode)");
+                        value = num;
+                    } else {
+                        result.success = false;
+                        result.errors.push("Expected integer");
+                        break;
+                    }
+                } else if (typeof value !== "number" || !isFinite(value) || value % 1 !== 0) {
                     result.success = false;
-                    result.errors.push("Expected integer");
+                    result.errors.push(`Expected integer, got ${typeof value}`);
                     break;
                 }
 
@@ -457,24 +465,29 @@ export class InterfaceSchema<T = any> {
             case "boolean":
                 if (typeof value === "boolean") {
                     result.data = value;
-                } else if (typeof value === "string") {
-                    const lower = value.toLowerCase();
-                    if (["true", "1", "yes", "on"].includes(lower)) {
-                        result.data = true;
-                        result.warnings.push("String converted to boolean");
-                    } else if (["false", "0", "no", "off"].includes(lower)) {
-                        result.data = false;
-                        result.warnings.push("String converted to boolean");
+                } else if (this.options.loose) {
+                    if (typeof value === "string") {
+                        const lower = value.toLowerCase();
+                        if (["true", "1", "yes", "on"].includes(lower)) {
+                            result.data = true;
+                            result.warnings.push("String converted to boolean (loose mode)");
+                        } else if (["false", "0", "no", "off"].includes(lower)) {
+                            result.data = false;
+                            result.warnings.push("String converted to boolean (loose mode)");
+                        } else {
+                            result.success = false;
+                            result.errors.push("Expected boolean");
+                        }
+                    } else if (typeof value === "number") {
+                        result.data = Boolean(value);
+                        result.warnings.push("Number converted to boolean (loose mode)");
                     } else {
                         result.success = false;
-                        result.errors.push("Expected boolean");
+                        result.errors.push(`Expected boolean, got ${typeof value}`);
                     }
-                } else if (typeof value === "number") {
-                    result.data = Boolean(value);
-                    result.warnings.push("Number converted to boolean");
                 } else {
                     result.success = false;
-                    result.errors.push("Expected boolean");
+                    result.errors.push(`Expected boolean, got ${typeof value}`);
                 }
                 break;
 
@@ -554,34 +567,12 @@ export class InterfaceSchema<T = any> {
                 break;
 
             case "date":
-                if (value instanceof Date) {
-                    if (isNaN(value.getTime())) {
-                        result.success = false;
-                        result.errors.push("Invalid date");
-                    }
-                } else if (typeof value === "string") {
-                    const date = new Date(value);
-                    if (isNaN(date.getTime())) {
-                        result.success = false;
-                        result.errors.push("Invalid date string");
-                    } else {
-                        result.data = date;
-                        result.warnings.push("String converted to Date");
-                    }
-                } else if (typeof value === "number") {
-                    const date = new Date(value);
-                    if (isNaN(date.getTime())) {
-                        result.success = false;
-                        result.errors.push("Invalid timestamp");
-                    } else {
-                        result.data = date;
-                        result.warnings.push("Timestamp converted to Date");
-                    }
-                } else {
+                if (!(value instanceof Date)) {
                     result.success = false;
-                    result.errors.push(
-                        "Expected Date object, date string, or timestamp"
-                    );
+                    result.errors.push(`Expected Date object, got ${typeof value}`);
+                } else if (isNaN(value.getTime())) {
+                    result.success = false;
+                    result.errors.push("Invalid date");
                 }
                 break;
 
@@ -671,6 +662,13 @@ export class InterfaceSchema<T = any> {
      */
     strict(): InterfaceSchema<T> {
         return this.withOptions({ strict: true });
+    }
+
+    /**
+     * Enable loose mode (allow type coercion)
+     */
+    loose(): InterfaceSchema<T> {
+        return this.withOptions({ loose: true });
     }
 
     /**

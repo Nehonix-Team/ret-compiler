@@ -15,8 +15,8 @@ try {
     role: SchemaHelpers.const("user")
   });
 
-  // Test validation
-  const result = UserSchema.safeParse({
+  // Test strict validation (should pass)
+  const validResult = UserSchema.safeParse({
     id: 1,
     name: "John Doe",
     email: "john@example.com",
@@ -24,26 +24,45 @@ try {
     role: "user"
   });
 
-  if (result.success) {
-    console.log('✅ Basic validation test passed');
+  if (validResult.success) {
+    console.log('✅ Valid data test passed');
   } else {
-    console.log('❌ Basic validation test failed:', result.errors);
+    console.log('❌ Valid data test failed:', validResult.errors);
     process.exit(1);
   }
 
-  // Test error case
-  const errorResult = UserSchema.safeParse({
-    id: "not-a-number",
-    name: "John",
-    email: "invalid-email",
-    status: "invalid",
-    role: "wrong"
+  // Test strict validation (should fail - string instead of number)
+  const strictResult = UserSchema.safeParse({
+    id: "1", // String instead of number - should fail in strict mode
+    name: "John Doe",
+    email: "john@example.com",
+    status: "active",
+    role: "user"
   });
 
-  if (!errorResult.success && errorResult.errors.length > 0) {
-    console.log('✅ Error validation test passed');
+  if (!strictResult.success && strictResult.errors.some(e => e.includes('Expected number, got string'))) {
+    console.log('✅ Strict validation test passed - correctly rejected string for number');
   } else {
-    console.log('❌ Error validation test failed');
+    console.log('❌ Strict validation test failed - should have rejected string for number');
+    console.log('Result:', strictResult);
+    process.exit(1);
+  }
+
+  // Test loose mode (should pass with warning)
+  const looseSchema = UserSchema.loose();
+  const looseResult = looseSchema.safeParse({
+    id: "1", // String that can be converted to number
+    name: "John Doe",
+    email: "john@example.com",
+    status: "active",
+    role: "user"
+  });
+
+  if (looseResult.success && looseResult.warnings.some(w => w.includes('String converted to number'))) {
+    console.log('✅ Loose mode test passed - correctly converted string to number');
+  } else {
+    console.log('❌ Loose mode test failed');
+    console.log('Result:', looseResult);
     process.exit(1);
   }
 
