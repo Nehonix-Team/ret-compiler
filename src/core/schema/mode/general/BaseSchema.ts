@@ -1,4 +1,4 @@
-import { SchemaValidationResult, BaseSchemaOptions } from "./types/types";
+import { SchemaValidationResult, BaseSchemaOptions } from "../../../types/types";
 
 /**
  * Abstract base class for all schema types

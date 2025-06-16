@@ -1,4 +1,4 @@
-import { Interface, SchemaHelpers } from '../index';
+import { Interface, Make } from '../index';
 
 describe('Interface Schema', () => {
   describe('Basic Types', () => {
@@ -117,9 +117,9 @@ describe('Interface Schema', () => {
   describe('Safe Constants', () => {
     it('should validate constant values', () => {
       const schema = Interface({
-        version: SchemaHelpers.const('1.0'),
-        status: SchemaHelpers.const(200),
-        enabled: SchemaHelpers.const(true)
+        version: Make.const('1.0'),
+        status: Make.const(200),
+        enabled: Make.const(true)
       });
 
       const validResult = schema.safeParse({
@@ -143,8 +143,8 @@ describe('Interface Schema', () => {
   describe('Union Types', () => {
     it('should validate union values', () => {
       const schema = Interface({
-        status: SchemaHelpers.union('pending', 'accepted', 'rejected'),
-        priority: SchemaHelpers.union('low', 'medium', 'high')
+        status: Make.union('pending', 'accepted', 'rejected'),
+        priority: Make.union('low', 'medium', 'high')
       });
 
       const validResult = schema.safeParse({
@@ -164,7 +164,7 @@ describe('Interface Schema', () => {
 
     it('should validate optional union values', () => {
       const schema = Interface({
-        type: SchemaHelpers.unionOptional('standard', 'express', 'overnight')
+        type: Make.unionOptional('standard', 'express', 'overnight')
       });
 
       const validResult = schema.safeParse({
@@ -210,7 +210,7 @@ describe('Interface Schema', () => {
       const schema = Interface({
         id: 'number',
         email: 'email',
-        status: SchemaHelpers.union('active', 'inactive')
+        status: Make.union('active', 'inactive')
       });
 
       const result = schema.safeParse({

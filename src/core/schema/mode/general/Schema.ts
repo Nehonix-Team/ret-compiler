@@ -199,5 +199,5 @@ export type {
     BooleanSchemaOptions,
     ArraySchemaOptions,
     ObjectSchemaOptions,
-} from "./types/types";
+} from "../../../types/types";
 

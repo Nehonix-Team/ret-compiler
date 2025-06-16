@@ -3,7 +3,7 @@
  * Demonstrates the clean separation between schema logic and validators
  */
 
-import { Schema } from '../core/Schema';
+import { Schema } from '../core/schema/mode/general/Schema';
 
 console.log('=== FORTIFYJS MODULAR SCHEMA TESTS ===\n');
 

@@ -1,5 +1,5 @@
 import { BaseSchema } from "./BaseSchema";
-import { SchemaValidationResult, ObjectSchemaOptions } from "./types/types";
+import { SchemaValidationResult, ObjectSchemaOptions } from "../../../types/types";
 
 /**
  * Object schema with property validation

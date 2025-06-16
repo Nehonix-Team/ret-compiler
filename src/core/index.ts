@@ -40,21 +40,21 @@
  */
 
 // Interface-based Schema (Recommended)
-export { Interface, FieldTypes, QuickSchemas, SchemaUtils } from "./Interface";
-export type { InferType, SchemaInterface, SchemaFieldType } from "./Interface";
+export { Interface, FieldTypes, QuickSchemas, Mod } from "./schema/mode/interfaces/Interface";
+export type { InferType, SchemaInterface, SchemaFieldType } from "./schema/mode/interfaces/Interface";
 
 // Traditional fluent API Schema
-export { Schema } from "./Schema";
+export { Schema } from "./schema/mode/general/Schema";
 
 // Base classes for extending
-export { BaseSchema } from "./BaseSchema";
+export { BaseSchema } from "./schema/mode/general/BaseSchema";
 
 // Individual schema types
-export { StringSchema } from "./StringSchema";
-export { NumberSchema } from "./NumberSchema";
-export { BooleanSchema } from "./BooleanSchema";
-export { ArraySchema } from "./ArraySchema";
-export { ObjectSchema } from "./ObjectSchema";
+export { StringSchema } from "./schema/mode/general/StringSchema";
+export { NumberSchema } from "./schema/mode/general/NumberSchema";
+export { BooleanSchema } from "./schema/mode/general/BooleanSchema";
+export { ArraySchema } from "./schema/mode/general/ArraySchema";
+export { ObjectSchema } from "./schema/mode/general/ObjectSchema";
 
 // Type definitions
 export type {

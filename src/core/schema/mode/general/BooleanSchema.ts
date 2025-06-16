@@ -1,5 +1,5 @@
 import { BaseSchema } from "./BaseSchema";
-import { SchemaValidationResult, BooleanSchemaOptions } from "./types/types";
+import { SchemaValidationResult, BooleanSchemaOptions } from "../../../types/types";
 
 /**
  * Boolean schema with smart type conversion

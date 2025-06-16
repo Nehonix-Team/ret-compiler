@@ -29,30 +29,34 @@
 
 /**
  * Fortify Schema - TypeScript Interface-like Schema Validation
- * 
+ *
  * A revolutionary schema validation system with TypeScript interface-like syntax
  * that's incredibly easy to use and much safer than traditional schema libraries.
- * 
+ *
  * @example Interface-based (Recommended)
  * ```typescript
- * import { Interface, SchemaHelpers } from 'fortify-schema';
- * 
+ * import { Interface, Make, Mod } from 'fortify-schema';
+ *
  * const UserSchema = Interface({
  *   id: "number",
  *   email: "email",
  *   name: "string",
  *   age: "number?",                        // Optional
- *   status: SchemaHelpers.union("active", "inactive"),
- *   role: SchemaHelpers.const("user")      // Safe constant
+ *   status: Make.union("active", "inactive"),
+ *   role: Make.const("user")      // Safe constant
  * });
- * 
+ *
+ * // Transform schemas easily
+ * const PublicUserSchema = Mod.omit(UserSchema, ["password"]);
+ * const PartialUserSchema = Mod.partial(UserSchema);
+ *
  * const result = UserSchema.safeParse(userData);
  * ```
- * 
+ *
  * @example Traditional Fluent API
  * ```typescript
  * import { Schema } from 'fortify-schema';
- * 
+ *
  * const UserSchema = Schema.object({
  *   id: Schema.number().int().positive(),
  *   email: Schema.string().email(),
@@ -62,21 +66,21 @@
  */
 
 // Main Interface-based API (Recommended)
-export { Interface, SchemaHelpers, FieldTypes, QuickSchemas } from './core/Interface';
+export { Interface, Make, Mod, FieldTypes, QuickSchemas } from './core/schema/mode/interfaces/Interface';
 
 // Traditional Fluent API
-export { Schema } from './core/Schema';
+export { Schema } from './core/schema/mode/general/Schema';
 
 // Base classes for extending
-export { BaseSchema } from './core/BaseSchema';
+export { BaseSchema } from './core/schema/mode/general/BaseSchema';
 
 // Individual schema types
-export { StringSchema } from './core/StringSchema';
-export { NumberSchema } from './core/NumberSchema';
-export { BooleanSchema } from './core/BooleanSchema';
-export { ArraySchema } from './core/ArraySchema';
-export { ObjectSchema } from './core/ObjectSchema';
-export { InterfaceSchema } from './core/InterfaceSchema';
+export { StringSchema } from './core/schema/mode/general/StringSchema';
+export { NumberSchema } from './core/schema/mode/general/NumberSchema';
+export { BooleanSchema } from './core/schema/mode/general/BooleanSchema';
+export { ArraySchema } from './core/schema/mode/general/ArraySchema';
+export { ObjectSchema } from './core/schema/mode/general/ObjectSchema';
+export { InterfaceSchema } from './core/schema/mode/general/InterfaceSchema';
 
 // Type definitions
 export type {
@@ -86,7 +90,7 @@ export type {
     ConstantValue,
     SchemaOptions,
     InferType
-} from './core/Interface';
+} from './core/schema/mode/interfaces/Interface';
 
 export type {
     // Traditional API types

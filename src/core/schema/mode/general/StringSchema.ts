@@ -1,5 +1,5 @@
 import { BaseSchema } from "./BaseSchema";
-import { SchemaValidationResult, StringSchemaOptions } from "./types/types";
+import { SchemaValidationResult, StringSchemaOptions } from "../../../types/types";
 
 /**
  * String schema with comprehensive validation options

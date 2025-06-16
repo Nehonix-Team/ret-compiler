@@ -12,17 +12,23 @@ import {
     SchemaFieldType,
     OptionalSchemaInterface,
     SchemaOptions,
-} from "./types/SchemaValidator.type";
-import { SchemaValidationResult } from "./types/types";
+    UnionValue,
+} from "../../../types/SchemaValidator.type";
+import { SchemaValidationResult } from "../../../types/types";
 
 /**
  * Interface Schema class for TypeScript-like schema definitions
  */
+// Helper type for schemas that allow unknown properties
+type AllowUnknownSchema<T> = T & Record<string, any>;
+
 export class InterfaceSchema<T = any> {
     constructor(
         private definition: SchemaInterface,
         private options: SchemaOptions = {}
     ) {}
+
+
 
     /**
      * Validate data against the interface schema
@@ -104,6 +110,18 @@ export class InterfaceSchema<T = any> {
             warnings: [],
             data: value,
         };
+
+        // Handle union values
+        if (this.isUnionValue(fieldType)) {
+            const allowedValues = fieldType.union;
+            if (!allowedValues.includes(value)) {
+                result.success = false;
+                result.errors.push(
+                    `Expected one of: ${allowedValues.join(", ")}, got ${value}`
+                );
+            }
+            return result;
+        }
 
         // Handle constant values
         if (this.isConstantValue(fieldType)) {
@@ -676,6 +694,16 @@ export class InterfaceSchema<T = any> {
     /**
      * Type guards
      */
+    private isUnionValue(value: any): value is UnionValue {
+        return (
+            typeof value === "object" &&
+            value !== null &&
+            !Array.isArray(value) &&
+            "union" in value &&
+            Array.isArray(value.union)
+        );
+    }
+
     private isConstantValue(
         value: any
     ): value is ConstantValue | OptionalConstantValue {
@@ -713,7 +741,7 @@ export class InterfaceSchema<T = any> {
     /**
      * Parse and validate (throws on error)
      */
-    parse(data: any): T {
+    parse(data: T): T {
         const result = this.validate(data);
         if (!result.success) {
             throw new SchemaValidationError(
@@ -726,9 +754,17 @@ export class InterfaceSchema<T = any> {
     }
 
     /**
-     * Safe parse (returns result object)
+     * Safe parse (returns result object) - strictly typed input
      */
-    safeParse(data: any): SchemaValidationResult<T> {
+    safeParse(data: T): SchemaValidationResult<T> {
+        return this.validate(data);
+    }
+
+    /**
+     * Safe parse with unknown data (for testing invalid inputs)
+     * Use this when you need to test data that might not match the schema
+     */
+    safeParseUnknown(data: unknown): SchemaValidationResult<T> {
         return this.validate(data);
     }
 
@@ -758,9 +794,10 @@ export class InterfaceSchema<T = any> {
 
     /**
      * Allow unknown properties (not strict about extra fields)
+     * Returns a schema that accepts extra properties beyond the defined interface
      */
-    allowUnknown(): InterfaceSchema<T> {
-        return this.withOptions({ allowUnknown: true });
+    allowUnknown(): InterfaceSchema<AllowUnknownSchema<T>> {
+        return this.withOptions({ allowUnknown: true }) as InterfaceSchema<AllowUnknownSchema<T>>;
     }
 
     /**

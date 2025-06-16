@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // CommonJS test to verify the build works
-const { Interface, SchemaHelpers } = require('./dist/cjs/index.js');
+const { Interface, Make } = require('./dist/cjs/index.js');
 
 console.log('🧪 Testing CommonJS build...');
 
@@ -11,8 +11,8 @@ try {
     id: "number",
     name: "string",
     email: "email",
-    status: SchemaHelpers.union("active", "inactive"),
-    role: SchemaHelpers.const("user")
+    status: Make.union("active", "inactive"),
+    role: Make.const("user")
   });
 
   // Test strict validation (should pass)

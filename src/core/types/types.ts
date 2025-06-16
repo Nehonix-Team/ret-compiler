@@ -69,9 +69,9 @@ export interface ObjectSchemaOptions extends BaseSchemaOptions {
 /**
  * Schema type definitions
  */
-export type SchemaType = 
+export type SchemaType =
     | 'string'
-    | 'number' 
+    | 'number'
     | 'boolean'
     | 'array'
     | 'object'

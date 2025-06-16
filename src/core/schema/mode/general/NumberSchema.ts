@@ -1,5 +1,5 @@
 import { BaseSchema } from "./BaseSchema";
-import { SchemaValidationResult, NumberSchemaOptions } from "./types/types";
+import { SchemaValidationResult, NumberSchemaOptions } from "../../../types/types";
 
 /**
  * Number schema with comprehensive validation options

@@ -7,8 +7,8 @@ import {
     Interface,
     FieldTypes,
     QuickSchemas,
-    SchemaHelpers,
-} from "../core/Interface";
+    Make,
+} from "../core/schema/mode/interfaces/Interface";
 
 console.log("=== FORTIFYJS INTERFACE SCHEMA TESTS ===\n");
 
@@ -23,7 +23,7 @@ const UserSchema = Interface({
     age: "number?", // Optional
     isActive: "boolean?", // Optional with smart conversion
     tags: "string[]?", // Optional array
-    role: SchemaHelpers.const("admin"), // Safe constant value
+    role: Make.const("admin"), // Safe constant value
 });
 
 console.log(
@@ -305,11 +305,11 @@ if (!result.success) {
 // ===== NEW SAFER SYNTAX =====
 console.log("\n11. New Safer Syntax for Constants and Unions:");
 
-// Safe constant values using SchemaHelpers.const()
+// Safe constant values using Make.const()
 const SafeAPIResponseSchema = Interface({
-    version: SchemaHelpers.const("1.0"), // Safe constant string
-    status: SchemaHelpers.const(200), // Safe constant number
-    success: SchemaHelpers.const(true), // Safe constant boolean
+    version: Make.const("1.0"), // Safe constant string
+    status: Make.const(200), // Safe constant number
+    success: Make.const(true), // Safe constant boolean
     data: "any",
 });
 
@@ -333,17 +333,17 @@ console.log(
     })
 );
 
-// Union types using SchemaHelpers.union()
+// Union types using Make.union()
 const OrderWithUnionsSchema = Interface({
     id: "number",
-    status: SchemaHelpers.union(
+    status: Make.union(
         "pending",
         "processing",
         "shipped",
         "delivered"
     ),
-    priority: SchemaHelpers.union("low", "medium", "high"),
-    type: SchemaHelpers.unionOptional("standard", "express", "overnight"),
+    priority: Make.union("low", "medium", "high"),
+    type: Make.unionOptional("standard", "express", "overnight"),
 });
 
 console.log(

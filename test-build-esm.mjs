@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // ES Module test to verify the build works
-import { Interface, SchemaHelpers as SH} from './dist/esm/index.js';
+import { Interface, Make} from './dist/esm/index.js';
 
 console.log('🧪 Testing ES Module build...');
 
@@ -11,8 +11,8 @@ try {
     id: "number",
     name: "string",
     email: "email",
-    status: SH.union("active", "inactive"),
-    role: SH.const("user")
+    status: Make.union("active", "inactive"),
+    role: Make.const("user")
   });
 
   // Test strict validation (should pass)

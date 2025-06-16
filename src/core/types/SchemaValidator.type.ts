@@ -7,6 +7,13 @@ export interface ConstantValue {
 }
 
 /**
+ * Union value wrapper for proper type inference
+ */
+export interface UnionValue<T extends readonly string[] = readonly string[]> {
+    union: T;
+}
+
+/**
  * Optional constant value wrapper
  */
 export interface OptionalConstantValue {
@@ -87,6 +94,9 @@ export type SchemaFieldType =
     // Constant values
     | ConstantValue
     | OptionalConstantValue
+
+    // Union values
+    | UnionValue
 
     // Nested objects and arrays
     | SchemaInterface

@@ -1,5 +1,5 @@
 import { BaseSchema } from "./BaseSchema";
-import { SchemaValidationResult, ArraySchemaOptions } from "./types/types";
+import { SchemaValidationResult, ArraySchemaOptions } from "../../../types/types";
 
 /**
  * Array schema with element validation
