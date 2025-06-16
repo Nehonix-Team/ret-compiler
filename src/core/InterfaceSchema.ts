@@ -63,23 +63,23 @@ export class InterfaceSchema<T = any> {
             );
         }
 
-        // Handle extra properties
-        if (this.options.strict) {
-            const extraKeys = inputKeys.filter(
-                (key) => !schemaKeys.includes(key)
-            );
-            if (extraKeys.length > 0) {
+        // Handle extra properties - STRICT BY DEFAULT (like TypeScript)
+        const extraKeys = inputKeys.filter(
+            (key) => !schemaKeys.includes(key)
+        );
+
+        if (extraKeys.length > 0) {
+            if (this.options.allowUnknown === true) {
+                // Explicitly allow unknown properties
+                for (const key of extraKeys) {
+                    validatedData[key] = data[key];
+                }
+            } else {
+                // Strict by default - reject unknown properties
                 result.success = false;
                 result.errors.push(
                     `Unexpected properties: ${extraKeys.join(", ")}`
                 );
-            }
-        } else if (this.options.allowUnknown !== false) {
-            // Include unknown properties by default
-            for (const key of inputKeys) {
-                if (!schemaKeys.includes(key)) {
-                    validatedData[key] = data[key];
-                }
             }
         }
 
@@ -200,10 +200,10 @@ export class InterfaceSchema<T = any> {
             data: value,
         };
 
-        const isOptional = fieldType.endsWith("?");
-        const baseType = isOptional ? fieldType.slice(0, -1) : fieldType;
-        const isArray = baseType.endsWith("[]");
-        const elementType = isArray ? baseType.slice(0, -2) : baseType;
+        // Parse constraints from field type
+        const { type: parsedType, constraints, optional: isOptional } = this.parseConstraints(fieldType);
+        const isArray = parsedType.endsWith("[]");
+        const elementType = isArray ? parsedType.slice(0, -2) : parsedType;
 
         // Handle undefined values
         if (value === undefined) {
@@ -235,25 +235,28 @@ export class InterfaceSchema<T = any> {
                 return result;
             }
 
+            // Apply parsed constraints to options
+            const enhancedOptions = { ...this.options, ...constraints };
+
             // Check array constraints
             if (
-                this.options.minItems !== undefined &&
-                value.length < this.options.minItems
+                enhancedOptions.minItems !== undefined &&
+                value.length < enhancedOptions.minItems
             ) {
                 result.success = false;
                 result.errors.push(
-                    `Array must have at least ${this.options.minItems} items`
+                    `Array must have at least ${enhancedOptions.minItems} items`
                 );
                 return result;
             }
 
             if (
-                this.options.maxItems !== undefined &&
-                value.length > this.options.maxItems
+                enhancedOptions.maxItems !== undefined &&
+                value.length > enhancedOptions.maxItems
             ) {
                 result.success = false;
                 result.errors.push(
-                    `Array must have at most ${this.options.maxItems} items`
+                    `Array must have at most ${enhancedOptions.maxItems} items`
                 );
                 return result;
             }
@@ -275,7 +278,7 @@ export class InterfaceSchema<T = any> {
             }
 
             // Check uniqueness if required
-            if (this.options.unique && result.success) {
+            if (enhancedOptions.unique && result.success) {
                 const uniqueValues = new Set(validatedArray);
                 if (uniqueValues.size !== validatedArray.length) {
                     result.success = false;
@@ -325,18 +328,100 @@ export class InterfaceSchema<T = any> {
     }
 
     /**
+     * Parse constraint syntax like "string(3,20)", "number(0,100)?", etc.
+     */
+    private parseConstraints(fieldType: string): { type: string; constraints: any; optional: boolean } {
+        let optional = false;
+        let type = fieldType;
+        let constraints: any = {};
+
+        // Check if optional (ends with ?)
+        if (type.endsWith("?")) {
+            optional = true;
+            type = type.slice(0, -1);
+        }
+
+        // Parse constraints: "string(3,20)", "number(0,100)", "string[]?(1,10)"
+        const constraintMatch = type.match(/^([a-zA-Z\[\]]+)\(([^)]*)\)$/);
+        if (constraintMatch) {
+            const [, baseType, constraintStr] = constraintMatch;
+            type = baseType;
+
+            // Parse constraint parameters
+            if (constraintStr.trim()) {
+                // Handle regex patterns: "string(/^[a-z]+$/)"
+                if (constraintStr.startsWith("/") && constraintStr.endsWith("/")) {
+                    const pattern = constraintStr.slice(1, -1);
+                    constraints.pattern = new RegExp(pattern);
+                }
+                // Handle min,max constraints: "string(3,20)", "number(0,100)"
+                else if (constraintStr.includes(",")) {
+                    const [minStr, maxStr] = constraintStr.split(",").map(s => s.trim());
+
+                    if (minStr) {
+                        const minVal = parseFloat(minStr);
+                        if (!isNaN(minVal)) {
+                            if (baseType.includes("[]")) {
+                                constraints.minItems = minVal;
+                            } else if (baseType === "string" || baseType.includes("string")) {
+                                constraints.minLength = minVal;
+                            } else {
+                                constraints.min = minVal;
+                            }
+                        }
+                    }
+
+                    if (maxStr) {
+                        const maxVal = parseFloat(maxStr);
+                        if (!isNaN(maxVal)) {
+                            if (baseType.includes("[]")) {
+                                constraints.maxItems = maxVal;
+                            } else if (baseType === "string" || baseType.includes("string")) {
+                                constraints.maxLength = maxVal;
+                            } else {
+                                constraints.max = maxVal;
+                            }
+                        }
+                    }
+                }
+                // Handle single value: "string(20)" -> max length
+                else {
+                    const val = parseFloat(constraintStr);
+                    if (!isNaN(val)) {
+                        if (baseType.includes("[]")) {
+                            constraints.maxItems = val;
+                        } else if (baseType === "string" || baseType.includes("string")) {
+                            constraints.maxLength = val;
+                        } else {
+                            constraints.max = val;
+                        }
+                    }
+                }
+            }
+        }
+
+        return { type, constraints, optional };
+    }
+
+    /**
      * Validate basic types with enhanced constraints
      */
     private validateBasicType(
-        type: string,
+        fieldType: string,
         value: any
     ): SchemaValidationResult {
+        // Parse constraints from field type
+        const { type, constraints, optional } = this.parseConstraints(fieldType);
+
         const result: SchemaValidationResult = {
             success: true,
             errors: [],
             warnings: [],
             data: value,
         };
+
+        // Apply parsed constraints to options
+        const enhancedOptions = { ...this.options, ...constraints };
 
         switch (type) {
             case "string":
@@ -348,26 +433,26 @@ export class InterfaceSchema<T = any> {
 
                 // Apply string constraints
                 if (
-                    this.options.minLength !== undefined &&
-                    value.length < this.options.minLength
+                    enhancedOptions.minLength !== undefined &&
+                    value.length < enhancedOptions.minLength
                 ) {
                     result.success = false;
                     result.errors.push(
-                        `String must be at least ${this.options.minLength} characters`
+                        `String must be at least ${enhancedOptions.minLength} characters`
                     );
                 }
 
                 if (
-                    this.options.maxLength !== undefined &&
-                    value.length > this.options.maxLength
+                    enhancedOptions.maxLength !== undefined &&
+                    value.length > enhancedOptions.maxLength
                 ) {
                     result.success = false;
                     result.errors.push(
-                        `String must be at most ${this.options.maxLength} characters`
+                        `String must be at most ${enhancedOptions.maxLength} characters`
                     );
                 }
 
-                if (this.options.pattern && !this.options.pattern.test(value)) {
+                if (enhancedOptions.pattern && !enhancedOptions.pattern.test(value)) {
                     result.success = false;
                     result.errors.push(
                         "String does not match required pattern"
@@ -396,22 +481,22 @@ export class InterfaceSchema<T = any> {
 
                 // Apply number constraints
                 if (
-                    this.options.min !== undefined &&
-                    value < this.options.min
+                    enhancedOptions.min !== undefined &&
+                    value < enhancedOptions.min
                 ) {
                     result.success = false;
                     result.errors.push(
-                        `Number must be at least ${this.options.min}`
+                        `Number must be at least ${enhancedOptions.min}`
                     );
                 }
 
                 if (
-                    this.options.max !== undefined &&
-                    value > this.options.max
+                    enhancedOptions.max !== undefined &&
+                    value > enhancedOptions.max
                 ) {
                     result.success = false;
                     result.errors.push(
-                        `Number must be at most ${this.options.max}`
+                        `Number must be at most ${enhancedOptions.max}`
                     );
                 }
                 break;
@@ -442,22 +527,22 @@ export class InterfaceSchema<T = any> {
 
                 // Apply number constraints
                 if (
-                    this.options.min !== undefined &&
-                    value < this.options.min
+                    enhancedOptions.min !== undefined &&
+                    value < enhancedOptions.min
                 ) {
                     result.success = false;
                     result.errors.push(
-                        `Integer must be at least ${this.options.min}`
+                        `Integer must be at least ${enhancedOptions.min}`
                     );
                 }
 
                 if (
-                    this.options.max !== undefined &&
-                    value > this.options.max
+                    enhancedOptions.max !== undefined &&
+                    value > enhancedOptions.max
                 ) {
                     result.success = false;
                     result.errors.push(
-                        `Integer must be at most ${this.options.max}`
+                        `Integer must be at most ${enhancedOptions.max}`
                     );
                 }
                 break;
@@ -669,6 +754,13 @@ export class InterfaceSchema<T = any> {
      */
     loose(): InterfaceSchema<T> {
         return this.withOptions({ loose: true });
+    }
+
+    /**
+     * Allow unknown properties (not strict about extra fields)
+     */
+    allowUnknown(): InterfaceSchema<T> {
+        return this.withOptions({ allowUnknown: true });
     }
 
     /**
