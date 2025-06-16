@@ -315,8 +315,8 @@ export class InterfaceSchema<T = any> {
             return this.validateUnionType(elementType, value);
         }
 
-        // Handle basic types
-        return this.validateBasicType(elementType, value);
+        // Handle basic types - pass the original fieldType to preserve constraints
+        return this.validateBasicType(fieldType, value);
     }
 
     /**
@@ -429,7 +429,7 @@ export class InterfaceSchema<T = any> {
         value: any
     ): SchemaValidationResult {
         // Parse constraints from field type
-        const { type, constraints, optional } = this.parseConstraints(fieldType);
+        const { type, constraints } = this.parseConstraints(fieldType);
 
         const result: SchemaValidationResult = {
             success: true,

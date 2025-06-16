@@ -158,6 +158,8 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 
 ### Field Types
 
+> **📖 [Complete Field Types Reference](./docs/FIELD-TYPES.md)** - Comprehensive guide to all available types and constraints
+
 #### Basic Types
 ```typescript
 {
@@ -211,7 +213,7 @@ import { Make } from 'fortify-schema';
   // Safe constants (explicit and unambiguous)
   version: Make.const("1.0"),
   status: Make.const(200),
-  
+
   // Union types (multiple allowed values)
   priority: Make.union("low", "medium", "high"),
   role: Make.unionOptional("user", "admin", "moderator")
@@ -468,12 +470,12 @@ const UserSchema = Interface({
   id: "uuid",
   email: "email",
   username: "string(3,20)",
-  
+
   // Security
   password: "string(8,)",                      // Minimum 8 characters
   role: Make.union("user", "moderator", "admin"),
   status: Make.union("active", "inactive", "suspended"),
-  
+
   // Profile information
   profile: {
     firstName: "string(1,50)",
@@ -482,16 +484,16 @@ const UserSchema = Interface({
     bio: "string(,500)?",                      // Optional bio, max 500 chars
     dateOfBirth: "date?"
   },
-  
+
   // Constraints and metadata
   age: "number(13,120)?",                      // Age verification
   tags: "string[](1,10)?",                     // User tags, 1-10 items
   permissions: "string[](,20)?",               // Max 20 permissions
-  
+
   // Timestamps
   createdAt: "date",
   lastLogin: "date?",
-  
+
   // Application-specific
   accountType: Make.const("standard"),
   preferences: {
@@ -510,16 +512,16 @@ const APIResponseSchema = Interface({
   version: Make.const("2.0"),
   timestamp: "date",
   requestId: "uuid",
-  
+
   // Response status
   status: Make.union("success", "error", "partial"),
   statusCode: "number(100,599)",
-  
+
   // Dynamic content
   data: "any?",
   errors: "string[]?",
   warnings: "string[]?",
-  
+
   // Pagination (for list responses)
   pagination: {
     page: "number(1,)",
@@ -527,7 +529,7 @@ const APIResponseSchema = Interface({
     total: "number(0,)",
     hasMore: "boolean"
   }?,
-  
+
   // Environment context
   meta: {
     environment: Make.union("development", "staging", "production"),
@@ -547,36 +549,36 @@ const ProductSchema = Interface({
   sku: "string(/^[A-Z0-9-]{6,20}$/)",
   name: "string(1,200)",
   slug: "string(/^[a-z0-9-]+$/)",
-  
+
   // Categorization
   category: "string",
   subcategory: "string?",
   tags: "string[](,20)",
-  
+
   // Pricing
   price: "number(0.01,99999.99)",
   originalPrice: "number(0.01,99999.99)?",
   currency: "string(/^[A-Z]{3}$/)",           // ISO currency code
-  
+
   // Inventory
   stock: "number(0,)",
   stockStatus: Make.union("in-stock", "low-stock", "out-of-stock"),
-  
+
   // Product details
   description: "string(,5000)",
   shortDescription: "string(,500)?",
   specifications: "any?",                      // Flexible spec object
-  
+
   // Media
   images: "url[](1,10)",                      // 1-10 product images
   videos: "url[](,3)?",                       // Optional videos
-  
+
   // Status and metadata
   status: Make.union("draft", "active", "archived"),
   featured: "boolean",
   createdAt: "date",
   updatedAt: "date",
-  
+
   // SEO
   seo: {
     title: "string(,60)?",
