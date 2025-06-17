@@ -756,8 +756,43 @@ export class InterfaceSchema<T = any> {
                 break;
 
             default:
-                result.success = false;
-                result.errors.push(`Unknown type: ${type}`);
+                // Check for Record types: record<string,any>, record<string,string>, etc.
+                if (type.startsWith("record<") && type.endsWith(">")) {
+                    const recordMatch = type.match(/^record<([^,]+),(.+)>$/);
+                    if (recordMatch) {
+                        const [, keyType, valueType] = recordMatch;
+
+                        if (typeof value !== "object" || value === null || Array.isArray(value)) {
+                            result.success = false;
+                            result.errors.push("Expected object for Record type");
+                            break;
+                        }
+
+                        // Validate each key-value pair
+                        for (const [key, val] of Object.entries(value)) {
+                            // For now, we only support string keys
+                            if (keyType === "string" && typeof key !== "string") {
+                                result.success = false;
+                                result.errors.push(`Record key must be string, got ${typeof key}`);
+                                break;
+                            }
+
+                            // Validate the value type
+                            const valueResult = this.validateStringFieldType(valueType.trim(), val);
+                            if (!valueResult.success) {
+                                result.success = false;
+                                result.errors.push(`Record value for key "${key}": ${valueResult.errors.join(", ")}`);
+                                break;
+                            }
+                        }
+                    } else {
+                        result.success = false;
+                        result.errors.push(`Invalid Record type format: ${type}`);
+                    }
+                } else {
+                    result.success = false;
+                    result.errors.push(`Unknown type: ${type}`);
+                }
         }
 
         return result;
