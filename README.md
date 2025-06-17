@@ -7,7 +7,7 @@
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/fortify-schema)](https://bundlephobia.com/package/fortify-schema)
 
 <div align="center">
-  <img src="https://sdk.nehonix.space/sdks/assets/fortify%20schema.jpg" alt="Fortify Schema Logo" width="400" />
+  <img src="https://sdk.nehonix.space/sdks/assets/fortify%20schema.jpg" alt="Fortify Schema Logo" width="300" />
 </div>
 
 **A TypeScript-first schema validation library with interface-like syntax that's intuitive, type-safe, and powerful.**

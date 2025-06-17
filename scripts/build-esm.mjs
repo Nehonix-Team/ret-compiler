@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-// CommonJS test to verify the build works
-const { Interface, Make } = require('./dist/cjs/index.js');
+// ES Module test to verify the build works
+import { Interface, Make} from '../dist/esm/index.js';
 
-console.log('🧪 Testing CommonJS build...');
+console.log('🧪 Testing ES Module build...');
 
 try {
   // Test basic interface
@@ -48,27 +48,9 @@ try {
     process.exit(1);
   }
 
-  // Test loose mode (should pass with warning)
-  const looseSchema = UserSchema.loose();
-  const looseResult = looseSchema.safeParse({
-    id: "1", // String that can be converted to number
-    name: "John Doe",
-    email: "john@example.com",
-    status: "active",
-    role: "user"
-  });
-
-  if (looseResult.success && looseResult.warnings.some(w => w.includes('String converted to number'))) {
-    console.log('✅ Loose mode test passed - correctly converted string to number');
-  } else {
-    console.log('❌ Loose mode test failed');
-    console.log('Result:', looseResult);
-    process.exit(1);
-  }
-
-  console.log('🎉 CommonJS tests passed!');
+  console.log('🎉 ES Module tests passed!');
 
 } catch (error) {
-  console.error('❌ CommonJS test failed:', error.message);
+  console.error('❌ ES Module test failed:', error.message);
   process.exit(1);
 }

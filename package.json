@@ -1,6 +1,6 @@
 {
   "name": "fortify-schema",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "TypeScript interface-like schema validation system that's easier to use than Zod",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -33,10 +33,10 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test:build": "npm run test:build:cjs && npm run test:build:esm",
-    "test:build:cjs": "node test-build-cjs.cjs",
-    "test:build:esm": "node test-build-esm.mjs",
-    "prepublishOnly": "npm run build && npm run test:build",
+    "manual:build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "node scripts/build-cjs.cjs",
+    "build:esm": "node scripts/build-esm.mjs",
+    "prepublishOnly": "npm run build && npm run manual:build",
     "clean": "rimraf dist"
   },
   "keywords": [
