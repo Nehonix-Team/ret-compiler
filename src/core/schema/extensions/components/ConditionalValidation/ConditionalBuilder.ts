@@ -1,7 +1,30 @@
 import { ConditionalThen } from "./ConditionalThen";
 
-/** 
- * Builder for single field conditional validation
+// Type helper to infer field types from schema strings
+type InferFieldType<T extends string> =
+    T extends "string" ? string :
+    T extends "string?" ? string | undefined :
+    T extends "number" ? number :
+    T extends "number?" ? number | undefined :
+    T extends "boolean" ? boolean :
+    T extends "boolean?" ? boolean | undefined :
+    T extends "string[]" ? string[] :
+    T extends "string[]?" ? string[] | undefined :
+    T extends "number[]" ? number[] :
+    T extends "number[]?" ? number[] | undefined :
+    T extends "boolean[]" ? boolean[] :
+    T extends "boolean[]?" ? boolean[] | undefined :
+    T extends `${string}|${string}` ? string :
+    any;
+
+// Type-safe conditional builder result
+type ConditionalBuilderResult<TThen extends string, TElse extends string = never> =
+    TElse extends never
+        ? { __conditional: true; __inferredType: InferFieldType<TThen> }
+        : { __conditional: true; __inferredType: InferFieldType<TThen> | InferFieldType<TElse> };
+
+/**
+ * Builder for single field conditional validation with TypeScript inference
  */
 export class ConditionalBuilder {
     private conditions: Array<{
@@ -37,7 +60,7 @@ export class ConditionalBuilder {
      * Check if field matches pattern
      */
     matches(pattern: RegExp): ConditionalThen {
-        return new ConditionalThen(this, (fieldValue) => 
+        return new ConditionalThen(this, (fieldValue) =>
             typeof fieldValue === "string" && pattern.test(fieldValue)
         );
     }

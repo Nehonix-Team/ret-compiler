@@ -193,6 +193,8 @@ type InferSchemaFieldType<T, TSchema extends SchemaInterface = {}> =
     // Handle constant values
     T extends ConstantValue ? T["const"] :
     T extends OptionalConstantValue ? T["const"] | undefined :
+    // Handle When.field() builder results
+    T extends { __conditional: true; __inferredType: infer U } ? U :
     // Handle revolutionary "*?" syntax FIRST
     T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}` ?
         InferConditionalType<Condition, ThenType, ElseType, TSchema> :
