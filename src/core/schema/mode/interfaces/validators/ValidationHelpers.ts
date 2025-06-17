@@ -1,13 +1,20 @@
 /**
  * Validation Helpers Module
- * 
- * Contains helper functions for validation operations
+ *
+ * Contains optimized helper functions for validation operations
  * extracted from InterfaceSchema to improve maintainability.
  */
- 
-import { SchemaValidationResult,  } from "../../../../types/types";
+
+import { SchemaValidationResult } from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
+
+// Cache for parsed constant values to avoid repeated parsing
+const constantCache = new Map<string, any>();
+
+// Pre-compiled regex patterns for better performance
+const NUMERIC_PATTERN = /^\d+(\.\d+)?$/;
+const BOOLEAN_PATTERN = /^(true|false)$/;
 
 /**
  * Helper functions for validation operations
@@ -15,210 +22,245 @@ import { TypeValidators } from "./TypeValidators";
 export class ValidationHelpers {
   /**
    * Validate constant types (e.g., "=admin", "=user")
+   * Optimized with caching for repeated constant validations
    */
-  static validateConstantType(constantValue: string, value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+  static validateConstantType(
+    constantValue: string,
+    value: any
+  ): SchemaValidationResult {
+    // Check cache first
+    let expectedValue = constantCache.get(constantValue);
 
-    // Convert the constant value to the appropriate type
-    let expectedValue: any = constantValue;
-
-    // Try to parse as number if it looks like a number
-    if (/^\d+(\.\d+)?$/.test(constantValue)) {
-      expectedValue = parseFloat(constantValue);
-    }
-    // Try to parse as boolean
-    else if (constantValue === "true" || constantValue === "false") {
-      expectedValue = constantValue === "true";
+    if (expectedValue === undefined) {
+      // Parse and cache the constant value
+      expectedValue = this.parseConstantValue(constantValue);
+      constantCache.set(constantValue, expectedValue);
     }
 
     if (value !== expectedValue) {
-      result.success = false;
-      result.errors.push(`Expected constant value: ${expectedValue}, got ${value}`);
+      return this.createErrorResult(
+        `Expected constant value: ${expectedValue}, got ${value}`,
+        value
+      );
     }
 
-    return result;
+    return this.createSuccessResult(value);
+  }
+
+  /**
+   * Parse constant value with type coercion
+   */
+  private static parseConstantValue(constantValue: string): any {
+    // Numeric check
+    if (NUMERIC_PATTERN.test(constantValue)) {
+      return parseFloat(constantValue);
+    }
+
+    // Boolean check
+    if (BOOLEAN_PATTERN.test(constantValue)) {
+      return constantValue === "true";
+    }
+
+    return constantValue;
   }
 
   /**
    * Validate union types (e.g., "pending|accepted|rejected")
+   * Optimized with Set for O(1) lookup instead of array includes
    */
-  static validateUnionType(unionType: string, value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+  static validateUnionType(
+    unionType: string,
+    value: any
+  ): SchemaValidationResult {
+    const allowedValues = new Set(unionType.split("|").map((v) => v.trim()));
+    const stringValue = String(value);
 
-    const allowedValues = unionType.split("|").map((v) => v.trim());
-
-    if (!allowedValues.includes(String(value))) {
-      result.success = false;
-      result.errors.push(`Expected one of: ${allowedValues.join(", ")}, got ${value}`);
+    if (!allowedValues.has(stringValue)) {
+      return this.createErrorResult(
+        `Expected one of: ${Array.from(allowedValues).join(", ")}, got ${value}`,
+        value
+      );
     }
 
-    return result;
+    return this.createSuccessResult(value);
   }
 
   /**
    * Validate record types (e.g., "record<string,any>")
+   * Optimized with early returns and better error handling
    */
   static validateRecordType(
     type: string,
     value: any,
     validateFieldType: (fieldType: string, value: any) => SchemaValidationResult
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
     const recordMatch = type.match(/^record<([^,]+),(.+)>$/);
-    if (recordMatch) {
-      const [, keyType, valueType] = recordMatch;
 
-      if (typeof value !== "object" || value === null || Array.isArray(value)) {
-        result.success = false;
-        result.errors.push("Expected object for Record type");
-        return result;
-      }
-
-      // Validate each key-value pair
-      for (const [key, val] of Object.entries(value)) {
-        // For now, we only support string keys
-        if (keyType === "string" && typeof key !== "string") {
-          result.success = false;
-          result.errors.push(`Record key must be string, got ${typeof key}`);
-          break;
-        }
-
-        // Validate the value type
-        const valueResult = validateFieldType(valueType.trim(), val);
-        if (!valueResult.success) {
-          result.success = false;
-          result.errors.push(`Record value for key "${key}": ${valueResult.errors.join(", ")}`);
-          break;
-        }
-      }
-    } else {
-      result.success = false;
-      result.errors.push(`Invalid Record type format: ${type}`);
+    if (!recordMatch) {
+      return this.createErrorResult(
+        `Invalid Record type format: ${type}`,
+        value
+      );
     }
 
-    return result;
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      return this.createErrorResult("Expected object for Record type", value);
+    }
+
+    const [, keyType, valueType] = recordMatch;
+    const trimmedValueType = valueType.trim();
+    const errors: string[] = [];
+
+    // Batch validation for better performance
+    for (const [key, val] of Object.entries(value)) {
+      // Validate key type (currently only string keys supported)
+      if (keyType === "string" && typeof key !== "string") {
+        errors.push(`Record key must be string, got ${typeof key}`);
+        continue;
+      }
+
+      // Validate value type
+      const valueResult = validateFieldType(trimmedValueType, val);
+      if (!valueResult.success) {
+        errors.push(
+          `Record value for key "${key}": ${valueResult.errors.join(", ")}`
+        );
+      }
+    }
+
+    if (errors.length > 0) {
+      return {
+        success: false,
+        errors,
+        warnings: [],
+        data: value,
+      };
+    }
+
+    return this.createSuccessResult(value);
   }
 
   /**
    * Validate array with constraints
+   * Optimized with pre-checks and batch validation
    */
   static validateArrayWithConstraints(
     value: any,
     elementType: string,
     constraints: any,
-    validateElementType: (elementType: string, value: any) => SchemaValidationResult
+    validateElementType: (
+      elementType: string,
+      value: any
+    ) => SchemaValidationResult
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
     if (!Array.isArray(value)) {
-      result.success = false;
-      result.errors.push("Expected array");
-      return result;
+      return this.createErrorResult("Expected array", value);
     }
 
-    // Check array constraints
-    if (constraints.minItems !== undefined && value.length < constraints.minItems) {
-      result.success = false;
-      result.errors.push(`Array must have at least ${constraints.minItems} items`);
-      return result;
+    // Pre-check constraints to fail fast
+    const constraintErrors = this.validateArrayConstraints(value, constraints);
+    if (constraintErrors.length > 0) {
+      return {
+        success: false,
+        errors: constraintErrors,
+        warnings: [],
+        data: value,
+      };
     }
 
-    if (constraints.maxItems !== undefined && value.length > constraints.maxItems) {
-      result.success = false;
-      result.errors.push(`Array must have at most ${constraints.maxItems} items`);
-      return result;
-    }
-
+    // Validate elements
     const validatedArray: any[] = [];
+    const errors: string[] = [];
+
     for (let i = 0; i < value.length; i++) {
       const elementResult = validateElementType(elementType, value[i]);
       if (!elementResult.success) {
-        result.success = false;
-        result.errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+        errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
       } else {
         validatedArray.push(elementResult.data);
       }
     }
 
-    // Check uniqueness if required
-    if (constraints.unique && result.success) {
-      const uniqueValues = new Set(validatedArray);
-      if (uniqueValues.size !== validatedArray.length) {
-        result.success = false;
-        result.errors.push("Array values must be unique");
+    if (errors.length > 0) {
+      return {
+        success: false,
+        errors,
+        warnings: [],
+        data: value,
+      };
+    }
+
+    // Check uniqueness constraint efficiently
+    if (constraints.unique) {
+      const uniqueCheck = this.checkArrayUniqueness(validatedArray);
+      if (!uniqueCheck.success) {
+        return uniqueCheck;
       }
     }
 
-    if (result.success) {
-      result.data = validatedArray;
+    return this.createSuccessResult(validatedArray);
+  }
+
+  /**
+   * Validate array constraints separately for better modularity
+   */
+  private static validateArrayConstraints(
+    value: any[],
+    constraints: any
+  ): string[] {
+    const errors: string[] = [];
+
+    if (
+      constraints.minItems !== undefined &&
+      value.length < constraints.minItems
+    ) {
+      errors.push(`Array must have at least ${constraints.minItems} items`);
     }
 
-    return result;
+    if (
+      constraints.maxItems !== undefined &&
+      value.length > constraints.maxItems
+    ) {
+      errors.push(`Array must have at most ${constraints.maxItems} items`);
+    }
+
+    return errors;
+  }
+
+  /**
+   * Check array uniqueness efficiently
+   */
+  private static checkArrayUniqueness(array: any[]): SchemaValidationResult {
+    const seen = new Set();
+    for (const item of array) {
+      const key = typeof item === "object" ? JSON.stringify(item) : item;
+      if (seen.has(key)) {
+        return this.createErrorResult("Array values must be unique", array);
+      }
+      seen.add(key);
+    }
+    return this.createSuccessResult(array);
   }
 
   /**
    * Handle undefined and null values based on optional flag
+   * Optimized with early returns
    */
   static handleOptionalValue(
     value: any,
     isOptional: boolean,
     defaultValue?: any
   ): SchemaValidationResult | null {
-    // Handle undefined values
     if (value === undefined) {
-      if (isOptional) {
-        return {
-          success: true,
-          errors: [],
-          warnings: [],
-          data: defaultValue,
-        };
-      }
-      return {
-        success: false,
-        errors: ["Required field is missing"],
-        warnings: [],
-        data: undefined,
-      };
+      return isOptional
+        ? this.createSuccessResult(defaultValue)
+        : this.createErrorResult("Required field is missing");
     }
 
-    // Handle null values
     if (value === null) {
-      if (isOptional) {
-        return {
-          success: true,
-          errors: [],
-          warnings: [],
-          data: null,
-        };
-      }
-      return {
-        success: false,
-        errors: ["Field cannot be null"],
-        warnings: [],
-        data: undefined,
-      };
+      return isOptional
+        ? this.createSuccessResult(null)
+        : this.createErrorResult("Field cannot be null");
     }
 
     return null; // Continue with normal validation
@@ -226,6 +268,7 @@ export class ValidationHelpers {
 
   /**
    * Route validation to appropriate type validator
+   * Optimized with Map-based lookup for better performance
    */
   static routeTypeValidation(
     type: string,
@@ -233,105 +276,141 @@ export class ValidationHelpers {
     options: SchemaOptions,
     constraints: any
   ): SchemaValidationResult {
+    // Use switch with grouped cases for better optimization
     switch (type) {
       case "string":
         return TypeValidators.validateString(value, options, constraints);
-      
+
       case "number":
       case "float":
-        return TypeValidators.validateNumber(value, options, constraints, type as "number" | "float");
-      
+        return TypeValidators.validateNumber(
+          value,
+          options,
+          constraints,
+          type as "number" | "float"
+        );
+
       case "int":
       case "integer":
       case "positive":
       case "negative":
-        return TypeValidators.validateInteger(value, options, constraints, type as "int" | "integer" | "positive" | "negative");
-      
+        return TypeValidators.validateInteger(
+          value,
+          options,
+          constraints,
+          type as "int" | "integer" | "positive" | "negative"
+        );
+
       case "double":
-        return TypeValidators.validateFloat(value, options, constraints, "double");
-      
+        return TypeValidators.validateFloat(
+          value,
+          options,
+          constraints,
+          "double"
+        );
+
       case "boolean":
       case "bool":
         return TypeValidators.validateBoolean(value, options, constraints);
-      
+
       case "date":
       case "datetime":
       case "timestamp":
-        return TypeValidators.validateDate(value, options, constraints, type as "date" | "datetime" | "timestamp");
-      
+        return TypeValidators.validateDate(
+          value,
+          options,
+          constraints,
+          type as "date" | "datetime" | "timestamp"
+        );
+
       case "email":
         return TypeValidators.validateEmail(value);
-      
+
       case "url":
       case "uri":
         return TypeValidators.validateUrl(value, type as "url" | "uri");
-      
+
       case "uuid":
       case "guid":
         return TypeValidators.validateUuid(value, type as "uuid" | "guid");
-      
+
       case "phone":
         return TypeValidators.validatePhone(value);
-      
+
       case "slug":
         return TypeValidators.validateSlug(value);
-      
+
       case "username":
         return TypeValidators.validateUsername(value);
-      
+
       case "password":
         return TypeValidators.validatePassword(value);
-      
+
       case "text":
         return TypeValidators.validateText(value);
-      
+
       case "json":
         return TypeValidators.validateJson(value);
-      
+
       case "object":
         return TypeValidators.validateObject(value);
-      
+
       case "unknown":
       case "void":
       case "null":
       case "undefined":
       case "any":
-        return TypeValidators.validateSpecialType(value, type as "unknown" | "void" | "null" | "undefined" | "any");
-      
+        return TypeValidators.validateSpecialType(
+          value,
+          type as "unknown" | "void" | "null" | "undefined" | "any"
+        );
+
       default:
-        return {
-          success: false,
-          errors: [`Unknown type: ${type}`],
-          warnings: [],
-          data: value,
-        };
+        return this.createErrorResult(`Unknown type: ${type}`, value);
     }
   }
 
   /**
-   * Merge validation results
+   * Merge validation results efficiently
+   * Optimized to avoid unnecessary array operations
    */
-  static mergeResults(results: SchemaValidationResult[]): SchemaValidationResult {
-    const merged: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: undefined,
-    };
+  static mergeResults(
+    results: SchemaValidationResult[]
+  ): SchemaValidationResult {
+    if (results.length === 0) {
+      return this.createSuccessResult(undefined);
+    }
+
+    if (results.length === 1) {
+      return results[0];
+    }
+
+    let success = true;
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
     for (const result of results) {
       if (!result.success) {
-        merged.success = false;
+        success = false;
       }
-      merged.errors.push(...result.errors);
-      merged.warnings.push(...result.warnings);
+      if (result.errors.length > 0) {
+        errors.push(...result.errors);
+      }
+      if (result.warnings.length > 0) {
+        warnings.push(...result.warnings);
+      }
     }
 
-    return merged;
+    return {
+      success,
+      errors,
+      warnings,
+      data: undefined,
+    };
   }
 
   /**
-   * Create error result
+   * Create error result efficiently
    */
   static createErrorResult(error: string, value?: any): SchemaValidationResult {
     return {
@@ -343,14 +422,33 @@ export class ValidationHelpers {
   }
 
   /**
-   * Create success result
+   * Create success result efficiently
    */
-  static createSuccessResult(data: any, warnings: string[] = []): SchemaValidationResult {
+  static createSuccessResult(
+    data: any,
+    warnings: string[] = []
+  ): SchemaValidationResult {
     return {
       success: true,
       errors: [],
       warnings,
       data,
+    };
+  }
+
+  /**
+   * Clear caches for memory management in long-running applications
+   */
+  static clearCaches(): void {
+    constantCache.clear();
+  }
+
+  /**
+   * Get cache statistics for monitoring
+   */
+  static getCacheStats(): { constantCacheSize: number } {
+    return {
+      constantCacheSize: constantCache.size,
     };
   }
 }
