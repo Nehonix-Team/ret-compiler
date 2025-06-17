@@ -6,96 +6,95 @@
  * Schema validation result
  */
 export interface SchemaValidationResult<T = any> {
-    success: boolean;
-    data?: T;
-    errors: string[];
-    warnings: string[];
+  success: boolean;
+  data?: T;
+  errors: string[];
+  warnings: string[];
 }
 
 /**
  * Base schema configuration options
  */
 export interface BaseSchemaOptions {
-    optional?: boolean;
-    nullable?: boolean;
-    default?: any;
+  optional?: boolean;
+  nullable?: boolean;
+  default?: any;
 }
 
 /**
  * String schema validation options
  */
 export interface StringSchemaOptions extends BaseSchemaOptions {
-    minLength?: number;
-    maxLength?: number;
-    pattern?: RegExp;
-    format?: 'email' | 'url' | 'uuid' | 'phone' | 'slug' | 'username';
+  minLength?: number;
+  maxLength?: number;
+  pattern?: RegExp;
+  format?: "email" | "url" | "uuid" | "phone" | "slug" | "username";
 }
 
 /**
  * Number schema validation options
  */
 export interface NumberSchemaOptions extends BaseSchemaOptions {
-    min?: number;
-    max?: number;
-    integer?: boolean;
-    positive?: boolean;
-    precision?: number;
+  min?: number;
+  max?: number;
+  integer?: boolean;
+  positive?: boolean;
+  precision?: number;
 }
 
 /**
  * Boolean schema validation options
  */
 export interface BooleanSchemaOptions extends BaseSchemaOptions {
-    strict?: boolean; // Only accept true boolean values
+  strict?: boolean; // Only accept true boolean values
 }
 
 /**
  * Array schema validation options
  */
 export interface ArraySchemaOptions extends BaseSchemaOptions {
-    minLength?: number;
-    maxLength?: number;
-    unique?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  unique?: boolean;
 }
 
 /**
  * Object schema validation options
  */
 export interface ObjectSchemaOptions extends BaseSchemaOptions {
-    strict?: boolean; // No extra properties allowed
-    allowUnknown?: boolean; // Allow unknown properties
+  strict?: boolean; // No extra properties allowed
+  allowUnknown?: boolean; // Allow unknown properties
 }
 
 /**
  * Schema type definitions
  */
 export type SchemaType =
-    | 'string'
-    | 'number'
-    | 'boolean'
-    | 'array'
-    | 'object'
-    | 'date'
-    | 'any';
+  | "string"
+  | "number"
+  | "boolean"
+  | "array"
+  | "object"
+  | "date"
+  | "any";
 
 /**
  * Schema definition for object properties
  */
 export type SchemaDefinition = {
-    [key: string]: SchemaConfig;
+  [key: string]: SchemaConfig;
 };
 
 /**
  * Complete schema configuration
  */
 export interface SchemaConfig {
-    type: SchemaType;
-    options?: BaseSchemaOptions;
-    elementSchema?: SchemaConfig; // For arrays
-    properties?: SchemaDefinition; // For objects
-    validator?: (value: any) => void; // Custom validator function
+  type: SchemaType;
+  options?: BaseSchemaOptions;
+  elementSchema?: SchemaConfig; // For arrays
+  properties?: SchemaDefinition; // For objects
+  validator?: (value: any) => void; // Custom validator function
 }
-
 
 // interfaces
 
@@ -103,9 +102,29 @@ export interface SchemaConfig {
  * Internal conditional pattern interface
  */
 export interface ConditionalPattern {
-    field: string;
-    operator: "=" | "!=" | ">" | "<" | ">=" | "<=" | "~" | "in" | "!in" | "exists" | "!exists";
-    value?: any;
-    thenSchema: string;
-    elseSchema?: string;
+  field: string;
+  operator:
+    | "="
+    | "!="
+    | ">"
+    | "<"
+    | ">="
+    | "<="
+    | "~"
+    | "!~"
+    | "in"
+    | "!in"
+    | "exists"
+    | "!exists"
+    | "empty"
+    | "!empty"
+    | "null"
+    | "!null"
+    | "startsWith"
+    | "endsWith"
+    | "contains"
+    | "!contains";
+  value?: any;
+  thenSchema: string;
+  elseSchema?: string;
 }

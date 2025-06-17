@@ -6,10 +6,10 @@ A revolutionary schema validation system with **TypeScript interface-like syntax
 
 **Zod, Joi, Yup** - they all suffer from the same issues:
 
--   **Complex syntax** that doesn't feel natural
--   **Verbose definitions** that are hard to read
--   **Steep learning curves** for simple validation
--   **Heavy bundle sizes** with unnecessary features
+- **Complex syntax** that doesn't feel natural
+- **Verbose definitions** that are hard to read
+- **Steep learning curves** for simple validation
+- **Heavy bundle sizes** with unnecessary features
 
 ## 💡 Our Solution: Interface-Based Schemas
 
@@ -18,23 +18,23 @@ We created a schema system that **looks and feels exactly like TypeScript interf
 ```typescript
 // ❌ Zod (complex and verbose)
 const UserSchema = z.object({
-    id: z.number().int().positive(),
-    email: z.string().email(),
-    name: z.string().min(2).max(50),
-    age: z.number().int().min(0).max(120).optional(),
-    isActive: z.boolean().default(true),
-    tags: z.array(z.string()).max(10).optional(),
+  id: z.number().int().positive(),
+  email: z.string().email(),
+  name: z.string().min(2).max(50),
+  age: z.number().int().min(0).max(120).optional(),
+  isActive: z.boolean().default(true),
+  tags: z.array(z.string()).max(10).optional(),
 });
 
 // ✅ FortifyJS Interface (clean and intuitive)
 const UserSchema = Interface({
-    id: "number",
-    email: "email",
-    name: "string",
-    age: "number?", // Optional with ?
-    isActive: "boolean?", // Optional with smart defaults
-    tags: "string[]?", // Optional array
-    role: "=admin", // Constant values
+  id: "number",
+  email: "email",
+  name: "string",
+  age: "number?", // Optional with ?
+  isActive: "boolean?", // Optional with smart defaults
+  tags: "string[]?", // Optional array
+  role: "=admin", // Constant values
 });
 ```
 
@@ -47,21 +47,21 @@ const UserSchema = Interface({
 **TypeScript interface syntax with runtime validation**
 
 ```typescript
-import { Interface } from "@fortifyjs/core/schema";
+import { Interface } from "fortify-schema";
 
 const UserSchema = Interface({
-    id: "number",
-    email: "email",
-    name: "string",
-    age: "number?", // Optional
-    isActive: "boolean?", // Optional
-    tags: "string[]?", // Optional array
-    role: "=admin", // Constant value
-    profile: {
-        // Nested object
-        bio: "string?",
-        avatar: "url?",
-    },
+  id: "number",
+  email: "email",
+  name: "string",
+  age: "number?", // Optional
+  isActive: "boolean?", // Optional
+  tags: "string[]?", // Optional array
+  role: "=admin", // Constant value
+  profile: {
+    // Nested object
+    bio: "string?",
+    avatar: "url?",
+  },
 });
 ```
 
@@ -70,14 +70,14 @@ const UserSchema = Interface({
 **Chainable method syntax for complex validation**
 
 ```typescript
-import { Schema } from "@fortifyjs/core/schema";
+import { Schema } from "fortify-schema";
 
 const UserSchema = Schema.object({
-    id: Schema.number().int().positive(),
-    email: Schema.string().email(),
-    name: Schema.string().min(2).max(50),
-    age: Schema.number().int().min(0).max(120).optional(),
-    isActive: Schema.boolean().default(true),
+  id: Schema.number().int().positive(),
+  email: Schema.string().email(),
+  name: Schema.string().min(2).max(50),
+  age: Schema.number().int().min(0).max(120).optional(),
+  isActive: Schema.boolean().default(true),
 });
 ```
 
@@ -85,18 +85,18 @@ const UserSchema = Schema.object({
 
 ### ✅ Pros of Interface Syntax:
 
--   **Instantly familiar** to TypeScript developers
--   **Extremely readable** - looks like documentation
--   **Minimal learning curve** - no new API to learn
--   **Faster to write** - less typing, more intuitive
--   **Self-documenting** - schema IS the documentation
+- **Instantly familiar** to TypeScript developers
+- **Extremely readable** - looks like documentation
+- **Minimal learning curve** - no new API to learn
+- **Faster to write** - less typing, more intuitive
+- **Self-documenting** - schema IS the documentation
 
 ### ❌ Cons of Traditional Fluent APIs:
 
--   **Verbose and complex** - lots of chaining
--   **Hard to read** - especially with nested objects
--   **Learning curve** - need to memorize API methods
--   **More typing** - repetitive method calls
+- **Verbose and complex** - lots of chaining
+- **Hard to read** - especially with nested objects
+- **Learning curve** - need to memorize API methods
+- **More typing** - repetitive method calls
 
 ## 📚 Interface Field Types
 
@@ -163,7 +163,7 @@ const UserSchema = Schema.object({
 ### Constant Values (Safe Syntax)
 
 ```typescript
-import { Make } from '@fortifyjs/core/schema';
+import { Make } from "fortify-schema";
 
 {
   version: Make.const("1.0"),     // Safe constant string
@@ -208,31 +208,31 @@ import { Make } from '@fortifyjs/core/schema';
 
 ```typescript
 const UserRegistrationSchema = Interface({
-    // Required fields
-    email: "email",
-    password: "string",
-    firstName: "string",
-    lastName: "string",
+  // Required fields
+  email: "email",
+  password: "string",
+  firstName: "string",
+  lastName: "string",
 
-    // Optional fields
-    age: "number?",
-    phone: "phone?",
-    website: "url?",
+  // Optional fields
+  age: "number?",
+  phone: "phone?",
+  website: "url?",
 
-    // Arrays
-    interests: "string[]?",
+  // Arrays
+  interests: "string[]?",
 
-    // Nested object
-    address: {
-        street: "string",
-        city: "string",
-        zipCode: "string",
-        country: "string",
-    },
+  // Nested object
+  address: {
+    street: "string",
+    city: "string",
+    zipCode: "string",
+    country: "string",
+  },
 
-    // Safe constants
-    type: Make.const("user"),
-    version: Make.const("1.0"),
+  // Safe constants
+  type: Make.const("user"),
+  version: Make.const("1.0"),
 });
 ```
 
@@ -240,28 +240,28 @@ const UserRegistrationSchema = Interface({
 
 ```typescript
 const APIResponseSchema = Interface({
-    success: "boolean",
-    status: Make.const(200), // Safe constant status
-    data: {
-        users: [
-            {
-                // Array of objects
-                id: "int",
-                email: "email",
-                profile: {
-                    name: "string",
-                    avatar: "url?",
-                },
-            },
-        ],
-        pagination: {
-            page: "int",
-            total: "int",
-            hasNext: "boolean",
+  success: "boolean",
+  status: Make.const(200), // Safe constant status
+  data: {
+    users: [
+      {
+        // Array of objects
+        id: "int",
+        email: "email",
+        profile: {
+          name: "string",
+          avatar: "url?",
         },
+      },
+    ],
+    pagination: {
+      page: "int",
+      total: "int",
+      hasNext: "boolean",
     },
-    errors: "string[]?",
-    timestamp: "date",
+  },
+  errors: "string[]?",
+  timestamp: "date",
 });
 ```
 
@@ -269,21 +269,21 @@ const APIResponseSchema = Interface({
 
 ```typescript
 const ConfigSchema = Interface({
-    database: {
-        host: "string",
-        port: "int",
-        name: "string",
-        ssl: "boolean?",
-    },
-    server: {
-        port: "int",
-        cors: "boolean?",
-    },
-    features: {
-        auth: "boolean?",
-        logging: "boolean?",
-    },
-    environment: Make.const("production"), // Safe constant
+  database: {
+    host: "string",
+    port: "int",
+    name: "string",
+    ssl: "boolean?",
+  },
+  server: {
+    port: "int",
+    cors: "boolean?",
+  },
+  features: {
+    auth: "boolean?",
+    logging: "boolean?",
+  },
+  environment: Make.const("production"), // Safe constant
 });
 ```
 
@@ -293,10 +293,10 @@ const ConfigSchema = Interface({
 
 ```typescript
 try {
-    const user = UserSchema.parse(userData);
-    // user is fully typed and validated
+  const user = UserSchema.parse(userData);
+  // user is fully typed and validated
 } catch (error) {
-    console.error("Validation failed:", error.message);
+  console.error("Validation failed:", error.message);
 }
 ```
 
@@ -306,10 +306,10 @@ try {
 const result = UserSchema.safeParse(userData);
 
 if (result.success) {
-    console.log("Valid data:", result.data);
+  console.log("Valid data:", result.data);
 } else {
-    console.log("Errors:", result.errors);
-    console.log("Warnings:", result.warnings);
+  console.log("Errors:", result.errors);
+  console.log("Warnings:", result.warnings);
 }
 ```
 
@@ -317,8 +317,8 @@ if (result.success) {
 
 ```typescript
 const StrictSchema = Interface({
-    id: "number",
-    name: "string",
+  id: "number",
+  name: "string",
 }).strict(); // No extra properties allowed
 ```
 
@@ -329,8 +329,8 @@ const StrictSchema = Interface({
 ```typescript
 // ❌ DANGEROUS - Looks like a string type but it's actually a constant!
 const BadSchema = Interface({
-    status: "pending", // Is this a string type or constant "pending"?
-    role: "=admin", // Very confusing and error-prone!
+  status: "pending", // Is this a string type or constant "pending"?
+  role: "=admin", // Very confusing and error-prone!
 });
 ```
 
@@ -338,29 +338,29 @@ const BadSchema = Interface({
 
 ```typescript
 // ✅ SAFE - Crystal clear what's a type vs constant
-import { Interface, Make } from "@fortifyjs/core/schema";
+import { Interface, Make } from "fortify-schema";
 
 const GoodSchema = Interface({
-    // Clear type definitions
-    name: "string",
-    email: "email",
+  // Clear type definitions
+  name: "string",
+  email: "email",
 
-    // Clear constant values
-    status: Make.const("pending"),
-    role: Make.const("admin"),
+  // Clear constant values
+  status: Make.const("pending"),
+  role: Make.const("admin"),
 
-    // Clear union types (multiple allowed values)
-    priority: Make.union("low", "medium", "high"),
-    category: Make.unionOptional("tech", "business", "design"),
+  // Clear union types (multiple allowed values)
+  priority: Make.union("low", "medium", "high"),
+  category: Make.unionOptional("tech", "business", "design"),
 });
 ```
 
 ### Benefits of Make
 
--   **🔒 Type Safety**: No confusion between types and constants
--   **📖 Readability**: Crystal clear intent in your schemas
--   **🐛 Bug Prevention**: Eliminates dangerous ambiguity
--   **🔧 IntelliSense**: Better IDE support and autocomplete
+- **🔒 Type Safety**: No confusion between types and constants
+- **📖 Readability**: Crystal clear intent in your schemas
+- **🐛 Bug Prevention**: Eliminates dangerous ambiguity
+- **🔧 IntelliSense**: Better IDE support and autocomplete
 
 ## 📊 Comparison
 
@@ -376,21 +376,20 @@ const GoodSchema = Interface({
 ## 🎉 Get Started
 
 ```bash
-npm install @fortifyjs/core
+npm install fortify-schema
 ```
 
 ```typescript
-import { Interface } from "@fortifyjs/core/schema";
+import { Interface } from "fortify-schema";
 
 const MySchema = Interface({
-    id: "number",
-    name: "string",
-    email: "email",
-    active: "boolean?",
+  id: "number",
+  name: "string",
+  email: "email",
+  active: "boolean?",
 });
 
 const result = MySchema.safeParse(data);
 ```
 
 **That's it!** No complex APIs to learn, no verbose syntax - just clean, readable schemas that work exactly like TypeScript interfaces! 🚀
-

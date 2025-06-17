@@ -15,24 +15,53 @@ Fortify Schema supports multiple conditional validation syntaxes:
 
 ### Comparison Operators
 
-| Operator | Description | Example | IDE Support |
-|----------|-------------|---------|-------------|
-| `=` | Equals | `"when role=admin *? string[] : string[]?"` | ✅ Full TypeScript inference |
-| `!=` | Not equals | `"when accountType!=free *? string : string?"` | ⚠️ **Works at runtime, no IDE errors** |
-| `>` | Greater than | `"when age>18 *? string : string?"` | ✅ Full TypeScript inference |
-| `<` | Less than | `"when age<65 *? string : string?"` | ✅ Full TypeScript inference |
-| `>=` | Greater than or equal | `"when age>=18 *? string : string?"` | ✅ Full TypeScript inference |
-| `<=` | Less than or equal | `"when age<=65 *? string : string?"` | ✅ Full TypeScript inference |
-| `~` | Regex match | `"when email~^admin *? string[] : string[]?"` | ✅ Full TypeScript inference |
+| Operator | Description           | Example                                        | IDE Support                            |
+| -------- | --------------------- | ---------------------------------------------- | -------------------------------------- |
+| `=`      | Equals                | `"when role=admin *? string[] : string[]?"`    | ✅ Full TypeScript inference           |
+| `!=`     | Not equals            | `"when accountType!=free *? string : string?"` | ⚠️ **Works at runtime, no IDE errors** |
+| `>`      | Greater than          | `"when age>18 *? string : string?"`            | ✅ Full TypeScript inference           |
+| `<`      | Less than             | `"when age<65 *? string : string?"`            | ✅ Full TypeScript inference           |
+| `>=`     | Greater than or equal | `"when age>=18 *? string : string?"`           | ✅ Full TypeScript inference           |
+| `<=`     | Less than or equal    | `"when age<=65 *? string : string?"`           | ✅ Full TypeScript inference           |
 
-### Special Operators
+### Pattern Operators
 
-| Operator | Description | Example | IDE Support |
-|----------|-------------|---------|-------------|
-| `.exists` | Field exists (not null/undefined) | `"when paymentMethod.exists *? string : string?"` | ✅ Full TypeScript inference |
-| `.!exists` | Field does not exist | `"when paymentMethod.!exists *? string? : string"` | ✅ Full TypeScript inference |
-| `.in()` | Value in array | `"when role.in(admin,teacher) *? string[] : string[]?"` | ✅ Full TypeScript inference |
-| `.!in()` | Value not in array | `"when role.!in(guest,user) *? string[] : string[]?"` | ✅ Full TypeScript inference |
+| Operator | Description          | Example                                       | IDE Support                  |
+| -------- | -------------------- | --------------------------------------------- | ---------------------------- |
+| `~`      | Regex match          | `"when email~^admin *? string[] : string[]?"` | ✅ Full TypeScript inference |
+| `!~`     | Negative regex match | `"when email!~@temp *? string : string?"`     | ✅ Full TypeScript inference |
+
+### Existence Operators
+
+| Operator   | Description                       | Example                                            | IDE Support                  |
+| ---------- | --------------------------------- | -------------------------------------------------- | ---------------------------- |
+| `.exists`  | Field exists (not null/undefined) | `"when paymentMethod.exists *? string : string?"`  | ✅ Full TypeScript inference |
+| `.!exists` | Field does not exist              | `"when paymentMethod.!exists *? string? : string"` | ✅ Full TypeScript inference |
+
+### State Operators
+
+| Operator  | Description                          | Example                                          | IDE Support                  |
+| --------- | ------------------------------------ | ------------------------------------------------ | ---------------------------- |
+| `.empty`  | Field is empty (string/array/object) | `"when description.empty *? =required : string"` | ✅ Full TypeScript inference |
+| `.!empty` | Field is not empty                   | `"when tags.!empty *? string[] : string[]?"`     | ✅ Full TypeScript inference |
+| `.null`   | Field is exactly null                | `"when optionalField.null *? string? : string"`  | ✅ Full TypeScript inference |
+| `.!null`  | Field is not null                    | `"when requiredField.!null *? string : string?"` | ✅ Full TypeScript inference |
+
+### Array Operators
+
+| Operator | Description        | Example                                                 | IDE Support                  |
+| -------- | ------------------ | ------------------------------------------------------- | ---------------------------- |
+| `.in()`  | Value in array     | `"when role.in(admin,teacher) *? string[] : string[]?"` | ✅ Full TypeScript inference |
+| `.!in()` | Value not in array | `"when role.!in(guest,user) *? string[] : string[]?"`   | ✅ Full TypeScript inference |
+
+### String Operators
+
+| Operator        | Description                   | Example                                                 | IDE Support                  |
+| --------------- | ----------------------------- | ------------------------------------------------------- | ---------------------------- |
+| `.startsWith()` | String starts with value      | `"when filename.startsWith(temp_) *? =delete : string"` | ✅ Full TypeScript inference |
+| `.endsWith()`   | String ends with value        | `"when filename.endsWith(.tmp) *? =delete : string"`    | ✅ Full TypeScript inference |
+| `.contains()`   | String contains value         | `"when path.contains(/temp/) *? =cleanup : string"`     | ✅ Full TypeScript inference |
+| `.!contains()`  | String does not contain value | `"when path.!contains(/secure/) *? =public : =private"` | ✅ Full TypeScript inference |
 
 ## Syntax Examples
 
@@ -46,20 +75,43 @@ const UserSchema = Interface({
   accountType: "free|premium|enterprise",
   age: "int(13,120)",
   userType: "student|teacher|admin",
-  
+  email: "email",
+  description: "string?",
+  tags: "string[]?",
+
   // Basic equality
   permissions: "when role=admin *? string[] : string[]?",
-  
+
   // Inequality (works at runtime, no IDE errors)
   paymentMethod: "when accountType!=free *? string : string?",
-  
+
   // Numeric comparisons
   accessLevel: "when age>=18 *? string : string?",
   discountRate: "when age<25 *? number(0,0.5) : number(0,0.1)",
-  
-  // Complex conditions
-  maxProjects: "when userType.in(admin,teacher) *? int(1,) : int(1,10)",
+
+  // Pattern matching
+  adminAccess: "when email~^admin *? =true : =false",
+  publicEmail: "when email!~@temp *? =public : =private",
+
+  // Existence checks
   billingAddress: "when paymentMethod.exists *? string : string?",
+  guestFeatures: "when paymentMethod.!exists *? string[] : string[]?",
+
+  // State checks
+  descriptionRequired: "when description.empty *? =required : string",
+  tagValidation: "when tags.!empty *? string[] : string[]?",
+  optionalCheck: "when description.null *? string? : string",
+  requiredCheck: "when email.!null *? string : string?",
+
+  // Array operations
+  maxProjects: "when userType.in(admin,teacher) *? int(1,) : int(1,10)",
+  restrictions: "when role.!in(guest) *? string[] : string[]?",
+
+  // String operations
+  tempFileCleanup: "when filename.startsWith(temp_) *? =delete : =keep",
+  backupRequired: "when filename.endsWith(.important) *? =true : =false",
+  securityLevel: "when path.contains(/secure/) *? =high : =normal",
+  publicAccess: "when path.!contains(/private/) *? =true : =false",
 });
 ```
 
@@ -71,19 +123,20 @@ More explicit syntax with proper nesting support:
 const OrderSchema = Interface({
   orderType: "pickup|delivery",
   customerType: "regular|premium|vip",
-  
+
   // Basic conditions
   deliveryFee: "when(orderType=delivery) then(number(5,50)) else(number?)",
-  
+
   // Inequality
   rushFee: "when(customerType!=vip) then(number(10,25)) else(number?)",
-  
+
   // Numeric comparisons
   discount: "when(orderValue>=100) then(number(0,0.2)) else(number(0,0.05))",
-  
+
   // Special operators
   insurance: "when(deliveryAddress.exists) then(boolean) else(boolean?)",
-  priority: "when(customerType.in(premium,vip)) then(high|urgent) else(normal|low)",
+  priority:
+    "when(customerType.in(premium,vip)) then(high|urgent) else(normal|low)",
 });
 ```
 
@@ -96,17 +149,24 @@ const EventSchema = Interface({
   eventType: "conference|workshop|webinar",
   duration: "int(30,480)", // minutes
   attendeeCount: "int(1,1000)",
-  
+
   // Programmatic conditional validation
-  venue: When.field("eventType").is("webinar").then("string?")
-                                 .isNot("webinar").then("string")
-                                 .default("string"),
-  
-  catering: When.field("attendeeCount").when(count => count >= 50).then("boolean")
-                                       .default("boolean?"),
-  
-  equipment: When.field("eventType").in(["conference", "workshop"]).then("string[]")
-                                    .default("string[]?"),
+  venue: When.field("eventType")
+    .is("webinar")
+    .then("string?")
+    .isNot("webinar")
+    .then("string")
+    .default("string"),
+
+  catering: When.field("attendeeCount")
+    .when((count) => count >= 50)
+    .then("boolean")
+    .default("boolean?"),
+
+  equipment: When.field("eventType")
+    .in(["conference", "workshop"])
+    .then("string[]")
+    .default("string[]?"),
 });
 ```
 
@@ -116,16 +176,42 @@ const EventSchema = Interface({
 
 These operators work perfectly with TypeScript IDE inference:
 
+**Comparison Operators:**
+
 - `=` (equals)
 - `>` (greater than)
 - `<` (less than)
 - `>=` (greater than or equal)
 - `<=` (less than or equal)
+
+**Pattern Operators:**
+
 - `~` (regex match)
-- `.exists`
-- `.!exists`
-- `.in()`
-- `.!in()`
+- `!~` (negative regex match)
+
+**Existence Operators:**
+
+- `.exists` (field exists)
+- `.!exists` (field does not exist)
+
+**State Operators:**
+
+- `.empty` (field is empty)
+- `.!empty` (field is not empty)
+- `.null` (field is exactly null)
+- `.!null` (field is not null)
+
+**Array Operators:**
+
+- `.in()` (value in array)
+- `.!in()` (value not in array)
+
+**String Operators:**
+
+- `.startsWith()` (string starts with value)
+- `.endsWith()` (string ends with value)
+- `.contains()` (string contains value)
+- `.!contains()` (string does not contain value)
 
 ### ⚠️ **Runtime-Only Operators**
 
@@ -139,12 +225,13 @@ You correctly identified that `!=` doesn't throw IDE errors but works at runtime
 
 ```typescript
 // This compiles without errors but validates correctly at runtime
-permissions: "when role!=admin *? string[]? : string[]"
+permissions: "when role!=admin *? string[]? : string[]";
 //                    ^^
 //                    No IDE error, but runtime validation works!
 ```
 
 **Why this happens:**
+
 - TypeScript's conditional type inference doesn't recognize `!=` as a valid type guard
 - The runtime parser correctly handles `!=` operator
 - Other operators like `=`, `>=`, etc. work with TypeScript's type system
@@ -152,76 +239,92 @@ permissions: "when role!=admin *? string[]? : string[]"
 ## Workarounds for `!=` IDE Support
 
 ### Option 1: Use `.!in()` for single values
+
 ```typescript
 // Instead of: "when role!=admin *? ..."
-permissions: "when role.!in(admin) *? string[]? : string[]"
+permissions: "when role.!in(admin) *? string[]? : string[]";
 ```
 
 ### Option 2: Use When.field() API
+
 ```typescript
-permissions: When.field("role").isNot("admin").then("string[]?").else("string[]")
+permissions: When.field("role")
+  .isNot("admin")
+  .then("string[]?")
+  .else("string[]");
 ```
 
 ### Option 3: Use positive logic
+
 ```typescript
 // Instead of: "when accountType!=free *? ..."
-paymentMethod: "when accountType.in(premium,enterprise) *? string : string?"
+paymentMethod: "when accountType.in(premium,enterprise) *? string : string?";
 ```
 
 ## Complete Working Example
 
 ```typescript
-import { Interface, When } from '@fortifyjs/core/schema';
+import { Interface, When } from "fortify-schema";
 
 const UserSchema = Interface({
   // Basic fields
   role: "admin|user|guest",
-  accountType: "free|premium|enterprise", 
+  accountType: "free|premium|enterprise",
   age: "int(13,120)",
   userType: "student|teacher|admin",
-  
+
   // ✅ WORKING: Equality (full IDE support)
   permissions: "when role=admin *? string[] : string[]?",
-  
+
   // ⚠️ RUNTIME ONLY: Inequality (no IDE errors, but validates correctly)
   paymentMethod: "when accountType!=free *? string : string?",
-  
+
   // ✅ WORKING: Numeric comparisons (full IDE support)
   accessLevel: "when age>=18 *? string : string?",
   discountRate: "when userType=student *? number(0,0.5) : number(0,0.1)",
-  
+
   // ✅ WORKING: Special operators (full IDE support)
   maxProjects: "when userType.in(admin,teacher) *? int(1,) : int(1,10)",
   billingAddress: "when paymentMethod.exists *? string : string?",
-  
+
   // ✅ WORKING: Programmatic API (full IDE support)
-  notifications: When.field("accountType").isNot("free").then("string[]").else("string[]?"),
+  notifications: When.field("accountType")
+    .isNot("free")
+    .then("string[]")
+    .else("string[]?"),
 });
 
 // Test the schema
 const result = UserSchema.safeParse({
   role: "=user",
-  accountType: "free", 
+  accountType: "free",
   age: 25,
   userType: "student",
   // paymentMethod: undefined, // This will pass validation correctly
 });
 
 console.log(result.success); // true
-console.log(result.data);    // Fully typed result
+console.log(result.data); // Fully typed result
 ```
 
 ## Operator Precedence
 
-When parsing conditions, operators are checked in this order:
+When parsing conditions, operators are checked in this order (highest to lowest precedence):
 
-1. `!=` (not equals)
-2. `>=` (greater than or equal)
-3. `<=` (less than or equal)
-4. `=` (equals)
-5. `>` (greater than)
-6. `<` (less than)
-7. `~` (regex match)
+**Existence Operators (Highest Precedence):**
+
+1. `.!exists` (field does not exist)
+2. `.exists` (field exists)
+
+**State Operators:** 3. `.!empty` (field is not empty) 4. `.empty` (field is empty) 5. `.!null` (field is not null) 6. `.null` (field is exactly null)
+
+**Array Operators:** 7. `.!in()` (value not in array) 8. `.in()` (value in array)
+
+**Pattern Operators:** 9. `!~` (negative regex match) 10. `~` (regex match)
+
+**String Operators:** 11. `.!contains()` (string does not contain value) 12. `.contains()` (string contains value) 13. `.endsWith()` (string ends with value) 14. `.startsWith()` (string starts with value)
+
+**Comparison Operators (Lowest Precedence):** 15. `!=` (not equals) 16. `>=` (greater than or equal) 17. `<=` (less than or equal) 18. `>` (greater than) 19. `<` (less than) 20. `=` (equals)
 
 ## Best Practices
 
@@ -237,13 +340,16 @@ If you're using `!=` and want full IDE support:
 
 ```typescript
 // Before (runtime only)
-permissions: "when role!=admin *? string[]? : string[]"
+permissions: "when role!=admin *? string[]? : string[]";
 
 // After (full IDE support)
-permissions: When.field("role").isNot("admin").then("string[]?").else("string[]")
+permissions: When.field("role")
+  .isNot("admin")
+  .then("string[]?")
+  .else("string[]");
 
 // Or use positive logic
-permissions: "when role.in(user,guest) *? string[]? : string[]"
+permissions: "when role.in(user,guest) *? string[]? : string[]";
 ```
 
 This comprehensive reference should help you understand why `!=` works at runtime but doesn't show IDE errors, and provides alternatives for full TypeScript support.

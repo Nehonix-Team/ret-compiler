@@ -1,244 +1,549 @@
-
 /**
- * Type inference system for schema definitions
+ * Enhanced Type Inference System for Schema Definitions
+ * Features: design, better extensibility, performance optimizations
  */
 
-import { ConstantValue, OptionalConstantValue, OptionalSchemaInterface, UnionValue } from "../../../../types/SchemaValidator.type";
+import {
+  ConstantValue,
+  OptionalConstantValue,
+  OptionalSchemaInterface,
+  UnionValue,
+} from "../../../../types/SchemaValidator.type";
 import { SchemaInterface } from "../Interface";
 
-// Helper type to parse union types recursively
-type ParseUnion<T extends string> =
-    T extends `${infer First}|${infer Rest}`
-        ? First | ParseUnion<Rest>
-        : T;
+// ============================================================================
+// CORE TYPE REGISTRY - Easy to extend with new types
+// ============================================================================
 
-// Helper type to infer TypeScript types from string field types
-export type InferFieldType<T> =
-    // Handle constant types FIRST (most specific) - "=admin", "=1.0", "=true"
-    T extends `=${infer ConstValue}` ?
-        ConstValue extends "true" ? true :
-        ConstValue extends "false" ? false :
-        ConstValue extends `${number}` ? number :
-        ConstValue :
-    T extends `=${infer ConstValue}?` ?
-        ConstValue extends "true" ? true | undefined :
-        ConstValue extends "false" ? false | undefined :
-        ConstValue extends `${number}` ? number | undefined :
-        ConstValue | undefined :
+// Base type mapping - easy to add new primitive types
+interface BaseTypeMap {
+  string: string;
+  number: number;
+  int: number;
+  integer: number;
+  float: number;
+  double: number;
+  positive: number;
+  negative: number;
+  boolean: boolean;
+  bool: boolean;
+  date: Date;
+  datetime: Date;
+  timestamp: Date;
+  email: string;
+  url: string;
+  uri: string;
+  uuid: string;
+  guid: string;
+  phone: string;
+  slug: string;
+  username: string;
+  password: string;
+  text: string;
+  json: any;
+  object: object;
+  any: any;
+  unknown: unknown;
+  void: void;
+  null: null;
+  undefined: undefined;
+}
 
-    // Handle "*?" syntax FIRST - "when condition *? then : else"
-    T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}` ?
-        InferFieldType<ThenType> | InferFieldType<ElseType> :
-    T extends `when ${infer Condition} *? ${infer ThenType}` ?
-        InferFieldType<ThenType> :
+// Constraint patterns - easy to add new constraint types
+interface ConstraintTypeMap {
+  min: number;
+  max: number;
+  length: number;
+  minLength: number;
+  maxLength: number;
+  pattern: string;
+  regex: string;
+  format: string;
+  enum: string;
+  range: string;
+  precision: number;
+  scale: number;
+}
 
-    // Handle parentheses syntax SECOND - "when(condition) then(schema) else(schema)"
-    T extends `when(${infer Condition}) then(${infer ThenType}) else(${infer ElseType})` ?
-        InferFieldType<ThenType> | InferFieldType<ElseType> :
-    T extends `when(${infer Condition}) then(${infer ThenType})` ?
-        InferFieldType<ThenType> :
+// ============================================================================
+// ENHANCED UNION PARSER - More robust and extensible
+// ============================================================================
 
+type ParseUnion<T extends string> = T extends `${infer First}|${infer Rest}`
+  ? First extends ""
+    ? ParseUnion<Rest>
+    : Rest extends ""
+      ? First
+      : First | ParseUnion<Rest>
+  : T extends ""
+    ? never
+    : T;
 
-    // Handle union types THIRD - "active|inactive|pending"
-    T extends `${string}|${string}` ? ParseUnion<T> :
-    T extends `${string}|${string}?` ? ParseUnion<T extends `${infer U}?` ? U : T> | undefined :
+// ============================================================================
+// ADVANCED CONDITIONAL OPERATORS - Extensible operator system
+// ============================================================================
 
-    // Handle string literals (basic types)
-    T extends "string" ? string :
-    T extends "string?" ? string | undefined :
-    T extends "number" ? number :
-    T extends "number?" ? number | undefined :
-    T extends "int" ? number :
-    T extends "int?" ? number | undefined :
-    T extends "float" ? number :
-    T extends "float?" ? number | undefined :
-    T extends "positive" ? number :
-    T extends "positive?" ? number | undefined :
-    T extends "boolean" ? boolean :
-    T extends "boolean?" ? boolean | undefined :
-    T extends "date" ? Date :
-    T extends "date?" ? Date | undefined :
-    T extends "email" ? string :
-    T extends "email?" ? string | undefined :
-    T extends "url" ? string :
-    T extends "url?" ? string | undefined :
-    T extends "uuid" ? string :
-    T extends "uuid?" ? string | undefined :
-    T extends "phone" ? string :
-    T extends "phone?" ? string | undefined :
-    T extends "slug" ? string :
-    T extends "slug?" ? string | undefined :
-    T extends "username" ? string :
-    T extends "username?" ? string | undefined :
-    T extends "any" ? any :
-    T extends "any?" ? any | undefined :
+interface OperatorMap {
+  "=": "equals";
+  "!=": "not_equals";
+  ">": "greater_than";
+  ">=": "greater_than_or_equal";
+  "<": "less_than";
+  "<=": "less_than_or_equal";
+  "~": "matches";
+  "!~": "not_matches";
+  in: "in_array";
+  "!in": "not_in_array";
+  exists: "field_exists";
+  "!exists": "field_not_exists";
+  empty: "is_empty";
+  "!empty": "not_empty";
+  null: "is_null";
+  "!null": "not_null";
+  startsWith: "starts_with";
+  endsWith: "ends_with";
+  contains: "contains";
+  "!contains": "not_contains";
+}
 
-    // Record types - Record<string, T> and Record<K, T>
-    T extends `record<string,${infer ValueType}>` ? Record<string, InferFieldType<ValueType>> :
-    T extends `record<string,${infer ValueType}>?` ? Record<string, InferFieldType<ValueType>> | undefined :
-    T extends `record<${infer KeyType},${infer ValueType}>` ? Record<string, InferFieldType<ValueType>> :
-    T extends `record<${infer KeyType},${infer ValueType}>?` ? Record<string, InferFieldType<ValueType>> | undefined :
-
-    // Array types
-    T extends "string[]" ? string[] :
-    T extends "string[]?" ? string[] | undefined :
-    T extends "number[]" ? number[] :
-    T extends "number[]?" ? number[] | undefined :
-    T extends "int[]" ? number[] :
-    T extends "int[]?" ? number[] | undefined :
-    T extends "boolean[]" ? boolean[] :
-    T extends "boolean[]?" ? boolean[] | undefined :
-    T extends "email[]" ? string[] :
-    T extends "email[]?" ? string[] | undefined :
-    T extends "url[]" ? string[] :
-    T extends "url[]?" ? string[] | undefined :
-    T extends "any[]" ? any[] :
-    T extends "any[]?" ? any[] | undefined :
-
-    // Constraint syntax patterns (more specific patterns first)
-    T extends `string(${string})` ? string :
-    T extends `string(${string})?` ? string | undefined :
-    T extends `number(${string})` ? number :
-    T extends `number(${string})?` ? number | undefined :
-    T extends `int(${string})` ? number :
-    T extends `int(${string})?` ? number | undefined :
-    T extends `string[](${string})` ? string[] :
-    T extends `string[](${string})?` ? string[] | undefined :
-    T extends `number[](${string})` ? number[] :
-    T extends `number[](${string})?` ? number[] | undefined :
-    T extends `int[](${string})` ? number[] :
-    T extends `int[](${string})?` ? number[] | undefined :
-
-    // Regex patterns
-    T extends `string(/${string}/)` ? string :
-    T extends `string(/${string}/)?` ? string | undefined :
-
-    // Fallback for unknown types
-    any;
-
-// Advanced conditional type parser for "when" syntax
+// Enhanced condition parser with better error handling
 export type ParseWhenCondition<T extends string> =
-    T extends `${infer Field}=${infer Value}` ? { field: Field; operator: "="; value: Value } :
-    T extends `${infer Field}!=${infer Value}` ? { field: Field; operator: "!="; value: Value } :
-    T extends `${infer Field}>${infer Value}` ? { field: Field; operator: ">"; value: Value } :
-    T extends `${infer Field}<${infer Value}` ? { field: Field; operator: "<"; value: Value } :
-    T extends `${infer Field}>=${infer Value}` ? { field: Field; operator: ">="; value: Value } :
-    T extends `${infer Field}<=${infer Value}` ? { field: Field; operator: "<="; value: Value } :
-    T extends `${infer Field}.exists` ? { field: Field; operator: "exists"; value: true } :
-    T extends `${infer Field}.in(${infer Values})` ? { field: Field; operator: "in"; value: Values } :
-    never;
+  // Method-based conditions (most specific first)
+  T extends `${infer Field}.!exists`
+    ? { field: Field; operator: "!exists"; value: true }
+    : T extends `${infer Field}.exists`
+      ? { field: Field; operator: "exists"; value: true }
+      : T extends `${infer Field}.!empty`
+        ? { field: Field; operator: "!empty"; value: true }
+        : T extends `${infer Field}.empty`
+          ? { field: Field; operator: "empty"; value: true }
+          : T extends `${infer Field}.!null`
+            ? { field: Field; operator: "!null"; value: true }
+            : T extends `${infer Field}.null`
+              ? { field: Field; operator: "null"; value: true }
+              : T extends `${infer Field}.!in(${infer Values})`
+                ? { field: Field; operator: "!in"; value: Values }
+                : T extends `${infer Field}.in(${infer Values})`
+                  ? { field: Field; operator: "in"; value: Values }
+                  : T extends `${infer Field}.!contains(${infer Value})`
+                    ? { field: Field; operator: "!contains"; value: Value }
+                    : T extends `${infer Field}.contains(${infer Value})`
+                      ? { field: Field; operator: "contains"; value: Value }
+                      : T extends `${infer Field}.startsWith(${infer Value})`
+                        ? { field: Field; operator: "startsWith"; value: Value }
+                        : T extends `${infer Field}.endsWith(${infer Value})`
+                          ? { field: Field; operator: "endsWith"; value: Value }
+                          : // Operator-based conditions
+                            T extends `${infer Field}!~${infer Value}`
+                            ? { field: Field; operator: "!~"; value: Value }
+                            : T extends `${infer Field}~${infer Value}`
+                              ? { field: Field; operator: "~"; value: Value }
+                              : T extends `${infer Field}!=${infer Value}`
+                                ? { field: Field; operator: "!="; value: Value }
+                                : T extends `${infer Field}>=${infer Value}`
+                                  ? {
+                                      field: Field;
+                                      operator: ">=";
+                                      value: Value;
+                                    }
+                                  : T extends `${infer Field}<=${infer Value}`
+                                    ? {
+                                        field: Field;
+                                        operator: "<=";
+                                        value: Value;
+                                      }
+                                    : T extends `${infer Field}>${infer Value}`
+                                      ? {
+                                          field: Field;
+                                          operator: ">";
+                                          value: Value;
+                                        }
+                                      : T extends `${infer Field}<${infer Value}`
+                                        ? {
+                                            field: Field;
+                                            operator: "<";
+                                            value: Value;
+                                          }
+                                        : T extends `${infer Field}=${infer Value}`
+                                          ? {
+                                              field: Field;
+                                              operator: "=";
+                                              value: Value;
+                                            }
+                                          : never;
 
+// ============================================================================
+// FIELD TYPE INFERENCE - Easier to extend with new patterns
+// ============================================================================
 
+// Core constant type inference
+type InferConstantType<T extends string> = T extends `=${infer ConstValue}`
+  ? ConstValue extends "true"
+    ? true
+    : ConstValue extends "false"
+      ? false
+      : ConstValue extends `${number}`
+        ? number
+        : ConstValue
+  : T extends `=${infer ConstValue}?`
+    ? ConstValue extends "true"
+      ? true | undefined
+      : ConstValue extends "false"
+        ? false | undefined
+        : ConstValue extends `${number}`
+          ? number | undefined
+          : ConstValue | undefined
+    : never;
 
-// Smart conditional type inference that evaluates conditions when possible
-export type InferConditionalType<
-    TCondition extends string,
-    TThenType extends string,
-    TElseType extends string,
-    TSchema extends SchemaInterface
-> = ParseWhenCondition<TCondition> extends { field: infer Field; operator: infer Op; value: infer Value }
+// Enhanced conditional type inference
+type InferConditionalType<T extends string> =
+  // "*?" syntax (most concise)
+  T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}`
+    ? InferFieldType<ThenType> | InferFieldType<ElseType>
+    : T extends `when ${infer Condition} *? ${infer ThenType}`
+      ? InferFieldType<ThenType>
+      : // Parentheses syntax (readable)
+        T extends `when(${infer Condition}) then(${infer ThenType}) else(${infer ElseType})`
+        ? InferFieldType<ThenType> | InferFieldType<ElseType>
+        : T extends `when(${infer Condition}) then(${infer ThenType})`
+          ? InferFieldType<ThenType>
+          : // Ternary-like syntax (familiar)
+            T extends `${infer Condition} ? ${infer ThenType} : ${infer ElseType}`
+            ? InferFieldType<ThenType> | InferFieldType<ElseType>
+            : // Legacy colon syntax (backward compatibility)
+              T extends `when:${infer Condition}:${infer ThenType}:${infer ElseType}`
+              ? InferFieldType<ThenType> | InferFieldType<ElseType>
+              : T extends `when:${infer Condition}:${infer ThenType}`
+                ? InferFieldType<ThenType>
+                : never;
+
+// Base type inference with extensible type map
+type InferBaseType<T extends string> = T extends keyof BaseTypeMap
+  ? BaseTypeMap[T]
+  : T extends `${infer BaseType}?`
+    ? BaseType extends keyof BaseTypeMap
+      ? BaseTypeMap[BaseType] | undefined
+      : never
+    : never;
+
+// Array type inference
+type InferArrayType<T extends string> = T extends `${infer ElementType}[]`
+  ? ElementType extends keyof BaseTypeMap
+    ? BaseTypeMap[ElementType][]
+    : ElementType extends `${string}|${string}`
+      ? ParseUnion<ElementType>[]
+      : any[]
+  : T extends `${infer ElementType}[]?`
+    ? ElementType extends keyof BaseTypeMap
+      ? BaseTypeMap[ElementType][] | undefined
+      : ElementType extends `${string}|${string}`
+        ? ParseUnion<ElementType>[] | undefined
+        : any[] | undefined
+    : never;
+
+// Record type inference with better key handling
+type InferRecordType<T extends string> =
+  T extends `record<${infer KeyType},${infer ValueType}>`
+    ? KeyType extends "string" | "number" | "symbol"
+      ? Record<string, InferFieldType<ValueType>>
+      : Record<string, InferFieldType<ValueType>>
+    : T extends `record<${infer KeyType},${infer ValueType}>?`
+      ? KeyType extends "string" | "number" | "symbol"
+        ? Record<string, InferFieldType<ValueType>> | undefined
+        : Record<string, InferFieldType<ValueType>> | undefined
+      : T extends `map<${infer KeyType},${infer ValueType}>`
+        ? Record<string, InferFieldType<ValueType>>
+        : T extends `map<${infer KeyType},${infer ValueType}>?`
+          ? Record<string, InferFieldType<ValueType>> | undefined
+          : never;
+
+// Constraint type inference
+type InferConstrainedType<T extends string> =
+  T extends `${infer BaseType}(${infer Constraints})`
+    ? BaseType extends keyof BaseTypeMap
+      ? BaseTypeMap[BaseType]
+      : BaseType extends `${infer ArrayType}[]`
+        ? ArrayType extends keyof BaseTypeMap
+          ? BaseTypeMap[ArrayType][]
+          : any[]
+        : any
+    : T extends `${infer BaseType}(${infer Constraints})?`
+      ? BaseType extends keyof BaseTypeMap
+        ? BaseTypeMap[BaseType] | undefined
+        : BaseType extends `${infer ArrayType}[]`
+          ? ArrayType extends keyof BaseTypeMap
+            ? BaseTypeMap[ArrayType][] | undefined
+            : any[] | undefined
+          : any | undefined
+      : never;
+
+// Regex pattern inference
+type InferRegexType<T extends string> =
+  T extends `${infer BaseType}(/${string}/)`
+    ? BaseType extends keyof BaseTypeMap
+      ? BaseTypeMap[BaseType]
+      : string
+    : T extends `${infer BaseType}(/${string}/)?`
+      ? BaseType extends keyof BaseTypeMap
+        ? BaseTypeMap[BaseType] | undefined
+        : string | undefined
+      : never;
+
+// ============================================================================
+// MAIN FIELD TYPE INFERENCE - Now  extensible
+// ============================================================================
+
+export type InferFieldType<T> = T extends string
+  ? // Try each inference type in order of specificity
+    InferConstantType<T> extends never
+    ? InferConditionalType<T> extends never
+      ? T extends `${string}|${string}`
+        ? T extends `${infer UnionType}?`
+          ? ParseUnion<UnionType> | undefined
+          : ParseUnion<T>
+        : InferArrayType<T> extends never
+          ? InferRecordType<T> extends never
+            ? InferConstrainedType<T> extends never
+              ? InferRegexType<T> extends never
+                ? InferBaseType<T> extends never
+                  ? any // Fallback for unknown types
+                  : InferBaseType<T>
+                : InferRegexType<T>
+              : InferConstrainedType<T>
+            : InferRecordType<T>
+          : InferArrayType<T>
+      : InferConditionalType<T>
+    : InferConstantType<T>
+  : any;
+
+// ============================================================================
+// ENHANCED CONDITIONAL EVALUATION - More sophisticated condition handling
+// ============================================================================
+
+export type InferConditionalTypeAdvanced<
+  TCondition extends string,
+  TThenType extends string,
+  TElseType extends string,
+  TSchema extends SchemaInterface,
+> =
+  ParseWhenCondition<TCondition> extends {
+    field: infer Field;
+    operator: infer Op;
+    value: infer Value;
+  }
     ? Field extends keyof TSchema
-        ? TSchema[Field] extends string
-            ? Op extends "="
-                ? TSchema[Field] extends `${string}|${string}`
-                    ? Value extends ParseUnion<TSchema[Field]>
-                        ? InferFieldType<TThenType>  // Condition can be true
-                        : InferFieldType<TElseType>  // Condition is definitely false
-                    : TSchema[Field] extends Value
-                        ? InferFieldType<TThenType>  // Exact match
-                        : InferFieldType<TElseType>  // No match
-                : Op extends "!="
-                    ? TSchema[Field] extends Value
-                        ? InferFieldType<TElseType>  // Condition is false (values match)
-                        : InferFieldType<TThenType>  // Condition is true (values don't match)
-                : InferFieldType<TThenType> | InferFieldType<TElseType>  // Complex conditions - use union
-            : InferFieldType<TThenType> | InferFieldType<TElseType>  // Non-string field - use union
-        : InferFieldType<TThenType> | InferFieldType<TElseType>  // Field not in schema - use union
-    : InferFieldType<TThenType> | InferFieldType<TElseType>;  // Can't parse condition - use union
+      ? TSchema[Field] extends string
+        ? // Enhanced condition evaluation
+          Op extends "="
+          ? TSchema[Field] extends `${string}|${string}`
+            ? Value extends ParseUnion<TSchema[Field]>
+              ? InferFieldType<TThenType>
+              : InferFieldType<TElseType>
+            : TSchema[Field] extends Value
+              ? InferFieldType<TThenType>
+              : InferFieldType<TElseType>
+          : Op extends "!="
+            ? TSchema[Field] extends Value
+              ? InferFieldType<TElseType>
+              : InferFieldType<TThenType>
+            : Op extends "exists"
+              ? InferFieldType<TThenType> // Field exists in schema
+              : Op extends "!exists"
+                ? InferFieldType<TElseType> // Field exists in schema
+                : // For complex operators, use union type
+                  InferFieldType<TThenType> | InferFieldType<TElseType>
+        : InferFieldType<TThenType> | InferFieldType<TElseType>
+      : InferFieldType<TThenType> | InferFieldType<TElseType>
+    : InferFieldType<TThenType> | InferFieldType<TElseType>;
 
-// Helper type to infer types from schema field values with conditional support
+// ============================================================================
+// ENHANCED SCHEMA FIELD TYPE INFERENCE - Better handling of complex types
+// ============================================================================
+
 export type InferSchemaFieldType<T, TSchema extends SchemaInterface = {}> =
-    // Handle union values first (most specific)
-    T extends UnionValue<infer U> ? U[number] :
-    // Handle constant values
-    T extends ConstantValue ? T["const"] :
-    T extends OptionalConstantValue ? T["const"] | undefined :
-    // Handle When.field() builder results
-    T extends { __conditional: true; __inferredType: infer U } ? U :
-    // Handle revolutionary "*?" syntax FIRST
-    T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}` ?
-        InferConditionalType<Condition, ThenType, ElseType, TSchema> :
-    T extends `when ${infer Condition} *? ${infer ThenType}` ?
-        InferFieldType<ThenType> :
+  // Handle union values (most specific)
+  T extends UnionValue<infer U>
+    ? U[number]
+    : // Handle constant values
+      T extends ConstantValue
+      ? T["const"]
+      : T extends OptionalConstantValue
+        ? T["const"] | undefined
+        : // Handle conditional builder results
+          T extends { __conditional: true; __inferredType: infer U }
+          ? U
+          : // Handle conditional syntax patterns
+            T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}`
+            ? InferConditionalTypeAdvanced<
+                Condition,
+                ThenType,
+                ElseType,
+                TSchema
+              >
+            : T extends `when ${infer Condition} *? ${infer ThenType}`
+              ? InferFieldType<ThenType>
+              : T extends `when(${infer Condition}) then(${infer ThenType}) else(${infer ElseType})`
+                ? InferConditionalTypeAdvanced<
+                    Condition,
+                    ThenType,
+                    ElseType,
+                    TSchema
+                  >
+                : T extends `when(${infer Condition}) then(${infer ThenType})`
+                  ? InferFieldType<ThenType>
+                  : T extends `${infer Condition} ? ${infer ThenType} : ${infer ElseType}`
+                    ? InferConditionalTypeAdvanced<
+                        Condition,
+                        ThenType,
+                        ElseType,
+                        TSchema
+                      >
+                    : T extends `when:${infer Condition}:${infer ThenType}:${infer ElseType}`
+                      ? InferConditionalTypeAdvanced<
+                          Condition,
+                          ThenType,
+                          ElseType,
+                          TSchema
+                        >
+                      : T extends `when:${infer Condition}:${infer ThenType}`
+                        ? InferFieldType<ThenType>
+                        : // Handle string field types
+                          T extends string
+                          ? InferFieldType<T>
+                          : // Handle nested objects
+                            T extends SchemaInterface
+                            ? InferSchemaType<T>
+                            : T extends OptionalSchemaInterface
+                              ? InferSchemaType<T["schema"]> | undefined
+                              : // Handle arrays
+                                T extends readonly [infer U]
+                                ? InferSchemaFieldType<U, TSchema>[]
+                                : T extends (infer U)[]
+                                  ? InferSchemaFieldType<U, TSchema>[]
+                                  : // Enhanced fallback
+                                    any;
 
-    // Handle parentheses syntax SECOND
-    T extends `when(${infer Condition}) then(${infer ThenType}) else(${infer ElseType})` ?
-        InferConditionalType<Condition, ThenType, ElseType, TSchema> :
-    T extends `when(${infer Condition}) then(${infer ThenType})` ?
-        InferFieldType<ThenType> :
+// ============================================================================
+// UTILITY TYPES - Enhanced with better optional field detection
+// ============================================================================
 
-    // Handle legacy conditional "when:" syntax THIRD
-    T extends `when:${infer Condition}:${infer ThenType}:${infer ElseType}` ?
-        InferConditionalType<Condition, ThenType, ElseType, TSchema> :
-    T extends `when:${infer Condition}:${infer ThenType}` ?
-        InferFieldType<ThenType> :
-    // Handle string field types (including union types)
-    T extends string ? InferFieldType<T> :
-    // Handle nested objects
-    T extends SchemaInterface ? InferSchemaType<T> :
-    // Handle optional nested objects
-    T extends OptionalSchemaInterface ? InferSchemaType<T["schema"]> | undefined :
-    // Handle array schemas [elementType]
-    T extends readonly [infer U] ? InferSchemaFieldType<U, TSchema>[] :
-    T extends (infer U)[] ? InferSchemaFieldType<U, TSchema>[] :
-    // Fallback
-    any;
+// More comprehensive optional field detection
+export type IsOptionalField<T> = T extends string
+  ? T extends `${string}?`
+    ? true
+    : false
+  : T extends OptionalConstantValue
+    ? true
+    : T extends OptionalSchemaInterface
+      ? true
+      : T extends { __optional: true }
+        ? true
+        : false;
 
-// Helper to check if a field is optional
-export type IsOptionalField<T> =
-    T extends string ? (T extends `${string}?` ? true : false) :
-    false;
-
-// Helper to get required fields
+// Enhanced required/optional field helpers
 export type RequiredFields<T extends SchemaInterface> = {
-    [K in keyof T]: IsOptionalField<T[K]> extends true ? never : K
+  [K in keyof T]: IsOptionalField<T[K]> extends true ? never : K;
 }[keyof T];
 
-// Helper to get optional fields
 export type OptionalFields<T extends SchemaInterface> = {
-    [K in keyof T]: IsOptionalField<T[K]> extends true ? K : never
+  [K in keyof T]: IsOptionalField<T[K]> extends true ? K : never;
 }[keyof T];
 
-// Main type to infer the complete schema type with proper optional handling and conditional context
-export type InferSchemaType<T extends SchemaInterface> =
-    // Required fields with schema context for conditional types
-    { [K in RequiredFields<T>]: InferSchemaFieldType<T[K], T> } &
-    // Optional fields with schema context for conditional types
-    { [K in OptionalFields<T>]?: InferSchemaFieldType<T[K], T> };
+// ============================================================================
+// MAIN SCHEMA TYPE INFERENCE - Enhanced with better performance
+// ============================================================================
 
-
-
-export type TypeToSchema<T> =
-    T extends string ? "string" :
-    T extends number ? "number" :
-    T extends boolean ? "boolean" :
-    T extends Date ? "date" :
-    T extends string[] ? "string[]" :
-    T extends number[] ? "number[]" :
-    T extends boolean[] ? "boolean[]" :
-    T extends Array<string> ? "string[]" :
-    T extends Array<number> ? "number[]" :
-    T extends Array<boolean> ? "boolean[]" :
-    // Check for specific Record patterns ONLY if they're explicitly Record types with index signatures
-    T extends Record<string, string> & { [K in keyof T]: string } ? "record<string,string>" :
-    T extends Record<string, number> & { [K in keyof T]: number } ? "record<string,number>" :
-    T extends Record<string, boolean> & { [K in keyof T]: boolean } ? "record<string,boolean>" :
-    // For complex named object types (like User, Product, etc.), preserve the original type!
-    // This must come BEFORE the generic Record<string, any> check
-    T extends object ? T :
-    "any";
-
-// Type to automatically generate schema interface from TypeScript type
-export type InterfaceSchemaFromType<T> = {
-    [K in keyof T]: TypeToSchema<T[K]>
+export type InferSchemaType<T extends SchemaInterface> = {
+  [K in RequiredFields<T>]: InferSchemaFieldType<T[K], T>;
+} & {
+  [K in OptionalFields<T>]?: InferSchemaFieldType<T[K], T>;
 };
+
+// ============================================================================
+// REVERSE TYPE MAPPING - Enhanced with better object handling
+// ============================================================================
+
+export type TypeToSchema<T> = T extends string
+  ? "string"
+  : T extends number
+    ? "number"
+    : T extends boolean
+      ? "boolean"
+      : T extends Date
+        ? "date"
+        : T extends string[]
+          ? "string[]"
+          : T extends number[]
+            ? "number[]"
+            : T extends boolean[]
+              ? "boolean[]"
+              : T extends Array<infer U>
+                ? U extends string
+                  ? "string[]"
+                  : U extends number
+                    ? "number[]"
+                    : U extends boolean
+                      ? "boolean[]"
+                      : "any[]"
+                : // Enhanced Record type detection
+                  T extends Record<string, infer V>
+                  ? V extends string
+                    ? "record<string,string>"
+                    : V extends number
+                      ? "record<string,number>"
+                      : V extends boolean
+                        ? "record<string,boolean>"
+                        : "record<string,any>"
+                  : // Preserve complex named object types
+                    T extends object
+                    ? T
+                    : "any";
+
+// Enhanced interface generation from TypeScript types
+export type InterfaceSchemaFromType<T> = {
+  [K in keyof T]: TypeToSchema<T[K]>;
+};
+
+// ============================================================================
+// EXTENSIBILITY HELPERS - For adding new features easily
+// ============================================================================
+
+// Type for custom type extensions
+export interface CustomTypeRegistry {
+  // Add custom types here, e.g.:
+  // customType: CustomTypeDefinition;
+}
+
+// Helper for plugin-based type extensions
+export type ExtendedBaseTypeMap = BaseTypeMap & CustomTypeRegistry;
+
+// Future-proof conditional operator extensions
+export interface CustomOperatorRegistry {
+  // Add custom operators here, e.g.:
+  // customOp: "custom_operation";
+}
+
+export type ExtendedOperatorMap = OperatorMap & CustomOperatorRegistry;
+
+// ============================================================================
+// PERFORMANCE OPTIMIZATIONS - Reduced recursion depth
+// ============================================================================
+
+// Cached type lookups for better performance
+type TypeCache<T extends string> = T extends keyof BaseTypeMap
+  ? BaseTypeMap[T]
+  : never;
+
+// Optimized union parsing with tail recursion optimization
+type OptimizedParseUnion<
+  T extends string,
+  Acc extends string = never,
+> = T extends `${infer First}|${infer Rest}`
+  ? OptimizedParseUnion<Rest, Acc | First>
+  : Acc | T;
+
+// Export optimized versions for heavy usage
+export type FastInferFieldType<T extends string> =
+  TypeCache<T> extends never ? InferFieldType<T> : TypeCache<T>;
+
+export type FastParseUnion<T extends string> = OptimizedParseUnion<T>;

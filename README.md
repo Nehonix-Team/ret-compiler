@@ -459,12 +459,41 @@ import { When } from 'fortify-schema';
 
 **Condition Operators:**
 
+**Comparison Operators:**
+
 - `=` - Equality: `"when role=admin *? ..."`
 - `!=` - Not equal: `"when status!=pending *? ..."`
 - `>`, `>=` - Greater than: `"when age>=18 *? ..."`
 - `<`, `<=` - Less than: `"when score<50 *? ..."`
+
+**Pattern Operators:**
+
+- `~` - Regex match: `"when email~^admin *? ..."`
+- `!~` - Negative regex: `"when email!~@temp *? ..."`
+
+**Existence Operators:**
+
 - `.exists` - Field exists: `"when email.exists *? ..."`
+- `.!exists` - Field does not exist: `"when email.!exists *? ..."`
+
+**State Operators:**
+
+- `.empty` - Field is empty: `"when description.empty *? ..."`
+- `.!empty` - Field is not empty: `"when tags.!empty *? ..."`
+- `.null` - Field is null: `"when optional.null *? ..."`
+- `.!null` - Field is not null: `"when required.!null *? ..."`
+
+**Array Operators:**
+
 - `.in(a,b,c)` - Value in array: `"when role.in(admin,mod) *? ..."`
+- `.!in(a,b,c)` - Value not in array: `"when role.!in(guest) *? ..."`
+
+**String Operators:**
+
+- `.startsWith(value)` - String starts with: `"when filename.startsWith(temp_) *? ..."`
+- `.endsWith(value)` - String ends with: `"when filename.endsWith(.tmp) *? ..."`
+- `.contains(value)` - String contains: `"when path.contains(/secure/) *? ..."`
+- `.!contains(value)` - String does not contain: `"when path.!contains(/temp/) *? ..."`
 
 **Benefits of the `*?` syntax:**
 

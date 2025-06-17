@@ -8,7 +8,7 @@
  *
  * ### 1. Interface-based (Recommended - TypeScript-like)
  * ```typescript
- * import { Interface } from '@fortifyjs/core/schema';
+ * import { Interface } from "fortify-schema";
  *
  * const UserSchema = Interface({
  *   id: "number",
@@ -25,7 +25,7 @@
  *
  * ### 2. Fluent API (Traditional)
  * ```typescript
- * import { Schema } from '@fortifyjs/core/schema';
+ * import { Schema } from "fortify-schema";
  *
  * const UserSchema = Schema.object({
  *   id: Schema.number().int().positive(),
@@ -39,10 +39,18 @@
  * ```
  */
 
-
 // Interface-based Schema (Recommended)
-export { Interface, FieldTypes, QuickSchemas, Mod } from "./schema/mode/interfaces/Interface";
-export type { InferType, SchemaInterface, SchemaFieldType } from "./schema/mode/interfaces/Interface";
+export {
+  Interface,
+  FieldTypes,
+  QuickSchemas,
+  Mod,
+} from "./schema/mode/interfaces/Interface";
+export type {
+  InferType,
+  SchemaInterface,
+  SchemaFieldType,
+} from "./schema/mode/interfaces/Interface";
 
 // Traditional fluent API Schema
 export { Schema } from "./schema/mode/general/Schema";
@@ -59,16 +67,16 @@ export { ObjectSchema } from "./schema/mode/general/ObjectSchema";
 
 // Type definitions
 export type {
-    SchemaValidationResult,
-    BaseSchemaOptions,
-    StringSchemaOptions,
-    NumberSchemaOptions,
-    BooleanSchemaOptions,
-    ArraySchemaOptions,
-    ObjectSchemaOptions,
-    SchemaType,
-    SchemaDefinition,
-    SchemaConfig,
+  SchemaValidationResult,
+  BaseSchemaOptions,
+  StringSchemaOptions,
+  NumberSchemaOptions,
+  BooleanSchemaOptions,
+  ArraySchemaOptions,
+  ObjectSchemaOptions,
+  SchemaType,
+  SchemaDefinition,
+  SchemaConfig,
 } from "./types/types";
 
 // extensions

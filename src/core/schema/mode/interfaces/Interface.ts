@@ -5,7 +5,7 @@
  *
  * @example
  * ```typescript
- * import { Interface } from '@fortifyjs/core/schema';
+ * import { Interface } from "fortify-schema";
  *
  * // Define schema like a TypeScript interface
  * const UserSchema = Interface({
@@ -29,13 +29,13 @@
 
 import { InterfaceSchema } from "./InterfaceSchema";
 import {
-    ConstantValue,
-    OptionalConstantValue,
-    OptionalSchemaInterface,
-    SchemaInterface,
-    SchemaOptions,
-    SchemaFieldType,
-    UnionValue,
+  ConstantValue,
+  OptionalConstantValue,
+  OptionalSchemaInterface,
+  SchemaInterface,
+  SchemaOptions,
+  SchemaFieldType,
+  UnionValue,
 } from "../../../types/SchemaValidator.type";
 import { InferSchemaType } from "./types/interface.type";
 
@@ -100,10 +100,10 @@ import { InferSchemaType } from "./types/interface.type";
  * ```
  */
 export function Interface<const T extends SchemaInterface>(
-    definition: T,
-    options?: SchemaOptions
+  definition: T,
+  options?: SchemaOptions
 ): InterfaceSchema<InferSchemaType<T>> {
-    return new InterfaceSchema<InferSchemaType<T>>(definition, options);
+  return new InterfaceSchema<InferSchemaType<T>>(definition, options);
 }
 
 /**
@@ -131,144 +131,142 @@ export function Interface<const T extends SchemaInterface>(
  * ```
  */
 export type InferType<T extends InterfaceSchema<any>> =
-    T extends InterfaceSchema<infer U> ? U : never;
+  T extends InterfaceSchema<infer U> ? U : never;
 
 // Export the main inference type for direct use
 export type { InferSchemaType };
 
 // Re-export types for convenience
 export type {
-    SchemaInterface,
-    SchemaOptions,
-    SchemaFieldType,
-    ConstantValue,
+  SchemaInterface,
+  SchemaOptions,
+  SchemaFieldType,
+  ConstantValue,
 } from "../../../types/SchemaValidator.type";
 export { InterfaceSchema } from "./InterfaceSchema";
-
 
 /**
  * Available field types for schema definitions
  */
 export const FieldTypes = {
-    // Basic types
-    STRING: "string" as const,
-    STRING_OPTIONAL: "string?" as const,
-    NUMBER: "number" as const,
-    NUMBER_OPTIONAL: "number?" as const,
-    BOOLEAN: "boolean" as const,
-    BOOLEAN_OPTIONAL: "boolean?" as const,
-    DATE: "date" as const,
-    DATE_OPTIONAL: "date?" as const,
-    ANY: "any" as const,
-    ANY_OPTIONAL: "any?" as const,
+  // Basic types
+  STRING: "string" as const,
+  STRING_OPTIONAL: "string?" as const,
+  NUMBER: "number" as const,
+  NUMBER_OPTIONAL: "number?" as const,
+  BOOLEAN: "boolean" as const,
+  BOOLEAN_OPTIONAL: "boolean?" as const,
+  DATE: "date" as const,
+  DATE_OPTIONAL: "date?" as const,
+  ANY: "any" as const,
+  ANY_OPTIONAL: "any?" as const,
 
-    // String formats
-    EMAIL: "email" as const,
-    EMAIL_OPTIONAL: "email?" as const,
-    URL: "url" as const,
-    URL_OPTIONAL: "url?" as const,
-    UUID: "uuid" as const,
-    UUID_OPTIONAL: "uuid?" as const,
-    PHONE: "phone" as const,
-    PHONE_OPTIONAL: "phone?" as const,
-    SLUG: "slug" as const,
-    SLUG_OPTIONAL: "slug?" as const,
-    USERNAME: "username" as const,
-    USERNAME_OPTIONAL: "username?" as const,
+  // String formats
+  EMAIL: "email" as const,
+  EMAIL_OPTIONAL: "email?" as const,
+  URL: "url" as const,
+  URL_OPTIONAL: "url?" as const,
+  UUID: "uuid" as const,
+  UUID_OPTIONAL: "uuid?" as const,
+  PHONE: "phone" as const,
+  PHONE_OPTIONAL: "phone?" as const,
+  SLUG: "slug" as const,
+  SLUG_OPTIONAL: "slug?" as const,
+  USERNAME: "username" as const,
+  USERNAME_OPTIONAL: "username?" as const,
 
-    // Number types
-    INT: "int" as const,
-    INT_OPTIONAL: "int?" as const,
-    POSITIVE: "positive" as const,
-    POSITIVE_OPTIONAL: "positive?" as const,
-    FLOAT: "float" as const,
-    FLOAT_OPTIONAL: "float?" as const,
+  // Number types
+  INT: "int" as const,
+  INT_OPTIONAL: "int?" as const,
+  POSITIVE: "positive" as const,
+  POSITIVE_OPTIONAL: "positive?" as const,
+  FLOAT: "float" as const,
+  FLOAT_OPTIONAL: "float?" as const,
 
-    // Array types
-    STRING_ARRAY: "string[]" as const,
-    STRING_ARRAY_OPTIONAL: "string[]?" as const,
-    NUMBER_ARRAY: "number[]" as const,
-    NUMBER_ARRAY_OPTIONAL: "number[]?" as const,
-    BOOLEAN_ARRAY: "boolean[]" as const,
-    BOOLEAN_ARRAY_OPTIONAL: "boolean[]?" as const,
-    INT_ARRAY: "int[]" as const,
-    INT_ARRAY_OPTIONAL: "int[]?" as const,
-    EMAIL_ARRAY: "email[]" as const,
-    EMAIL_ARRAY_OPTIONAL: "email[]?" as const,
-    URL_ARRAY: "url[]" as const,
-    URL_ARRAY_OPTIONAL: "url[]?" as const,
+  // Array types
+  STRING_ARRAY: "string[]" as const,
+  STRING_ARRAY_OPTIONAL: "string[]?" as const,
+  NUMBER_ARRAY: "number[]" as const,
+  NUMBER_ARRAY_OPTIONAL: "number[]?" as const,
+  BOOLEAN_ARRAY: "boolean[]" as const,
+  BOOLEAN_ARRAY_OPTIONAL: "boolean[]?" as const,
+  INT_ARRAY: "int[]" as const,
+  INT_ARRAY_OPTIONAL: "int[]?" as const,
+  EMAIL_ARRAY: "email[]" as const,
+  EMAIL_ARRAY_OPTIONAL: "email[]?" as const,
+  URL_ARRAY: "url[]" as const,
+  URL_ARRAY_OPTIONAL: "url[]?" as const,
 
-    // Record types
-    RECORD_STRING_ANY: "record<string,any>" as const,
-    RECORD_STRING_ANY_OPTIONAL: "record<string,any>?" as const,
-    RECORD_STRING_STRING: "record<string,string>" as const,
-    RECORD_STRING_STRING_OPTIONAL: "record<string,string>?" as const,
-    RECORD_STRING_NUMBER: "record<string,number>" as const,
-    RECORD_STRING_NUMBER_OPTIONAL: "record<string,number>?" as const,
+  // Record types
+  RECORD_STRING_ANY: "record<string,any>" as const,
+  RECORD_STRING_ANY_OPTIONAL: "record<string,any>?" as const,
+  RECORD_STRING_STRING: "record<string,string>" as const,
+  RECORD_STRING_STRING_OPTIONAL: "record<string,string>?" as const,
+  RECORD_STRING_NUMBER: "record<string,number>" as const,
+  RECORD_STRING_NUMBER_OPTIONAL: "record<string,number>?" as const,
 } as const;
 
 /**
  * Quick schema creation helpers
  */
 export const QuickSchemas = {
-    /**
-     * User schema with common fields
-     */
-    User: Interface({
-        id: "number",
-        email: "email",
-        name: "string",
-        createdAt: "date?",
-        updatedAt: "date?",
-    }),
+  /**
+   * User schema with common fields
+   */
+  User: Interface({
+    id: "number",
+    email: "email",
+    name: "string",
+    createdAt: "date?",
+    updatedAt: "date?",
+  }),
 
-    /**
-     * API response schema
-     */
-    APIResponse: Interface({
-        success: "boolean",
-        data: "any?",
-        errors: "string[]?",
-        timestamp: "date?",
-    }),
+  /**
+   * API response schema
+   */
+  APIResponse: Interface({
+    success: "boolean",
+    data: "any?",
+    errors: "string[]?",
+    timestamp: "date?",
+  }),
 
-    /**
-     * Pagination schema
-     */
-    Pagination: Interface({
-        page: "int",
-        limit: "int",
-        total: "int",
-        hasNext: "boolean?",
-        hasPrev: "boolean?",
-    }),
+  /**
+   * Pagination schema
+   */
+  Pagination: Interface({
+    page: "int",
+    limit: "int",
+    total: "int",
+    hasNext: "boolean?",
+    hasPrev: "boolean?",
+  }),
 
-    /**
-     * Address schema
-     */
-    Address: Interface({
-        street: "string",
-        city: "string",
-        state: "string?",
-        zipCode: "string",
-        country: "string",
-    }),
+  /**
+   * Address schema
+   */
+  Address: Interface({
+    street: "string",
+    city: "string",
+    state: "string?",
+    zipCode: "string",
+    country: "string",
+  }),
 
-    /**
-     * Contact info schema
-     */
-    Contact: Interface({
-        email: "email?",
-        phone: "phone?",
-        website: "url?",
-    }),
+  /**
+   * Contact info schema
+   */
+  Contact: Interface({
+    email: "email?",
+    phone: "phone?",
+    website: "url?",
+  }),
 };
 
 /**
  * Schema modification utilities - transform and combine schemas
  */
 export { Mod } from "../../../utils/Mod";
-
 
 /**
  * Helper functions for creating schema values
