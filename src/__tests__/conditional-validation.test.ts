@@ -2,8 +2,8 @@
  * Comprehensive tests for conditional validation implementation
  */
 
-import { InterfaceSchema } from "../InterfaceSchema";
-import { When } from "../../../extensions/components/ConditionalValidation/When";
+import { When } from "../core/schema/extensions";
+import { InterfaceSchema } from "../core/schema/mode/interfaces/InterfaceSchema";
 
 describe("Conditional Validation Implementation", () => {
   describe("Revolutionary *? Syntax", () => {

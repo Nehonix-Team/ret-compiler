@@ -6,6 +6,10 @@
 [![Build Status](https://github.com/Nehonix-Team/fortify-schema/workflows/CI/badge.svg)](https://github.com/Nehonix-Team/fortify-schema/actions)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/fortify-schema)](https://bundlephobia.com/package/fortify-schema)
 
+<div align="center">
+  <img src="https://sdk.nehonix.space/sdks/assets/fortify%20schema.jpg" alt="Fortify Schema Logo" width="400" />
+</div>
+
 **A TypeScript-first schema validation library with interface-like syntax that's intuitive, type-safe, and powerful.**
 
 ## Documentation Navigation

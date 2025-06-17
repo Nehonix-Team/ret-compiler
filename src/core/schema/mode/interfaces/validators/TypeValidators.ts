@@ -5,7 +5,7 @@
  * to improve maintainability and reduce file size.
  */
 
-import { SchemaValidationResult,  } from "../../../../types/types";
+import { SchemaValidationResult } from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
 
 /**
@@ -310,7 +310,7 @@ export class TypeValidators {
   }
 
   /**
-   * Validate email format
+   * Validate email format with comprehensive RFC 5322 compliance and plus addressing support
    */
   static validateEmail(value: any): SchemaValidationResult {
     const result: SchemaValidationResult = {
@@ -323,9 +323,81 @@ export class TypeValidators {
     if (typeof value !== "string") {
       result.success = false;
       result.errors.push("Expected string for email");
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return result;
+    }
+
+    // Comprehensive email validation with plus addressing support
+    // RFC 5322 compliant regex that includes plus addressing
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+    if (!emailRegex.test(value)) {
       result.success = false;
       result.errors.push("Invalid email format");
+      return result;
+    }
+
+    // Additional validation checks
+    if (value.length > 254) {
+      result.success = false;
+      result.errors.push("Email address is too long (max 254 characters)");
+      return result;
+    }
+
+    const [localPart, domain] = value.split("@");
+
+    // Local part validation
+    if (localPart.length > 64) {
+      result.success = false;
+      result.errors.push("Email local part is too long (max 64 characters)");
+      return result;
+    }
+
+    // Check for consecutive dots
+    if (localPart.includes("..")) {
+      result.success = false;
+      result.errors.push("Email local part cannot contain consecutive dots");
+      return result;
+    }
+
+    // Check for leading/trailing dots
+    if (localPart.startsWith(".") || localPart.endsWith(".")) {
+      result.success = false;
+      result.errors.push("Email local part cannot start or end with a dot");
+      return result;
+    }
+
+    // Plus addressing detection and validation
+    if (localPart.includes("+")) {
+      result.warnings.push("Email uses plus addressing (alias detected)");
+
+      // Validate plus addressing format
+      const plusIndex = localPart.indexOf("+");
+      const basePart = localPart.substring(0, plusIndex);
+      const tagPart = localPart.substring(plusIndex + 1);
+
+      if (basePart.length === 0) {
+        result.success = false;
+        result.errors.push("Email local part cannot start with plus sign");
+        return result;
+      }
+
+      if (tagPart.length === 0) {
+        result.warnings.push("Empty tag in plus addressing");
+      }
+    }
+
+    // Domain validation
+    if (domain.length > 253) {
+      result.success = false;
+      result.errors.push("Email domain is too long (max 253 characters)");
+      return result;
+    }
+
+    if (domain.includes("..")) {
+      result.success = false;
+      result.errors.push("Email domain cannot contain consecutive dots");
+      return result;
     }
 
     return result;
