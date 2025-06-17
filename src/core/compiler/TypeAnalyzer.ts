@@ -129,7 +129,7 @@ export class TypeAnalyzer {
             };
         }
 
-        // Handle arrays
+        // Handle arrays 
         if (this.checker.isArrayType(nonOptionalType)) {
             const elementType = this.checker.getElementTypeOfArrayType(nonOptionalType);
             return {

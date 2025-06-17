@@ -119,14 +119,14 @@ const schema = Interface({
 
 // TypeScript enforces correct types based on conditions
 const adminUser = {
-  role: "admin" as const,
+  role: "=admin" as const,
   permissions: ["read", "write"], // ✅ string[]
   maxProjects: 100               // ✅ number
 };
 
 // TypeScript catches errors at compile time
 const invalidUser = {
-  role: "admin" as const,
+  role: "=admin" as const,
   permissions: ["read", 2]  // ❌ TypeScript error: Type 'number' is not assignable to type 'string'
 };
 ```

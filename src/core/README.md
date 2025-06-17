@@ -34,7 +34,7 @@ const UserSchema = Interface({
     age: "number?", // Optional with ?
     isActive: "boolean?", // Optional with smart defaults
     tags: "string[]?", // Optional array
-    role: "admin", // Constant values
+    role: "=admin", // Constant values
 });
 ```
 
@@ -56,7 +56,7 @@ const UserSchema = Interface({
     age: "number?", // Optional
     isActive: "boolean?", // Optional
     tags: "string[]?", // Optional array
-    role: "admin", // Constant value
+    role: "=admin", // Constant value
     profile: {
         // Nested object
         bio: "string?",
@@ -330,7 +330,7 @@ const StrictSchema = Interface({
 // ❌ DANGEROUS - Looks like a string type but it's actually a constant!
 const BadSchema = Interface({
     status: "pending", // Is this a string type or constant "pending"?
-    role: "admin", // Very confusing and error-prone!
+    role: "=admin", // Very confusing and error-prone!
 });
 ```
 

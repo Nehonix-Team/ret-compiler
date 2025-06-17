@@ -10,15 +10,15 @@
 
 ## Documentation Navigation
 
-| Resource | Description |
-|----------|-------------|
-| **[Complete Documentation](./docs/README.md)** | Full documentation index with organized sections |
-| **[Quick Reference](./docs/QUICK-REFERENCE.md)** | Cheat sheet for common patterns and syntax |
-| **[Field Types Reference](./docs/FIELD-TYPES.md)** | Comprehensive guide to all available types and constraints |
-| **[Real-World Examples](./docs/EXAMPLES.md)** | Production-ready schemas for enterprise use |
-| **[Migration Guide](./docs/MIGRATION.md)** | Step-by-step migration from Zod, Joi, Yup |
-| **[Quick Start](#quick-start-guide)** | Get up and running in 5 minutes |
-| **[Schema Transformation](#schema-transformation-with-mod)** | Transform and combine schemas with Mod utilities |
+| Resource                                                     | Description                                                |
+| ------------------------------------------------------------ | ---------------------------------------------------------- |
+| **[Complete Documentation](./docs/README.md)**               | Full documentation index with organized sections           |
+| **[Quick Reference](./docs/QUICK-REFERENCE.md)**             | Cheat sheet for common patterns and syntax                 |
+| **[Field Types Reference](./docs/FIELD-TYPES.md)**           | Comprehensive guide to all available types and constraints |
+| **[Real-World Examples](./docs/EXAMPLES.md)**                | Production-ready schemas for enterprise use                |
+| **[Migration Guide](./docs/MIGRATION.md)**                   | Step-by-step migration from Zod, Joi, Yup                  |
+| **[Quick Start](#quick-start-guide)**                        | Get up and running in 5 minutes                            |
+| **[Schema Transformation](#schema-transformation-with-mod)** | Transform and combine schemas with Mod utilities           |
 
 ---
 
@@ -43,20 +43,21 @@ See why developers are migrating to Fortify Schema from traditional validation l
 
 ### Code Comparison
 
-| Traditional Libraries | Fortify Schema | Reduction |
-|----------------------|----------------|-----------|
-| **Zod** | **Fortify Schema** | **70% Less Code** |
-| `z.number().int().positive()` | `"positive"` | 24 → 10 chars |
-| `z.string().min(2).max(50)` | `"string(2,50)"` | 25 → 15 chars |
-| `z.array(z.string()).min(1).max(10)` | `"string[](1,10)"` | 33 → 17 chars |
-| `z.enum(["active", "inactive"])` | `"active\|inactive"` | 31 → 17 chars |
-| `z.string().optional()` | `"string?"` | 21 → 9 chars |
+| Traditional Libraries                | Fortify Schema       | Reduction         |
+| ------------------------------------ | -------------------- | ----------------- |
+| **Zod**                              | **Fortify Schema**   | **70% Less Code** |
+| `z.number().int().positive()`        | `"positive"`         | 24 → 10 chars     |
+| `z.string().min(2).max(50)`          | `"string(2,50)"`     | 25 → 15 chars     |
+| `z.array(z.string()).min(1).max(10)` | `"string[](1,10)"`   | 33 → 17 chars     |
+| `z.enum(["active", "inactive"])`     | `"active\|inactive"` | 31 → 17 chars     |
+| `z.string().optional()`              | `"string?"`          | 21 → 9 chars      |
 
 ### Real-World Schema Comparison
 
 **Traditional Approach (Zod):**
+
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 const UserSchema = z.object({
   id: z.number().int().positive(),
@@ -65,14 +66,15 @@ const UserSchema = z.object({
   age: z.number().int().min(18).max(120).optional(),
   tags: z.array(z.string()).min(1).max(10).optional(),
   status: z.enum(["active", "inactive", "pending"]),
-  role: z.literal("admin")
+  role: z.literal("admin"),
 });
 // 8 lines, 312 characters, complex method chaining
 ```
 
 **Fortify Schema Approach:**
+
 ```typescript
-import { Interface } from 'fortify-schema';
+import { Interface } from "fortify-schema";
 
 const UserSchema = Interface({
   id: "positive",
@@ -81,7 +83,7 @@ const UserSchema = Interface({
   age: "int(18,120)?",
   tags: "string[](1,10)?",
   status: "active|inactive|pending",
-  role: "admin"
+  role: "admin|user",
 });
 // 8 lines, 156 characters, TypeScript-like syntax
 ```
@@ -91,24 +93,31 @@ const UserSchema = Interface({
 ### Revolutionary Conditional Validation
 
 **Problem with Existing Libraries:**
+
 ```typescript
 // Zod - Requires complex workarounds
-const schema = z.object({
-  role: z.enum(['admin', 'user']),
-  permissions: z.array(z.string()).optional()
-}).refine((data) => {
-  if (data.role === 'admin' && !data.permissions) {
-    return false;
-  }
-  return true;
-}, { message: "Admin users must have permissions" });
+const schema = z
+  .object({
+    role: z.enum(["admin", "user"]),
+    permissions: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.role === "admin" && !data.permissions) {
+        return false;
+      }
+      return true;
+    },
+    { message: "Admin users must have permissions" }
+  );
 ```
 
 **Fortify Schema Solution:**
+
 ```typescript
 const schema = Interface({
   role: "admin|user",
-  permissions: "when role=admin *? string[] : string[]?"
+  permissions: "when role=admin *? string[] : string[]?",
 });
 // Built-in conditional validation with perfect TypeScript inference
 ```
@@ -118,16 +127,19 @@ const schema = Interface({
 ### Why Developers Choose Fortify Schema
 
 **Dramatic Simplification**
+
 - Up to 70% reduction in schema definition code
 - TypeScript interface-like syntax developers already know
 - Single import for most validation scenarios
 
 **Superior Type Safety**
+
 - Exact literal types instead of generic unions
 - Revolutionary conditional validation with compile-time inference
 - Perfect IDE integration with autocomplete and error detection
 
 **Enterprise Performance**
+
 - Optimized validation algorithms
 - Tree-shakable architecture for minimal bundle impact
 - Zero runtime type overhead
@@ -139,16 +151,16 @@ const schema = Interface({
 ### Clean, Intuitive Syntax
 
 ```typescript
-import { Interface } from 'fortify-schema';
+import { Interface } from "fortify-schema";
 
 const UserSchema = Interface({
   id: "number",
   email: "email",
-  name: "string(2,50)",                    // Length constraints
-  age: "number(18,120)?",                  // Range with optional
-  tags: "string[](1,10)?",                 // Array constraints
-  status: "active|inactive",               // Union types - pure TypeScript syntax!
-  role: "admin"                            // Literal constants - just the value!
+  name: "string(2,50)", // Length constraints
+  age: "number(18,120)?", // Range with optional
+  tags: "string[](1,10)?", // Array constraints
+  status: "active|inactive", // Union types - pure TypeScript syntax!
+  role: "=admin", // Literal constants - use =value syntax
 });
 ```
 
@@ -159,16 +171,16 @@ const result = UserSchema.safeParse(userData);
 
 if (result.success && result.data) {
   // Perfect type inference - no manual definitions needed
-  result.data.status;  // "active" | "inactive" (exact union!)
-  result.data.role;    // "admin" (exact literal!)
-  result.data.age;     // number | undefined (perfect optionals!)
+  result.data.status; // "active" | "inactive" (exact union!)
+  result.data.role; // "admin" (exact literal!)
+  result.data.age; // number | undefined (perfect optionals!)
 }
 
 // Compile-time safety prevents runtime errors
 UserSchema.safeParse({
   id: 1,
   name: "John",
-  invalidProp: "error"  // ❌ TypeScript ERROR caught at compile time
+  invalidProp: "error", // ❌ TypeScript ERROR caught at compile time
 });
 ```
 
@@ -185,29 +197,29 @@ const UserSchema = Interface({
   permissions: "when role=admin *? string[] : string[]?",
   maxProjects: "when accountType=free *? int(1,3) : int(1,)",
   paymentMethod: "when accountType!=free *? string : string?",
-  billingAddress: "when paymentMethod.exists *? string : string?"
+  billingAddress: "when paymentMethod.exists *? string : string?",
 });
 
 // TypeScript knows the EXACT type based on conditions
 const adminUser = {
-  role: "admin" as const,
+  role: "=admin" as const,
   permissions: ["read", "write", "delete"], // ✅ TypeScript: string[]
-  maxProjects: 100,                         // ✅ TypeScript: number
-  paymentMethod: "credit_card"              // ✅ TypeScript: string
+  maxProjects: 100, // ✅ TypeScript: number
+  paymentMethod: "credit_card", // ✅ TypeScript: string
 };
 
 const regularUser = {
-  role: "user" as const,
+  role: "=user" as const,
   accountType: "free" as const,
-  maxProjects: 2                           // ✅ TypeScript: number (1-3 range)
+  maxProjects: 2, // ✅ TypeScript: number (1-3 range)
   // permissions not allowed for regular users
   // paymentMethod not required for free users
 };
 
 // TypeScript catches conditional type mismatches at compile time
 const invalidUser = {
-  role: "user" as const,
-  permissions: ["read", 2]  // ❌ TypeScript ERROR: Type 'number' is not assignable to type 'string'
+  role: "=user" as const,
+  permissions: ["read", 2], // ❌ TypeScript ERROR: Type 'number' is not assignable to type 'string'
 };
 ```
 
@@ -231,6 +243,7 @@ permissions: When.field("role").is("admin").then("string[]").else("string[]?")
 ```
 
 **Why the conditional syntax is powerful:**
+
 - **Crystal clear boundaries**: Easy to see where condition ends and logic begins
 - **Perfect TypeScript inference**: Full compile-time type checking
 - **No conflicts**: Doesn't interfere with optional `?` operator
@@ -248,6 +261,7 @@ npm install fortify-schema
 ```
 
 **Requirements:**
+
 - TypeScript 4.5+
 - Node.js 14+
 
@@ -258,32 +272,32 @@ npm install fortify-schema
 ### Basic Schema Definition
 
 ```typescript
-import { Interface } from 'fortify-schema';
+import { Interface } from "fortify-schema";
 
 // Define your schema like a TypeScript interface
 const UserSchema = Interface({
   id: "number",
   email: "email",
   name: "string",
-  age: "number?",                        // Optional field
+  age: "number?", // Optional field
   isActive: "boolean?",
-  tags: "string[]?",                     // Optional array
-  status: "active|inactive|pending",     // Union types - TypeScript syntax!
-  role: "user"                           // Literal constants - just the value!
+  tags: "string[]?", // Optional array
+  status: "active|inactive|pending", // Union types - TypeScript syntax!
+  role: "=user", // Literal constants - use =value syntax
 });
 ```
 
 ### Schema Transformation
 
 ```typescript
-import { Mod } from 'fortify-schema';
+import { Mod } from "fortify-schema";
 
 // Create variations of your schema
 const PublicUserSchema = Mod.omit(UserSchema, ["password"]);
 const PartialUserSchema = Mod.partial(UserSchema);
 const ExtendedSchema = Mod.extend(UserSchema, {
   createdAt: "date",
-  lastLogin: "date?"
+  lastLogin: "date?",
 });
 ```
 
@@ -294,10 +308,10 @@ const ExtendedSchema = Mod.extend(UserSchema, {
 const result = UserSchema.safeParse(userData);
 
 if (result.success) {
-  console.log('✅ Valid user:', result.data);
+  console.log("✅ Valid user:", result.data);
   // result.data is perfectly typed with exact inference
 } else {
-  console.log('❌ Validation errors:', result.errors);
+  console.log("❌ Validation errors:", result.errors);
 }
 
 // Flexible validation (for external/unknown data)
@@ -313,6 +327,7 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 > **[Complete Field Types Reference](./docs/FIELD-TYPES.md)** - Comprehensive guide to all available types and constraints
 
 #### Basic Types
+
 ```typescript
 {
   name: "string",           // String validation
@@ -324,6 +339,7 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 ```
 
 #### Optional Fields
+
 ```typescript
 {
   name: "string",           // Required field
@@ -334,6 +350,7 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 ```
 
 #### Format Validation
+
 ```typescript
 {
   email: "email",           // Email format validation
@@ -346,6 +363,7 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 ```
 
 #### Array Types
+
 ```typescript
 {
   tags: "string[]",         // Array of strings
@@ -358,6 +376,7 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 ### Advanced Type Definitions
 
 #### Constants and Unions
+
 ```typescript
 import { Make } from 'fortify-schema';
 
@@ -379,6 +398,7 @@ import { Make } from 'fortify-schema';
 Fortify Schema provides the first conditional validation system with complete TypeScript inference:
 
 #### Advanced Conditional Syntax (Recommended)
+
 ```typescript
 {
   role: "admin|user|guest",
@@ -402,6 +422,7 @@ Fortify Schema provides the first conditional validation system with complete Ty
 ```
 
 #### Parentheses Syntax (Also Clear)
+
 ```typescript
 {
   role: "admin|user|guest",
@@ -412,6 +433,7 @@ Fortify Schema provides the first conditional validation system with complete Ty
 ```
 
 #### Import-based Conditional Validation (Most Powerful)
+
 ```typescript
 import { When } from 'fortify-schema';
 
@@ -425,17 +447,18 @@ import { When } from 'fortify-schema';
 
 #### Conditional Syntax Reference
 
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| **Advanced Conditional Syntax** | | |
-| `"when condition *? then : else"` | Crystal clear syntax | `"when role=admin *? string[] : string[]?"` |
-| `"when condition *? then"` | Only when condition | `"when role=admin *? string[]"` |
-| **Parentheses Syntax** | | |
-| `"when(condition) then(schema) else(schema)"` | Explicit structure | `"when(role=admin) then(string[]) else(string[]?)"` |
-| **Legacy Syntax** (Still supported but not recommended) | | |
-| `"when:field=value:then:else"` | Legacy format | `"when:role=admin:string[]:string[]?"` |
+| Syntax                                                  | Description          | Example                                             |
+| ------------------------------------------------------- | -------------------- | --------------------------------------------------- |
+| **Advanced Conditional Syntax**                         |                      |                                                     |
+| `"when condition *? then : else"`                       | Crystal clear syntax | `"when role=admin *? string[] : string[]?"`         |
+| `"when condition *? then"`                              | Only when condition  | `"when role=admin *? string[]"`                     |
+| **Parentheses Syntax**                                  |                      |                                                     |
+| `"when(condition) then(schema) else(schema)"`           | Explicit structure   | `"when(role=admin) then(string[]) else(string[]?)"` |
+| **Legacy Syntax** (Still supported but not recommended) |                      |                                                     |
+| `"when:field=value:then:else"`                          | Legacy format        | `"when:role=admin:string[]:string[]?"`              |
 
 **Condition Operators:**
+
 - `=` - Equality: `"when role=admin *? ..."`
 - `!=` - Not equal: `"when status!=pending *? ..."`
 - `>`, `>=` - Greater than: `"when age>=18 *? ..."`
@@ -444,11 +467,13 @@ import { When } from 'fortify-schema';
 - `.in(a,b,c)` - Value in array: `"when role.in(admin,mod) *? ..."`
 
 **Benefits of the `*?` syntax:**
+
 - **No confusion** with optional `?` operator
 - **Crystal clear** where condition ends and logic begins
 - **Natural language** flow that's easy to read
 
 **Complete TypeScript Integration:**
+
 - ✅ Compile-time type checking for conditional fields
 - ✅ Exact type inference based on conditions
 - ✅ IDE autocomplete and error detection
@@ -504,15 +529,15 @@ import { When } from 'fortify-schema';
 
 ### Constraint Reference Table
 
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `"string(min,max)"` | Length constraints | `"string(3,20)"` |
-| `"string(min,)"` | Minimum length only | `"string(8,)"` |
-| `"string(,max)"` | Maximum length only | `"string(,100)"` |
-| `"string(/regex/)"` | Pattern validation | `"string(/^[a-z]+$/)"` |
-| `"number(min,max)"` | Value range | `"number(0,100)"` |
-| `"type[](min,max)"` | Array size constraints | `"string[](1,10)"` |
-| `"type?"` | Optional field | `"string?"` |
+| Syntax              | Description            | Example                |
+| ------------------- | ---------------------- | ---------------------- |
+| `"string(min,max)"` | Length constraints     | `"string(3,20)"`       |
+| `"string(min,)"`    | Minimum length only    | `"string(8,)"`         |
+| `"string(,max)"`    | Maximum length only    | `"string(,100)"`       |
+| `"string(/regex/)"` | Pattern validation     | `"string(/^[a-z]+$/)"` |
+| `"number(min,max)"` | Value range            | `"number(0,100)"`      |
+| `"type[](min,max)"` | Array size constraints | `"string[](1,10)"`     |
+| `"type?"`           | Optional field         | `"string?"`            |
 
 ---
 
@@ -538,7 +563,7 @@ const UserSchema = Interface({
   name: "string",
   email: "email",
   password: "string",
-  createdAt: "date"
+  createdAt: "date",
 });
 
 // Pick specific fields
@@ -560,7 +585,7 @@ const RequiredSchema = Mod.required(OptionalSchema);
 // Extend with new fields
 const ExtendedSchema = Mod.extend(UserSchema, {
   lastLogin: "date?",
-  isVerified: "boolean"
+  isVerified: "boolean",
 });
 ```
 
@@ -569,15 +594,12 @@ const ExtendedSchema = Mod.extend(UserSchema, {
 ```typescript
 // Chain multiple transformations
 const APIResponseSchema = Mod.extend(
-  Mod.omit(
-    Mod.merge(UserSchema, ProfileSchema),
-    ["password", "internalId"]
-  ),
+  Mod.omit(Mod.merge(UserSchema, ProfileSchema), ["password", "internalId"]),
   {
     metadata: {
       version: Make.const("2.0"),
-      timestamp: "date"
-    }
+      timestamp: "date",
+    },
   }
 );
 ```
@@ -593,13 +615,13 @@ Fortify Schema is strict by default, respecting exactly what you specify:
 ```typescript
 const schema = Interface({
   id: "number",
-  name: "string"
+  name: "string",
 });
 
 // This fails - string "1" is not a number
 const result = schema.safeParse({
-  id: "1",        // Type mismatch
-  name: "John"
+  id: "1", // Type mismatch
+  name: "John",
 });
 // result.success === false
 ```
@@ -611,17 +633,17 @@ Enable automatic type conversion when needed:
 ```typescript
 const looseSchema = Interface({
   id: "number",
-  active: "boolean"
+  active: "boolean",
 }).loose();
 
 // This succeeds with automatic conversion
 const result = looseSchema.safeParse({
-  id: "123",      // Converted to number
-  active: "true"  // Converted to boolean
+  id: "123", // Converted to number
+  active: "true", // Converted to boolean
 });
 
-console.log(result.success);  // true
-console.log(result.data);     // { id: 123, active: true }
+console.log(result.success); // true
+console.log(result.data); // { id: 123, active: true }
 console.log(result.warnings); // Conversion warnings
 ```
 
@@ -632,14 +654,14 @@ Prevent additional properties:
 ```typescript
 const strictSchema = Interface({
   id: "number",
-  name: "string"
+  name: "string",
 }).strict();
 
 // Fails due to extra property
 const result = strictSchema.safeParse({
   id: 1,
   name: "John",
-  age: 25  // Not allowed in strict mode
+  age: 25, // Not allowed in strict mode
 });
 ```
 
@@ -655,15 +677,15 @@ try {
   const user = UserSchema.parse(userData);
   // user is fully typed and validated
 } catch (error) {
-  console.error('Validation failed:', error.message);
+  console.error("Validation failed:", error.message);
 }
 
 // safeParse() - Returns result object (recommended)
 const result = UserSchema.safeParse(userData);
 if (result.success) {
-  console.log('Valid data:', result.data);
+  console.log("Valid data:", result.data);
 } else {
-  console.log('Errors:', result.errors);
+  console.log("Errors:", result.errors);
 }
 
 // safeParseUnknown() - For dynamic/unknown data
@@ -704,7 +726,7 @@ const UserSchema = Interface({
   username: "string(3,20)",
 
   // Security
-  password: "string(8,)",                      // Minimum 8 characters
+  password: "string(8,)", // Minimum 8 characters
   role: Make.union("user", "moderator", "admin"),
   status: Make.union("active", "inactive", "suspended"),
 
@@ -713,14 +735,14 @@ const UserSchema = Interface({
     firstName: "string(1,50)",
     lastName: "string(1,50)",
     avatar: "url?",
-    bio: "string(,500)?",                      // Optional bio, max 500 chars
-    dateOfBirth: "date?"
+    bio: "string(,500)?", // Optional bio, max 500 chars
+    dateOfBirth: "date?",
   },
 
   // Constraints and metadata
-  age: "number(13,120)?",                      // Age verification
-  tags: "string[](1,10)?",                     // User tags, 1-10 items
-  permissions: "string[](,20)?",               // Max 20 permissions
+  age: "number(13,120)?", // Age verification
+  tags: "string[](1,10)?", // User tags, 1-10 items
+  permissions: "string[](,20)?", // Max 20 permissions
 
   // Timestamps
   createdAt: "date",
@@ -731,8 +753,8 @@ const UserSchema = Interface({
   preferences: {
     theme: Make.union("light", "dark", "auto"),
     notifications: "boolean",
-    language: "string(/^[a-z]{2}$/)"           // ISO language code
-  }
+    language: "string(/^[a-z]{2}$/)", // ISO language code
+  },
 });
 ```
 
@@ -835,22 +857,26 @@ const ProductSchema = Interface({
 
 ```typescript
 // Import only what you need
-import { Interface } from 'fortify-schema';              // Core only
-import { Interface, Make } from 'fortify-schema';       // + Union types
-import { Interface, Make, Mod } from 'fortify-schema';  // + Transformations
+import { Interface } from "fortify-schema"; // Core only
+import { Interface, Make } from "fortify-schema"; // + Union types
+import { Interface, Make, Mod } from "fortify-schema"; // + Transformations
 
 // Advanced extensions (tree-shakable)
 import {
-    Smart, When, Live, Docs,
-    Extensions, Quick,
-    TypeScriptGenerator
-} from 'fortify-schema';
+  Smart,
+  When,
+  Live,
+  Docs,
+  Extensions,
+  Quick,
+  TypeScriptGenerator,
+} from "fortify-schema";
 
 // Individual extension imports for minimal bundle size
-import { Smart } from 'fortify-schema';                  // Smart inference only
-import { When } from 'fortify-schema';                   // Conditional validation only
-import { Live } from 'fortify-schema';                   // Real-time validation only
-import { Docs } from 'fortify-schema';                   // Documentation generation only
+import { Smart } from "fortify-schema"; // Smart inference only
+import { When } from "fortify-schema"; // Conditional validation only
+import { Live } from "fortify-schema"; // Real-time validation only
+import { Docs } from "fortify-schema"; // Documentation generation only
 ```
 
 ---
@@ -865,7 +891,7 @@ const zodSchema = z.object({
   name: z.string().min(2).max(50),
   age: z.number().int().positive().optional(),
   email: z.string().email(),
-  role: z.enum(["user", "admin"])
+  role: z.enum(["user", "admin"]),
 });
 
 // Fortify Schema
@@ -873,7 +899,7 @@ const fortifySchema = Interface({
   name: "string(2,50)",
   age: "number(1,)?",
   email: "email",
-  role: Make.union("user", "admin")
+  role: Make.union("user", "admin"),
 });
 ```
 
@@ -884,14 +910,14 @@ const fortifySchema = Interface({
 const joiSchema = Joi.object({
   name: Joi.string().min(2).max(50).required(),
   age: Joi.number().integer().positive(),
-  email: Joi.string().email()
+  email: Joi.string().email(),
 });
 
 // Fortify Schema
 const fortifySchema = Interface({
   name: "string(2,50)",
   age: "number(1,)",
-  email: "email"
+  email: "email",
 });
 ```
 
@@ -909,7 +935,7 @@ const schema = Interface({
   name: "string",
   tags: "string[]?",
   status: Make.union("active", "inactive"),
-  role: Make.const("user")
+  role: Make.const("user"),
 });
 
 type InferredType = typeof schema._type;
@@ -918,8 +944,8 @@ type InferredType = typeof schema._type;
 //   id: number;
 //   name: string;
 //   tags?: string[];
-//   status: "active" | "inactive";
-//   role: "user";
+//   status: "=active" | "inactive";
+//   role: "=user";
 // }
 ```
 
@@ -930,7 +956,7 @@ type InferredType = typeof schema._type;
 const result = schema.safeParse({
   id: 1,
   name: "John",
-  invalidProperty: "error"  // ❌ TypeScript error
+  invalidProperty: "error", // ❌ TypeScript error
 });
 
 // For unknown data, use safeParseUnknown
@@ -961,9 +987,9 @@ Interface(definition: SchemaDefinition): Schema<T>
 Utility for creating complex types safely.
 
 ```typescript
-Make.const(value)                    // Literal constant
-Make.union(...values)                // Union type
-Make.unionOptional(...values)        // Optional union type
+Make.const(value); // Literal constant
+Make.union(...values); // Union type
+Make.unionOptional(...values); // Optional union type
 ```
 
 ### Mod
@@ -971,12 +997,12 @@ Make.unionOptional(...values)        // Optional union type
 Schema transformation utilities.
 
 ```typescript
-Mod.merge(schema1, schema2)          // Combine schemas
-Mod.pick(schema, keys)               // Select specific fields
-Mod.omit(schema, keys)               // Remove specific fields
-Mod.partial(schema)                  // Make all fields optional
-Mod.required(schema)                 // Make all fields required
-Mod.extend(schema, definition)       // Add new fields
+Mod.merge(schema1, schema2); // Combine schemas
+Mod.pick(schema, keys); // Select specific fields
+Mod.omit(schema, keys); // Remove specific fields
+Mod.partial(schema); // Make all fields optional
+Mod.required(schema); // Make all fields required
+Mod.extend(schema, definition); // Add new fields
 ```
 
 ### Extensions
@@ -985,43 +1011,45 @@ Advanced features for complex validation scenarios.
 
 ```typescript
 // Smart inference - Generate schemas automatically
-Smart.fromSample(data)               // Generate schema from sample data
-Smart.fromJsonSchema(jsonSchema)     // Convert from JSON Schema
-Smart.fromType<T>()                  // Generate from TypeScript type
+Smart.fromSample(data); // Generate schema from sample data
+Smart.fromJsonSchema(jsonSchema); // Convert from JSON Schema
+Smart.fromType<T>(); // Generate from TypeScript type
 
 // Conditional validation - Dependent field validation
-When.field("role").is("admin").then("string[]").else("string[]?")
-When.custom((data) => data.age >= 18).then("string").else("string?")
+When.field("role").is("admin").then("string[]").else("string[]?");
+When.custom((data) => data.age >= 18)
+  .then("string")
+  .else("string?");
 
 // Real-time validation - Live validation system
-Live.validator(schema)               // Create live validator
-Live.stream(schema)                  // Stream-based validation
+Live.validator(schema); // Create live validator
+Live.stream(schema); // Stream-based validation
 
 // Documentation generation - Automatic docs
-Docs.generate(schema)                // Generate documentation
-Docs.typescript(schema)              // Generate TypeScript definitions
-Docs.openapi(schema)                 // Generate OpenAPI specification
+Docs.generate(schema); // Generate documentation
+Docs.typescript(schema); // Generate TypeScript definitions
+Docs.openapi(schema); // Generate OpenAPI specification
 
 // Unified extensions access
-Extensions.Smart.fromSample(data)    // Access via Extensions object
-Extensions.When.field("role")        // Organized by category
-Extensions.Live.validator(schema)    // Consistent API
+Extensions.Smart.fromSample(data); // Access via Extensions object
+Extensions.When.field("role"); // Organized by category
+Extensions.Live.validator(schema); // Consistent API
 
 // Quick shortcuts for common operations
-Quick.fromSample(data)               // Smart.fromSample shortcut
-Quick.when("role").is("admin")       // When.field shortcut
-Quick.live(schema)                   // Live.validator shortcut
-Quick.docs(schema)                   // Docs.generate shortcut
+Quick.fromSample(data); // Smart.fromSample shortcut
+Quick.when("role").is("admin"); // When.field shortcut
+Quick.live(schema); // Live.validator shortcut
+Quick.docs(schema); // Docs.generate shortcut
 ```
 
 ### Schema Methods
 
 ```typescript
-schema.parse(data)                   // Parse with exceptions
-schema.safeParse(data)               // Safe parse with known data
-schema.safeParseUnknown(data)        // Safe parse with unknown data
-schema.loose()                       // Enable type coercion
-schema.strict()                      // Prevent extra properties
+schema.parse(data); // Parse with exceptions
+schema.safeParse(data); // Safe parse with known data
+schema.safeParseUnknown(data); // Safe parse with unknown data
+schema.loose(); // Enable type coercion
+schema.strict(); // Prevent extra properties
 ```
 
 ---
@@ -1067,4 +1095,4 @@ MIT © [Nehonix Team](https://github.com/Nehonix-Team)
 
 ---
 
-*Built with precision and care by the Nehonix Team*
+_Built with precision and care by the Nehonix Team_

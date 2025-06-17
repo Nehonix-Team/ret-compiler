@@ -24,7 +24,7 @@ const result = UserSchema.safeParse({
   id: 1,
   email: "john@example.com",
   username: "johndoe",
-  role: "user",
+  role: "=user",
   isActive: true,
   createdAt: new Date()
 });
