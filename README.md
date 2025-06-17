@@ -359,7 +359,7 @@ import { When } from 'fortify-schema';
 | `"when condition *? then"` | Only when condition | `"when role=admin *? string[]"` |
 | **Parentheses Syntax** | | |
 | `"when(condition) then(schema) else(schema)"` | Explicit structure | `"when(role=admin) then(string[]) else(string[]?)"` |
-| **Legacy Syntax** (Still supported) | | |
+| **Legacy Syntax** (Still supported but not recommended) | | |
 | `"when:field=value:then:else"` | Legacy format | `"when:role=admin:string[]:string[]?"` |
 
 **Condition Operators:**
@@ -765,6 +765,19 @@ const ProductSchema = Interface({
 import { Interface } from 'fortify-schema';              // Core only
 import { Interface, Make } from 'fortify-schema';       // + Union types
 import { Interface, Make, Mod } from 'fortify-schema';  // + Transformations
+
+// Advanced extensions (tree-shakable)
+import {
+    Smart, When, Live, Docs,
+    Extensions, Quick,
+    TypeScriptGenerator
+} from 'fortify-schema';
+
+// Individual extension imports for minimal bundle size
+import { Smart } from 'fortify-schema';                  // Smart inference only
+import { When } from 'fortify-schema';                   // Conditional validation only
+import { Live } from 'fortify-schema';                   // Real-time validation only
+import { Docs } from 'fortify-schema';                   // Documentation generation only
 ```
 
 ---
@@ -891,6 +904,41 @@ Mod.omit(schema, keys)               // Remove specific fields
 Mod.partial(schema)                  // Make all fields optional
 Mod.required(schema)                 // Make all fields required
 Mod.extend(schema, definition)       // Add new fields
+```
+
+### Extensions
+
+Advanced features for complex validation scenarios.
+
+```typescript
+// Smart inference - Generate schemas automatically
+Smart.fromSample(data)               // Generate schema from sample data
+Smart.fromJsonSchema(jsonSchema)     // Convert from JSON Schema
+Smart.fromType<T>()                  // Generate from TypeScript type
+
+// Conditional validation - Dependent field validation
+When.field("role").is("admin").then("string[]").else("string[]?")
+When.custom((data) => data.age >= 18).then("string").else("string?")
+
+// Real-time validation - Live validation system
+Live.validator(schema)               // Create live validator
+Live.stream(schema)                  // Stream-based validation
+
+// Documentation generation - Automatic docs
+Docs.generate(schema)                // Generate documentation
+Docs.typescript(schema)              // Generate TypeScript definitions
+Docs.openapi(schema)                 // Generate OpenAPI specification
+
+// Unified extensions access
+Extensions.Smart.fromSample(data)    // Access via Extensions object
+Extensions.When.field("role")        // Organized by category
+Extensions.Live.validator(schema)    // Consistent API
+
+// Quick shortcuts for common operations
+Quick.fromSample(data)               // Smart.fromSample shortcut
+Quick.when("role").is("admin")       // When.field shortcut
+Quick.live(schema)                   // Live.validator shortcut
+Quick.docs(schema)                   // Docs.generate shortcut
 ```
 
 ### Schema Methods

@@ -8,7 +8,6 @@ The extensions are built with a clean, maintainable architecture:
 
 - **Core Extensions**: High-level APIs for common use cases
 - **Specialized Modules**: Focused utilities in the `mods/` directory
-- **Real Implementations**: No placeholders or mock code
 
 ## Available Extensions
 
