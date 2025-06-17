@@ -27,7 +27,7 @@
  * ```
  */
 
-import { InterfaceSchema } from "../general/InterfaceSchema";
+import { InterfaceSchema } from "./InterfaceSchema";
 import {
     ConstantValue,
     OptionalConstantValue,
@@ -42,9 +42,44 @@ import {
  * Type inference system for schema definitions
  */
 
+// Helper type to parse union types recursively
+type ParseUnion<T extends string> =
+    T extends `${infer First}|${infer Rest}`
+        ? First | ParseUnion<Rest>
+        : T;
+
 // Helper type to infer TypeScript types from string field types
 type InferFieldType<T> =
-    // Handle string literals first (most specific)
+    // Handle constant types FIRST (most specific) - "=admin", "=1.0", "=true"
+    T extends `=${infer ConstValue}` ?
+        ConstValue extends "true" ? true :
+        ConstValue extends "false" ? false :
+        ConstValue extends `${number}` ? number :
+        ConstValue :
+    T extends `=${infer ConstValue}?` ?
+        ConstValue extends "true" ? true | undefined :
+        ConstValue extends "false" ? false | undefined :
+        ConstValue extends `${number}` ? number | undefined :
+        ConstValue | undefined :
+
+    // Handle "*?" syntax FIRST - "when condition *? then : else"
+    T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}` ?
+        InferFieldType<ThenType> | InferFieldType<ElseType> :
+    T extends `when ${infer Condition} *? ${infer ThenType}` ?
+        InferFieldType<ThenType> :
+
+    // Handle parentheses syntax SECOND - "when(condition) then(schema) else(schema)"
+    T extends `when(${infer Condition}) then(${infer ThenType}) else(${infer ElseType})` ?
+        InferFieldType<ThenType> | InferFieldType<ElseType> :
+    T extends `when(${infer Condition}) then(${infer ThenType})` ?
+        InferFieldType<ThenType> :
+
+
+    // Handle union types THIRD - "active|inactive|pending"
+    T extends `${string}|${string}` ? ParseUnion<T> :
+    T extends `${string}|${string}?` ? ParseUnion<T extends `${infer U}?` ? U : T> | undefined :
+
+    // Handle string literals (basic types)
     T extends "string" ? string :
     T extends "string?" ? string | undefined :
     T extends "number" ? number :
@@ -108,19 +143,73 @@ type InferFieldType<T> =
     T extends `string(/${string}/)` ? string :
     T extends `string(/${string}/)?` ? string | undefined :
 
-    // Union types like "active|inactive|pending"
-    T extends `${infer U}|${infer Rest}` ? U | InferFieldType<Rest> :
-
     // Fallback for unknown types
     any;
 
-// Helper type to infer types from schema field values
-type InferSchemaFieldType<T> =
+// Advanced conditional type parser for "when" syntax
+type ParseWhenCondition<T extends string> =
+    T extends `${infer Field}=${infer Value}` ? { field: Field; operator: "="; value: Value } :
+    T extends `${infer Field}!=${infer Value}` ? { field: Field; operator: "!="; value: Value } :
+    T extends `${infer Field}>${infer Value}` ? { field: Field; operator: ">"; value: Value } :
+    T extends `${infer Field}<${infer Value}` ? { field: Field; operator: "<"; value: Value } :
+    T extends `${infer Field}>=${infer Value}` ? { field: Field; operator: ">="; value: Value } :
+    T extends `${infer Field}<=${infer Value}` ? { field: Field; operator: "<="; value: Value } :
+    T extends `${infer Field}.exists` ? { field: Field; operator: "exists"; value: true } :
+    T extends `${infer Field}.in(${infer Values})` ? { field: Field; operator: "in"; value: Values } :
+    never;
+
+
+
+// Smart conditional type inference that evaluates conditions when possible
+type InferConditionalType<
+    TCondition extends string,
+    TThenType extends string,
+    TElseType extends string,
+    TSchema extends SchemaInterface
+> = ParseWhenCondition<TCondition> extends { field: infer Field; operator: infer Op; value: infer Value }
+    ? Field extends keyof TSchema
+        ? TSchema[Field] extends string
+            ? Op extends "="
+                ? TSchema[Field] extends `${string}|${string}`
+                    ? Value extends ParseUnion<TSchema[Field]>
+                        ? InferFieldType<TThenType>  // Condition can be true
+                        : InferFieldType<TElseType>  // Condition is definitely false
+                    : TSchema[Field] extends Value
+                        ? InferFieldType<TThenType>  // Exact match
+                        : InferFieldType<TElseType>  // No match
+                : Op extends "!="
+                    ? TSchema[Field] extends Value
+                        ? InferFieldType<TElseType>  // Condition is false (values match)
+                        : InferFieldType<TThenType>  // Condition is true (values don't match)
+                : InferFieldType<TThenType> | InferFieldType<TElseType>  // Complex conditions - use union
+            : InferFieldType<TThenType> | InferFieldType<TElseType>  // Non-string field - use union
+        : InferFieldType<TThenType> | InferFieldType<TElseType>  // Field not in schema - use union
+    : InferFieldType<TThenType> | InferFieldType<TElseType>;  // Can't parse condition - use union
+
+// Helper type to infer types from schema field values with conditional support
+type InferSchemaFieldType<T, TSchema extends SchemaInterface = {}> =
     // Handle union values first (most specific)
     T extends UnionValue<infer U> ? U[number] :
     // Handle constant values
     T extends ConstantValue ? T["const"] :
     T extends OptionalConstantValue ? T["const"] | undefined :
+    // Handle revolutionary "*?" syntax FIRST
+    T extends `when ${infer Condition} *? ${infer ThenType} : ${infer ElseType}` ?
+        InferConditionalType<Condition, ThenType, ElseType, TSchema> :
+    T extends `when ${infer Condition} *? ${infer ThenType}` ?
+        InferFieldType<ThenType> :
+
+    // Handle parentheses syntax SECOND
+    T extends `when(${infer Condition}) then(${infer ThenType}) else(${infer ElseType})` ?
+        InferConditionalType<Condition, ThenType, ElseType, TSchema> :
+    T extends `when(${infer Condition}) then(${infer ThenType})` ?
+        InferFieldType<ThenType> :
+
+    // Handle legacy conditional "when:" syntax THIRD
+    T extends `when:${infer Condition}:${infer ThenType}:${infer ElseType}` ?
+        InferConditionalType<Condition, ThenType, ElseType, TSchema> :
+    T extends `when:${infer Condition}:${infer ThenType}` ?
+        InferFieldType<ThenType> :
     // Handle string field types (including union types)
     T extends string ? InferFieldType<T> :
     // Handle nested objects
@@ -128,8 +217,8 @@ type InferSchemaFieldType<T> =
     // Handle optional nested objects
     T extends OptionalSchemaInterface ? InferSchemaType<T["schema"]> | undefined :
     // Handle array schemas [elementType]
-    T extends readonly [infer U] ? InferSchemaFieldType<U>[] :
-    T extends (infer U)[] ? InferSchemaFieldType<U>[] :
+    T extends readonly [infer U] ? InferSchemaFieldType<U, TSchema>[] :
+    T extends (infer U)[] ? InferSchemaFieldType<U, TSchema>[] :
     // Fallback
     any;
 
@@ -148,12 +237,12 @@ type OptionalFields<T extends SchemaInterface> = {
     [K in keyof T]: IsOptionalField<T[K]> extends true ? K : never
 }[keyof T];
 
-// Main type to infer the complete schema type with proper optional handling
+// Main type to infer the complete schema type with proper optional handling and conditional context
 type InferSchemaType<T extends SchemaInterface> =
-    // Required fields
-    { [K in RequiredFields<T>]: InferSchemaFieldType<T[K]> } &
-    // Optional fields
-    { [K in OptionalFields<T>]?: InferSchemaFieldType<T[K]> };
+    // Required fields with schema context for conditional types
+    { [K in RequiredFields<T>]: InferSchemaFieldType<T[K], T> } &
+    // Optional fields with schema context for conditional types
+    { [K in OptionalFields<T>]?: InferSchemaFieldType<T[K], T> };
 
 /**
  * Create a schema using TypeScript interface-like syntax with full type inference
@@ -259,7 +348,7 @@ export type {
     SchemaFieldType,
     ConstantValue,
 } from "../../../types/SchemaValidator.type";
-export { InterfaceSchema } from "../general/InterfaceSchema";
+export { InterfaceSchema } from "./InterfaceSchema";
 
 /**
  * Helper functions for creating schema values

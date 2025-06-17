@@ -1,21 +1,22 @@
 # Fortify Schema - Real-World Examples
 
-A collection of production-ready schema examples for common use cases.
+This document provides production-ready schema examples for common use cases, demonstrating practical applications of Fortify Schema.
 
-## 🚀 Quick Examples
+## Basic Examples
 
-### Basic User Schema
+### User Schema
+
 ```typescript
-import { Interface, Make } from 'fortify-schema';
+import { Interface } from 'fortify-schema';
 
 const UserSchema = Interface({
-  id: "positive",
-  email: "email",
-  username: "string(3,20)",
-  age: "int(13,120)?",
-  role: Make.union("user", "admin", "moderator"),
-  isActive: "boolean",
-  createdAt: "date",
+  id: "positive",                               // Positive integer ID
+  email: "email",                               // Email format
+  username: "string(3,20)",                     // Username with length constraints
+  age: "int(13,120)?",                          // Optional age with range
+  role: "user|admin|moderator",                 // Role options
+  isActive: "boolean",                          // Active status
+  createdAt: "date",                            // Creation date
 });
 
 // Usage
@@ -27,298 +28,295 @@ const result = UserSchema.safeParse({
   isActive: true,
   createdAt: new Date()
 });
+
+if (result.success) {
+  console.log('✓ Valid:', result.data);
+} else {
+  console.log('✗ Errors:', result.errors);
+}
 ```
 
 ### API Response Schema
+
 ```typescript
 const APIResponseSchema = Interface({
-  success: "boolean",
-  status: "int(100,599)",
-  data: "any?",
-  errors: "string[]?",
-  timestamp: "date",
-  requestId: "uuid",
+  success: "boolean",                           // Success flag
+  status: "int(100,599)",                       // HTTP status code
+  data: "any?",                                 // Optional data
+  errors: "string[]?",                          // Optional error messages
+  timestamp: "date",                            // Response timestamp
+  requestId: "uuid",                            // Request ID
 });
 
 // Usage
 const apiResult = APIResponseSchema.safeParse(response);
 if (apiResult.success) {
-  console.log('API Response:', apiResult.data);
+  console.log('✓ API Response:', apiResult.data);
+} else {
+  console.log('✗ Errors:', apiResult.errors);
 }
 ```
 
-## 🏢 Enterprise Examples
+## Enterprise Examples
 
 ### E-commerce Product Schema
+
 ```typescript
 const ProductSchema = Interface({
-  // Basic Info
-  id: "uuid",
-  sku: "string(/^[A-Z]{3}-\\d{4}$/)",          // Format: ABC-1234
-  name: "string(1,100)",
-  description: "string(,2000)?",
-  
+  // Basic information
+  id: "uuid",                                   // UUID identifier
+  sku: "string(/^[A-Z]{3}-\\d{4}$/)",          // SKU format (e.g., ABC-1234)
+  name: "string(1,100)",                        // Product name
+  description: "string(,2000)?",                // Optional description
+
   // Pricing
   price: "number(0.01,)",                       // Minimum $0.01
-  originalPrice: "number(0.01,)?",
-  discount: "float(0,100)?",                    // Percentage
-  currency: Make.const("USD"),
-  
+  originalPrice: "number(0.01,)?",              // Optional original price
+  discount: "float(0,100)?",                    // Optional discount percentage
+  currency: Make.const("USD"),                  // Fixed currency
+
   // Inventory
-  stock: "int(0,)",
-  lowStockThreshold: "int(1,)?",
-  
+  stock: "int(0,)",                             // Non-negative stock count
+  lowStockThreshold: "int(1,)?",                // Optional low stock alert
+
   // Categories
-  category: Make.union("electronics", "clothing", "books", "home"),
-  subcategory: "string?",
-  tags: "string[](,20)?",
-  
+  category: Make.union("electronics", "clothing", "books", "home"), // Category options
+  subcategory: "string?",                       // Optional subcategory
+  tags: "string[](,20)?",                       // Optional tags
+
   // Media
-  images: "url[](1,10)",                        // 1-10 images required
-  videos: "url[](,3)?",                         // Max 3 videos
-  
+  images: "url[](1,10)",                        // 1-10 images
+  videos: "url[](,3)?",                         // Optional, max 3 videos
+
   // Attributes
-  weight: "number(0,)?",
+  weight: "number(0,)?",                        // Optional weight
   dimensions: {
-    length: "number(0,)",
-    width: "number(0,)",
-    height: "number(0,)"
+    length: "number(0,)",                       // Length
+    width: "number(0,)",                        // Width
+    height: "number(0,)"                        // Height
   },
-  
+
   // Status
-  isActive: "boolean",
-  isFeatured: "boolean?",
-  publishedAt: "date?",
+  isActive: "boolean",                          // Active status
+  isFeatured: "boolean?",                       // Optional featured flag
+  publishedAt: "date?",                         // Optional publish date
 });
 ```
 
 ### User Profile Management
+
 ```typescript
 const UserProfileSchema = Interface({
   // Identity
-  id: "uuid",
-  email: "email",
-  username: "string(3,30)",
-  
-  // Personal Info
-  firstName: "string(1,50)",
-  lastName: "string(1,50)",
-  displayName: "string(1,100)?",
-  bio: "string(,500)?",
-  
+  id: "uuid",                                   // UUID identifier
+  email: "email",                               // Email format
+  username: "string(3,30)",                     // Username with length constraints
+
+  // Personal information
+  firstName: "string(1,50)",                    // First name
+  lastName: "string(1,50)",                     // Last name
+  displayName: "string(1,100)?",                // Optional display name
+  bio: "string(,500)?",                         // Optional bio
+
   // Contact
-  phone: "string(/^\\+?[1-9]\\d{1,14}$/)?",    // International format
-  website: "url?",
+  phone: "string(/^\\+?[1-9]\\d{1,14}$/)?",    // Optional international phone
+  website: "url?",                              // Optional website
   location: {
     country: "string(2,2)",                     // ISO country code
-    city: "string(1,100)?",
-    timezone: "string?"
+    city: "string(1,100)?",                     // Optional city
+    timezone: "string?"                         // Optional timezone
   },
-  
+
   // Preferences
   settings: {
-    theme: Make.union("light", "dark", "auto"),
+    theme: Make.union("light", "dark", "auto"), // Theme options
     language: "string(2,5)",                    // Language code
     notifications: {
-      email: "boolean",
-      push: "boolean",
-      sms: "boolean"
+      email: "boolean",                         // Email notifications
+      push: "boolean",                          // Push notifications
+      sms: "boolean"                            // SMS notifications
     },
     privacy: {
-      profileVisible: "boolean",
-      showEmail: "boolean",
-      showPhone: "boolean"
+      profileVisible: "boolean",                // Profile visibility
+      showEmail: "boolean",                     // Show email
+      showPhone: "boolean"                      // Show phone
     }
   },
-  
+
   // Social
   socialLinks: {
-    twitter: "string(/^@[a-zA-Z0-9_]{1,15}$/)?",
-    linkedin: "url?",
-    github: "string(/^[a-zA-Z0-9-]{1,39}$/)?",
+    twitter: "string(/^@[a-zA-Z0-9_]{1,15}$/)?", // Optional Twitter handle
+    linkedin: "url?",                            // Optional LinkedIn URL
+    github: "string(/^[a-zA-Z0-9-]{1,39}$/)?",   // Optional GitHub username
   },
-  
+
   // Metadata
-  avatar: "url?",
-  coverImage: "url?",
-  tags: "string[](,20)?",
-  interests: "string[](,50)?",
-  
+  avatar: "url?",                               // Optional avatar
+  coverImage: "url?",                           // Optional cover image
+  tags: "string[](,20)?",                       // Optional tags
+  interests: "string[](,50)?",                  // Optional interests
+
   // System
-  role: Make.union("user", "premium", "admin", "moderator"),
-  status: Make.union("active", "inactive", "suspended", "pending"),
-  emailVerified: "boolean",
-  phoneVerified: "boolean",
-  
+  role: Make.union("user", "premium", "admin", "moderator"), // Role options
+  status: Make.union("active", "inactive", "suspended", "pending"), // Status options
+  emailVerified: "boolean",                     // Email verification status
+  phoneVerified: "boolean",                     // Phone verification status
+
   // Timestamps
-  createdAt: "date",
-  updatedAt: "date",
-  lastLoginAt: "date?",
-  emailVerifiedAt: "date?",
+  createdAt: "date",                            // Creation date
+  updatedAt: "date",                            // Last updated
+  lastLoginAt: "date?",                         // Optional last login
+  emailVerifiedAt: "date?"                      // Optional email verification date
 });
 ```
 
-## 🔄 Schema Transformation Examples
+## Schema Transformation Examples
 
 ### API Versioning
+
 ```typescript
 import { Mod } from 'fortify-schema';
 
-// Base user schema
 const BaseUserSchema = Interface({
-  id: "uuid",
-  email: "email",
-  name: "string",
-  createdAt: "date"
+  id: "uuid",                                   // UUID identifier
+  email: "email",                               // Email format
+  name: "string",                               // Name
+  createdAt: "date"                             // Creation date
 });
 
-// V1 API - Basic fields
+// V1 API: Basic fields
 const UserV1Schema = Mod.pick(BaseUserSchema, ["id", "email", "name"]);
 
-// V2 API - Add timestamps
+// V2 API: Add timestamps
 const UserV2Schema = Mod.extend(UserV1Schema, {
-  createdAt: "date",
-  updatedAt: "date"
+  createdAt: "date",                            // Creation date
+  updatedAt: "date"                             // Last updated
 });
 
-// V3 API - Add profile info
+// V3 API: Add profile information
 const UserV3Schema = Mod.extend(UserV2Schema, {
   profile: {
-    avatar: "url?",
-    bio: "string(,500)?"
+    avatar: "url?",                             // Optional avatar
+    bio: "string(,500)?"                        // Optional bio
   },
   preferences: {
-    theme: Make.union("light", "dark")
+    theme: Make.union("light", "dark")          // Theme options
   }
 });
 ```
 
 ### Form Validation
+
 ```typescript
-// Registration form
 const RegistrationSchema = Interface({
-  email: "email",
-  password: "string(8,)",
-  confirmPassword: "string(8,)",
-  firstName: "string(1,50)",
-  lastName: "string(1,50)",
+  email: "email",                               // Email format
+  password: "string(8,)",                       // Minimum 8 characters
+  confirmPassword: "string(8,)",                // Minimum 8 characters
+  firstName: "string(1,50)",                    // First name
+  lastName: "string(1,50)",                     // Last name
   agreeToTerms: Make.const(true),               // Must be true
-  newsletter: "boolean?"
+  newsletter: "boolean?"                        // Optional newsletter subscription
 });
 
-// Login form
 const LoginSchema = Mod.pick(RegistrationSchema, ["email", "password"]);
 
-// Password reset form
 const PasswordResetSchema = Interface({
-  email: "email",
-  token: "string(/^[a-zA-Z0-9]{32}$/)",        // 32-char token
-  newPassword: "string(8,)",
-  confirmPassword: "string(8,)"
+  email: "email",                               // Email format
+  token: "string(/^[a-zA-Z0-9]{32}$/)",        // 32-character token
+  newPassword: "string(8,)",                    // Minimum 8 characters
+  confirmPassword: "string(8,)"                 // Minimum 8 characters
 });
 
-// Profile update form (all optional)
 const ProfileUpdateSchema = Mod.partial(
   Mod.omit(RegistrationSchema, ["password", "confirmPassword", "agreeToTerms"])
 );
 ```
 
-## 🌐 API Integration Examples
+## API Integration Examples
 
 ### REST API Schemas
+
 ```typescript
-// GET /users/:id response
 const GetUserResponseSchema = Interface({
-  success: "boolean",
-  data: UserProfileSchema,
+  success: "boolean",                           // Success flag
+  data: UserProfileSchema,                      // User profile data
   meta: {
-    requestId: "uuid",
-    timestamp: "date",
-    version: Make.const("1.0")
+    requestId: "uuid",                          // Request ID
+    timestamp: "date",                          // Response timestamp
+    version: Make.const("1.0")                  // API version
   }
 });
 
-// POST /users request body
 const CreateUserRequestSchema = Mod.omit(UserProfileSchema, [
   "id", "createdAt", "updatedAt", "lastLoginAt"
 ]);
 
-// PATCH /users/:id request body
 const UpdateUserRequestSchema = Mod.partial(CreateUserRequestSchema);
 
-// GET /users list response
 const GetUsersResponseSchema = Interface({
-  success: "boolean",
+  success: "boolean",                           // Success flag
   data: UserProfileSchema.array(),              // Array of users
   pagination: {
-    page: "int(1,)",
-    limit: "int(1,100)",
-    total: "int(0,)",
-    hasNext: "boolean",
-    hasPrev: "boolean"
+    page: "int(1,)",                            // Current page
+    limit: "int(1,100)",                        // Items per page
+    total: "int(0,)",                           // Total items
+    hasNext: "boolean",                         // Has next page
+    hasPrev: "boolean"                          // Has previous page
   },
   meta: {
-    requestId: "uuid",
-    timestamp: "date"
+    requestId: "uuid",                          // Request ID
+    timestamp: "date"                           // Response timestamp
   }
 });
 ```
 
 ### GraphQL Integration
+
 ```typescript
-// GraphQL User type
 const GraphQLUserSchema = Interface({
-  id: "uuid",
-  email: "email",
+  id: "uuid",                                   // UUID identifier
+  email: "email",                               // Email format
   profile: {
-    firstName: "string",
-    lastName: "string",
-    avatar: "url?"
+    firstName: "string",                        // First name
+    lastName: "string",                         // Last name
+    avatar: "url?"                              // Optional avatar
   },
   posts: {
-    id: "uuid",
-    title: "string",
-    content: "string",
-    publishedAt: "date?"
+    id: "uuid",                                 // Post ID
+    title: "string",                            // Post title
+    content: "string",                          // Post content
+    publishedAt: "date?"                        // Optional publish date
   }.array(),
-  followers: "int(0,)",
-  following: "int(0,)"
+  followers: "int(0,)",                         // Follower count
+  following: "int(0,)"                          // Following count
 });
 
-// GraphQL Query variables
 const GetUserQuerySchema = Interface({
-  id: "uuid",
-  includeProfile: "boolean?",
-  includePosts: "boolean?",
-  postsLimit: "int(1,50)?"
+  id: "uuid",                                   // User ID
+  includeProfile: "boolean?",                   // Include profile data
+  includePosts: "boolean?",                     // Include posts
+  postsLimit: "int(1,50)?"                      // Optional post limit
 });
 ```
 
-## 🔒 Security & Validation Examples
+## Security & Validation Examples
 
 ### Input Sanitization
+
 ```typescript
 const SecureInputSchema = Interface({
-  // Prevent XSS
-  title: "string(/^[a-zA-Z0-9\\s\\-_.,!?]{1,100}$/)",
-  
-  // SQL injection prevention
-  searchQuery: "string(/^[a-zA-Z0-9\\s]{1,50}$/)",
-  
-  // File upload validation
-  filename: "string(/^[a-zA-Z0-9._-]{1,255}$/)",
-  fileType: Make.union("image/jpeg", "image/png", "image/gif", "application/pdf"),
-  fileSize: "int(1,10485760)",                  // Max 10MB
-  
-  // Rate limiting
-  requestsPerMinute: "int(1,100)",
-  
-  // IP validation
-  clientIP: "string(/^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$/)",
+  title: "string(/^[a-zA-Z0-9\\s\\-_.,!?]{1,100}$/)", // Prevent XSS
+  searchQuery: "string(/^[a-zA-Z0-9\\s]{1,50}$/)",    // Prevent SQL injection
+  filename: "string(/^[a-zA-Z0-9._-]{1,255}$/)",      // File upload validation
+  fileType: Make.union("image/jpeg", "image/png", "image/gif", "application/pdf"), // Allowed file types
+  fileSize: "int(1,10485760)",                        // Max 10MB
+  requestsPerMinute: "int(1,100)",                    // Rate limiting
+  clientIP: "string(/^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$/)" // IP validation
 });
 ```
 
 ### Authentication Schemas
+
 ```typescript
 const JWTPayloadSchema = Interface({
   sub: "uuid",                                  // Subject (user ID)
@@ -327,22 +325,23 @@ const JWTPayloadSchema = Interface({
   aud: "string",                               // Audience
   iss: "string",                               // Issuer
   scope: "string[]",                           // Permissions
-  role: Make.union("user", "admin", "service")
+  role: Make.union("user", "admin", "service") // Role options
 });
 
 const AuthRequestSchema = Interface({
-  email: "email",
-  password: "string(1,)",
-  rememberMe: "boolean?",
-  captcha: "string(/^[a-zA-Z0-9]{6}$/)?",      // 6-char captcha
+  email: "email",                               // Email format
+  password: "string(1,)",                      // Non-empty password
+  rememberMe: "boolean?",                      // Optional remember me
+  captcha: "string(/^[a-zA-Z0-9]{6}$/)?"       // Optional 6-char captcha
 });
 
 const RefreshTokenSchema = Interface({
   refreshToken: "string(/^[a-zA-Z0-9+/]{40,}={0,2}$/)", // Base64 token
-  deviceId: "uuid?"
+  deviceId: "uuid?"                             // Optional device ID
 });
 ```
 
 ---
 
-**📖 [Back to Documentation](./README.md)** | **🚀 [Quick Reference](./QUICK-REFERENCE.md)**
+**Related Resources**  
+[Complete Documentation](./README.md) | [Quick Reference](./QUICK-REFERENCE.md)

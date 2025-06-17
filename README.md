@@ -6,27 +6,27 @@
 [![Build Status](https://github.com/Nehonix-Team/fortify-schema/workflows/CI/badge.svg)](https://github.com/Nehonix-Team/fortify-schema/actions)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/fortify-schema)](https://bundlephobia.com/package/fortify-schema)
 
-**A revolutionary TypeScript-first schema validation library with interface-like syntax that's intuitive, type-safe, and incredibly powerful.**
+**A TypeScript-first schema validation library with interface-like syntax that's intuitive, type-safe, and powerful.**
 
-## 📚 Documentation Navigation
+## Documentation Navigation
 
 | Resource | Description |
 |----------|-------------|
-| **[📖 Complete Documentation](./docs/README.md)** | Full documentation index with organized sections |
-| **[🚀 Quick Reference](./docs/QUICK-REFERENCE.md)** | Cheat sheet for common patterns and syntax |
-| **[📝 Field Types Reference](./docs/FIELD-TYPES.md)** | Comprehensive guide to all available types and constraints |
-| **[💼 Real-World Examples](./docs/EXAMPLES.md)** | Production-ready schemas for enterprise use |
-| **[🔄 Migration Guide](./docs/MIGRATION.md)** | Step-by-step migration from Zod, Joi, Yup |
-| **[⚡ Quick Start](#quick-start-guide)** | Get up and running in 5 minutes |
-| **[🔧 Schema Transformation](#schema-transformation-with-mod)** | Transform and combine schemas with Mod utilities |
+| **[Complete Documentation](./docs/README.md)** | Full documentation index with organized sections |
+| **[Quick Reference](./docs/QUICK-REFERENCE.md)** | Cheat sheet for common patterns and syntax |
+| **[Field Types Reference](./docs/FIELD-TYPES.md)** | Comprehensive guide to all available types and constraints |
+| **[Real-World Examples](./docs/EXAMPLES.md)** | Production-ready schemas for enterprise use |
+| **[Migration Guide](./docs/MIGRATION.md)** | Step-by-step migration from Zod, Joi, Yup |
+| **[Quick Start](#quick-start-guide)** | Get up and running in 5 minutes |
+| **[Schema Transformation](#schema-transformation-with-mod)** | Transform and combine schemas with Mod utilities |
 
 ---
 
 ## Overview
 
-Fortify Schema reimagines schema validation by bringing TypeScript interface syntax to runtime validation. Unlike traditional schema libraries that require complex APIs and verbose definitions, Fortify Schema allows you to define schemas that look and feel exactly like TypeScript interfaces while providing powerful runtime validation and perfect type inference.
+Fortify Schema brings TypeScript interface syntax to runtime validation. Unlike traditional schema libraries that require complex APIs and verbose definitions, Fortify Schema allows you to define schemas that look and feel exactly like TypeScript interfaces while providing powerful runtime validation and perfect type inference.
 
-### Key Differentiators
+### Key Features
 
 - **Interface-like syntax** that TypeScript developers instantly understand
 - **Perfect type inference** with no manual type definitions required
@@ -79,7 +79,7 @@ const UserSchema = Interface({
 });
 ```
 
-### Revolutionary Type Inference
+### Advanced Type Inference
 
 ```typescript
 const result = UserSchema.safeParse(userData);
@@ -98,6 +98,73 @@ UserSchema.safeParse({
   invalidProp: "error"  // ❌ TypeScript ERROR caught at compile time
 });
 ```
+
+### Conditional Validation with Perfect Type Inference
+
+**The world's first schema library with conditional validation that provides complete TypeScript inference support**
+
+```typescript
+const UserSchema = Interface({
+  role: "admin|user|guest",
+  accountType: "free|premium|enterprise",
+
+  // Advanced conditional syntax - Crystal clear, no confusion
+  permissions: "when role=admin *? string[] : string[]?",
+  maxProjects: "when accountType=free *? int(1,3) : int(1,)",
+  paymentMethod: "when accountType!=free *? string : string?",
+  billingAddress: "when paymentMethod.exists *? string : string?"
+});
+
+// TypeScript knows the EXACT type based on conditions
+const adminUser = {
+  role: "admin" as const,
+  permissions: ["read", "write", "delete"], // ✅ TypeScript: string[]
+  maxProjects: 100,                         // ✅ TypeScript: number
+  paymentMethod: "credit_card"              // ✅ TypeScript: string
+};
+
+const regularUser = {
+  role: "user" as const,
+  accountType: "free" as const,
+  maxProjects: 2                           // ✅ TypeScript: number (1-3 range)
+  // permissions not allowed for regular users
+  // paymentMethod not required for free users
+};
+
+// TypeScript catches conditional type mismatches at compile time
+const invalidUser = {
+  role: "user" as const,
+  permissions: ["read", 2]  // ❌ TypeScript ERROR: Type 'number' is not assignable to type 'string'
+};
+```
+
+**Three Approaches Available:**
+
+1. **Advanced Conditional Syntax** (Crystal clear + Perfect TypeScript inference)
+2. **Parentheses Syntax** (Clear structure, runtime only)
+3. **Import-based Syntax** (Fluent API, most powerful)
+
+```typescript
+import { When } from 'fortify-schema';
+
+// Advanced conditional syntax (Recommended - Full TypeScript support)
+permissions: "when role=admin *? string[] : string[]?",
+
+// Parentheses syntax (Runtime validation only - limited TypeScript inference)
+permissions: "when(role=admin) then(string[]) else(string[]?)",
+
+// Import-based syntax (Full TypeScript support)
+permissions: When.field("role").is("admin").then("string[]").else("string[]?")
+```
+
+**Why the conditional syntax is powerful:**
+- **Crystal clear boundaries**: Easy to see where condition ends and logic begins
+- **Perfect TypeScript inference**: Full compile-time type checking
+- **No conflicts**: Doesn't interfere with optional `?` operator
+- **Intuitive**: Reads like natural language
+- **Professional**: Clean and elegant syntax
+
+**Note**: The parentheses syntax works perfectly at runtime but has limited TypeScript inference due to nested parentheses in template literal types. Use the `*?` syntax for the best developer experience.
 
 ---
 
@@ -154,10 +221,10 @@ const ExtendedSchema = Mod.extend(UserSchema, {
 const result = UserSchema.safeParse(userData);
 
 if (result.success) {
-  console.log('✓ Valid user:', result.data);
+  console.log('✅ Valid user:', result.data);
   // result.data is perfectly typed with exact inference
 } else {
-  console.log('✗ Validation errors:', result.errors);
+  console.log('❌ Validation errors:', result.errors);
 }
 
 // Flexible validation (for external/unknown data)
@@ -170,7 +237,7 @@ const unknownResult = UserSchema.safeParseUnknown(apiResponse);
 
 ### Field Types
 
-> **📖 [Complete Field Types Reference](./docs/FIELD-TYPES.md)** - Comprehensive guide to all available types and constraints
+> **[Complete Field Types Reference](./docs/FIELD-TYPES.md)** - Comprehensive guide to all available types and constraints
 
 #### Basic Types
 ```typescript
@@ -233,6 +300,86 @@ import { Make } from 'fortify-schema';
 ```
 
 **Why use `Make`?** It eliminates ambiguity between type specifications and constant values, making schemas more readable and maintainable.
+
+### Conditional Validation
+
+Fortify Schema provides the first conditional validation system with complete TypeScript inference:
+
+#### Advanced Conditional Syntax (Recommended)
+```typescript
+{
+  role: "admin|user|guest",
+
+  // Advanced conditional syntax - Crystal clear
+  permissions: "when role=admin *? string[] : string[]?",
+
+  // Multiple conditions with different operators
+  maxProjects: "when accountType=free *? int(1,3) : int(1,)",
+  paymentMethod: "when accountType!=free *? string : string?",
+
+  // Existence-based conditions
+  billingAddress: "when paymentMethod.exists *? string : string?",
+
+  // Numeric comparisons
+  seniorDiscount: "when age>=65 *? number : number?",
+
+  // Array inclusion checks
+  adminFeatures: "when role.in(admin,moderator) *? string[] : string[]?"
+}
+```
+
+#### Parentheses Syntax (Also Clear)
+```typescript
+{
+  role: "admin|user|guest",
+  permissions: "when(role=admin) then(string[]) else(string[]?)",
+  maxProjects: "when(accountType=free) then(int(1,3)) else(int(1,))",
+  paymentMethod: "when(accountType!=free) then(string) else(string?)"
+}
+```
+
+#### Import-based Conditional Validation (Most Powerful)
+```typescript
+import { When } from 'fortify-schema';
+
+{
+  role: "admin|user|guest",
+  permissions: When.field("role").is("admin").then("string[]").else("string[]?"),
+  maxProjects: When.field("accountType").is("free").then("int(1,3)").else("int(1,)"),
+  paymentMethod: When.field("accountType").isNot("free").then("string").else("string?")
+}
+```
+
+#### Conditional Syntax Reference
+
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| **Advanced Conditional Syntax** | | |
+| `"when condition *? then : else"` | Crystal clear syntax | `"when role=admin *? string[] : string[]?"` |
+| `"when condition *? then"` | Only when condition | `"when role=admin *? string[]"` |
+| **Parentheses Syntax** | | |
+| `"when(condition) then(schema) else(schema)"` | Explicit structure | `"when(role=admin) then(string[]) else(string[]?)"` |
+| **Legacy Syntax** (Still supported) | | |
+| `"when:field=value:then:else"` | Legacy format | `"when:role=admin:string[]:string[]?"` |
+
+**Condition Operators:**
+- `=` - Equality: `"when role=admin *? ..."`
+- `!=` - Not equal: `"when status!=pending *? ..."`
+- `>`, `>=` - Greater than: `"when age>=18 *? ..."`
+- `<`, `<=` - Less than: `"when score<50 *? ..."`
+- `.exists` - Field exists: `"when email.exists *? ..."`
+- `.in(a,b,c)` - Value in array: `"when role.in(admin,mod) *? ..."`
+
+**Benefits of the `*?` syntax:**
+- **No confusion** with optional `?` operator
+- **Crystal clear** where condition ends and logic begins
+- **Natural language** flow that's easy to read
+
+**Complete TypeScript Integration:**
+- ✅ Compile-time type checking for conditional fields
+- ✅ Exact type inference based on conditions
+- ✅ IDE autocomplete and error detection
+- ✅ Runtime validation with full data context
 
 ---
 
@@ -638,7 +785,7 @@ const zodSchema = z.object({
 // Fortify Schema
 const fortifySchema = Interface({
   name: "string(2,50)",
-  age: "number(1,)?"
+  age: "number(1,)?",
   email: "email",
   role: Make.union("user", "admin")
 });

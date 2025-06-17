@@ -98,3 +98,14 @@ export interface SchemaConfig {
 
 
 // interfaces
+
+/**
+ * Internal conditional pattern interface
+ */
+export interface ConditionalPattern {
+    field: string;
+    operator: "=" | "!=" | ">" | "<" | ">=" | "<=" | "~" | "in" | "!in" | "exists" | "!exists";
+    value?: any;
+    thenSchema: string;
+    elseSchema?: string;
+}

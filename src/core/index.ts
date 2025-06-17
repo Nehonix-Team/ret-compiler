@@ -39,6 +39,7 @@
  * ```
  */
 
+
 // Interface-based Schema (Recommended)
 export { Interface, FieldTypes, QuickSchemas, Mod } from "./schema/mode/interfaces/Interface";
 export type { InferType, SchemaInterface, SchemaFieldType } from "./schema/mode/interfaces/Interface";
@@ -70,3 +71,5 @@ export type {
     SchemaConfig,
 } from "./types/types";
 
+// extensions
+export * from "./schema/extensions";

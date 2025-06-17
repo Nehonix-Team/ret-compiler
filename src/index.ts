@@ -68,6 +68,13 @@
 // Main Interface-based API (Recommended)
 export { Interface, Make, Mod, FieldTypes, QuickSchemas } from './core/schema/mode/interfaces/Interface';
 
+// Extensions (Advanced Features)
+export {
+    Smart, When, Live, Docs,
+    Extensions, Quick, 
+    TypeScriptGenerator
+} from './core/schema/extensions';
+
 // Traditional Fluent API
 export { Schema } from './core/schema/mode/general/Schema';
 
@@ -80,7 +87,7 @@ export { NumberSchema } from './core/schema/mode/general/NumberSchema';
 export { BooleanSchema } from './core/schema/mode/general/BooleanSchema';
 export { ArraySchema } from './core/schema/mode/general/ArraySchema';
 export { ObjectSchema } from './core/schema/mode/general/ObjectSchema';
-export { InterfaceSchema } from './core/schema/mode/general/InterfaceSchema';
+export { InterfaceSchema } from './core/schema/mode/interfaces/InterfaceSchema';
 
 // Type definitions
 export type {
@@ -105,3 +112,5 @@ export type {
     SchemaDefinition,
     SchemaConfig
 } from './core/types/types';
+
+

@@ -15,6 +15,7 @@ import {
     UnionValue,
 } from "../../../types/SchemaValidator.type";
 import { SchemaValidationResult } from "../../../types/types";
+import { ConditionalSyntaxUtils } from "../../extensions/components/ConditionalValidation/utils/SyntaxParser";
 
 /**
  * Interface Schema class for TypeScript-like schema definitions
@@ -53,7 +54,21 @@ export class InterfaceSchema<T = any> {
 
         // Validate each field in the schema
         for (const [key, fieldType] of Object.entries(this.definition)) {
-            const fieldResult = this.validateField(key, fieldType, data[key]);
+            let fieldResult: SchemaValidationResult;
+
+            // Handle conditional fields with full data context
+            if (typeof fieldType === "string" && ConditionalSyntaxUtils.isConditional(fieldType)) {
+                const conditionalConfig = ConditionalSyntaxUtils.parse(fieldType);
+                if (conditionalConfig) {
+                    fieldResult = this.validateConditionalFieldWithContext(conditionalConfig, data[key], data);
+                } else {
+                    fieldResult = this.validateField(key, fieldType, data[key]);
+                }
+            } else if (this.isConditionalValidation(fieldType)) {
+                fieldResult = this.validateConditionalFieldWithContext(fieldType, data[key], data);
+            } else {
+                fieldResult = this.validateField(key, fieldType, data[key]);
+            }
 
             if (!fieldResult.success) {
                 result.success = false;
@@ -155,6 +170,11 @@ export class InterfaceSchema<T = any> {
             return nestedSchema.validate(value);
         }
 
+        // Handle conditional validation objects
+        if (this.isConditionalValidation(fieldType)) {
+            return this.validateConditionalField(fieldType, value);
+        }
+
         // Handle nested objects
         if (this.isSchemaInterface(fieldType)) {
             const nestedSchema = new InterfaceSchema(fieldType, this.options);
@@ -196,6 +216,13 @@ export class InterfaceSchema<T = any> {
 
         // Handle string field types
         if (typeof fieldType === "string") {
+            // Check if it's conditional validation syntax (both new and legacy)
+            if (ConditionalSyntaxUtils.isConditional(fieldType)) {
+                const conditionalConfig = ConditionalSyntaxUtils.parse(fieldType);
+                if (conditionalConfig) {
+                    return this.validateConditionalField(conditionalConfig, value);
+                }
+            }
             return this.validateStringFieldType(fieldType, value);
         }
 
@@ -310,6 +337,13 @@ export class InterfaceSchema<T = any> {
             return result;
         }
 
+        // Note: Conditional "when" syntax is handled at the field level, not here
+
+        // Handle constant values (e.g., "=admin", "=user")
+        if (elementType.startsWith("=")) {
+            return this.validateConstantType(elementType.slice(1), value);
+        }
+
         // Handle union types (e.g., "pending|accepted|rejected")
         if (elementType.includes("|")) {
             return this.validateUnionType(elementType, value);
@@ -317,6 +351,42 @@ export class InterfaceSchema<T = any> {
 
         // Handle basic types - pass the original fieldType to preserve constraints
         return this.validateBasicType(fieldType, value);
+    }
+
+    /**
+     * Validate constant types (e.g., "=admin", "=user")
+     */
+    private validateConstantType(
+        constantValue: string,
+        value: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        // Convert the constant value to the appropriate type
+        let expectedValue: any = constantValue;
+
+        // Try to parse as number if it looks like a number
+        if (/^\d+(\.\d+)?$/.test(constantValue)) {
+            expectedValue = parseFloat(constantValue);
+        }
+        // Try to parse as boolean
+        else if (constantValue === "true" || constantValue === "false") {
+            expectedValue = constantValue === "true";
+        }
+
+        if (value !== expectedValue) {
+            result.success = false;
+            result.errors.push(
+                `Expected constant value: ${expectedValue}, got ${value}`
+            );
+        }
+
+        return result;
     }
 
     /**
@@ -344,6 +414,8 @@ export class InterfaceSchema<T = any> {
 
         return result;
     }
+
+
 
     /**
      * Parse constraint syntax like "string(3,20)", "number(0,100)?", etc.
@@ -692,6 +764,110 @@ export class InterfaceSchema<T = any> {
     }
 
     /**
+     * Validate conditional field with full data context
+     */
+    private validateConditionalFieldWithContext(
+        conditionalDef: any,
+        value: any,
+        fullData: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        // Get the field this condition depends on
+        const fieldName = conditionalDef.fieldName;
+        const conditions = conditionalDef.conditions || [];
+        const defaultSchema = conditionalDef.default;
+
+        // Get the value of the dependent field
+        const dependentFieldValue = fullData[fieldName];
+
+        // Find the matching condition
+        let schemaToUse = defaultSchema;
+
+        for (const condition of conditions) {
+            if (this.evaluateCondition(condition, dependentFieldValue)) {
+                schemaToUse = condition.schema;
+                break;
+            }
+        }
+
+        // If we have a schema to validate against, use it
+        if (schemaToUse) {
+            if (typeof schemaToUse === "string") {
+                return this.validateStringFieldType(schemaToUse, value);
+            } else if (typeof schemaToUse === "object") {
+                return this.validateField("conditional", schemaToUse, value);
+            }
+        }
+
+        // If no schema found, accept the value
+        return result;
+    }
+
+    /**
+     * Evaluate a condition against a field value
+     */
+    private evaluateCondition(condition: any, fieldValue: any): boolean {
+        if (!condition.condition) {
+            return false;
+        }
+
+        return condition.condition(fieldValue);
+    }
+
+    /**
+     * Validate conditional field based on other field values (legacy method)
+     */
+    private validateConditionalField(
+        conditionalDef: any,
+        value: any
+    ): SchemaValidationResult {
+        const result: SchemaValidationResult = {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+        };
+
+        // Get the field this condition depends on
+        const conditions = conditionalDef.conditions || [];
+        const defaultSchema = conditionalDef.default;
+
+        // We need access to the full data object to check the dependent field
+        // For now, we'll use a simplified approach and validate against the default schema
+        // In a full implementation, we'd need to pass the full data context
+
+        let schemaToUse = defaultSchema;
+
+        // Try to find a matching condition
+        // Note: This is a simplified implementation
+        // A full implementation would need access to the complete data object
+        for (const condition of conditions) {
+            if (condition.schema) {
+                schemaToUse = condition.schema;
+                break; // Use the first available schema for now
+            }
+        }
+
+        // If we have a schema to validate against, use it
+        if (schemaToUse) {
+            if (typeof schemaToUse === "string") {
+                return this.validateStringFieldType(schemaToUse, value);
+            } else if (typeof schemaToUse === "object") {
+                return this.validateField("conditional", schemaToUse, value);
+            }
+        }
+
+        // If no schema found, accept the value
+        return result;
+    }
+
+    /**
      * Type guards
      */
     private isUnionValue(value: any): value is UnionValue {
@@ -728,13 +904,25 @@ export class InterfaceSchema<T = any> {
         );
     }
 
+    private isConditionalValidation(value: any): boolean {
+        return (
+            typeof value === "object" &&
+            value !== null &&
+            !Array.isArray(value) &&
+            value.__conditional === true &&
+            "fieldName" in value &&
+            "conditions" in value
+        );
+    }
+
     private isSchemaInterface(value: any): value is SchemaInterface {
         return (
             typeof value === "object" &&
             value !== null &&
             !Array.isArray(value) &&
             !this.isConstantValue(value) &&
-            !this.isOptionalSchemaInterface(value)
+            !this.isOptionalSchemaInterface(value) &&
+            !this.isConditionalValidation(value)
         );
     }
 
