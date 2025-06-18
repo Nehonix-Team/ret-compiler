@@ -1,6 +1,6 @@
 {
   "name": "fortify-schema",
-  "version": "1.0.13",
+  "version": "1.0.15",
   "description": "TypeScript interface-like schema validation system that's easier to use than Zod",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
