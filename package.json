@@ -30,6 +30,8 @@
     "dev": "rollup -c -w",
     "test": "jest",
     "test:watch": "jest --watch",
+    "demo": "bun examples/superiority-demo.ts",
+    "demo:performance": "bun src/core/performance/benchmark.ts",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",

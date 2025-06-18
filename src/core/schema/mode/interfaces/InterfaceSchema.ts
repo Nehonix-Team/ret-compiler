@@ -20,97 +20,292 @@ import { ConstraintParser, TypeGuards, ValidationHelpers } from "./validators";
 // Helper type for schemas that allow unknown properties
 type AllowUnknownSchema<T> = T & Record<string, any>;
 
+// Pre-compiled field definition for faster validation
+interface CompiledField {
+  key: string;
+  originalType: SchemaFieldType;
+  isString: boolean;
+  isConditional: boolean;
+  conditionalConfig?: any;
+  parsedConstraints?: any;
+  isArray?: boolean;
+  elementType?: string;
+  isOptional?: boolean;
+}
+
 export class InterfaceSchema<T = any> {
+  private compiledFields: CompiledField[] = [];
+  private schemaKeys: string[] = [];
+
   constructor(
     private definition: SchemaInterface,
     private options: SchemaOptions = {}
-  ) {}
+  ) {
+    // Pre-compile schema at initialization
+    this.precompileSchema();
+  }
 
   /**
-   * Validate data against the interface schema
+   * Pre-compile schema for faster validation
+   */
+  private precompileSchema(): void {
+    const entries = Object.entries(this.definition);
+    this.schemaKeys = entries.map(([key]) => key);
+    this.compiledFields = [];
+
+    for (const [key, fieldType] of entries) {
+      const compiled: CompiledField = {
+        key,
+        originalType: fieldType,
+        isString: typeof fieldType === "string",
+        isConditional: false,
+      };
+
+      if (typeof fieldType === "string") {
+        // Check for conditional syntax
+        if (ConditionalSyntaxUtils.isConditional(fieldType)) {
+          compiled.isConditional = true;
+          compiled.conditionalConfig = ConditionalSyntaxUtils.parse(fieldType);
+        } else {
+          // Pre-parse constraints
+          const parsed = ConstraintParser.parseConstraints(fieldType);
+          compiled.parsedConstraints = parsed;
+          compiled.isOptional = parsed.optional;
+          compiled.isArray = parsed.type.endsWith("[]");
+          compiled.elementType = compiled.isArray
+            ? parsed.type.slice(0, -2)
+            : parsed.type;
+        }
+      } else if (TypeGuards.isConditionalValidation(fieldType)) {
+        compiled.isConditional = true;
+        compiled.conditionalConfig = fieldType;
+      }
+
+      this.compiledFields.push(compiled);
+    }
+  }
+
+  /**
+   * Validate data against the interface schema - optimized version
    */
   validate(data: any): SchemaValidationResult<T> {
-    const result: SchemaValidationResult<T> = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: undefined,
-    };
-
+    // Fast path for non-objects
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      result.success = false;
-      result.errors.push("Expected object");
-      return result;
+      return {
+        success: false,
+        errors: ["Expected object"],
+        warnings: [],
+        data: undefined,
+      };
     }
 
     const validatedData: any = {};
-    const inputKeys = Object.keys(data);
-    const schemaKeys = Object.keys(this.definition);
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    let hasErrors = false;
 
-    // Validate each field in the schema
-    for (const [key, fieldType] of Object.entries(this.definition)) {
+    // Use pre-compiled fields for faster validation
+    for (let i = 0; i < this.compiledFields.length; i++) {
+      const field = this.compiledFields[i];
+      const value = data[field.key];
+
       let fieldResult: SchemaValidationResult;
 
-      // Handle conditional fields with full data context
-      if (
-        typeof fieldType === "string" &&
-        ConditionalSyntaxUtils.isConditional(fieldType)
-      ) {
-        const conditionalConfig = ConditionalSyntaxUtils.parse(fieldType);
-        if (conditionalConfig) {
-          fieldResult = this.validateConditionalFieldWithContext(
-            conditionalConfig,
-            data[key],
-            data
-          );
-        } else {
-          fieldResult = this.validateField(key, fieldType, data[key]);
-        }
-      } else if (TypeGuards.isConditionalValidation(fieldType)) {
+      // Use pre-compiled information to skip parsing
+      if (field.isConditional) {
         fieldResult = this.validateConditionalFieldWithContext(
-          fieldType,
-          data[key],
+          field.conditionalConfig,
+          value,
           data
         );
+      } else if (field.isString && field.parsedConstraints) {
+        // Use pre-parsed constraints for string fields
+        fieldResult = this.validatePrecompiledStringField(field, value);
       } else {
-        fieldResult = this.validateField(key, fieldType, data[key]);
+        // Fallback to original validation for complex types
+        fieldResult = this.validateField(field.key, field.originalType, value);
       }
 
+      // Process field result
       if (!fieldResult.success) {
-        result.success = false;
-        result.errors.push(
-          ...fieldResult.errors.map((err) => `${key}: ${err}`)
-        );
+        hasErrors = true;
+        // Batch error processing
+        for (let j = 0; j < fieldResult.errors.length; j++) {
+          errors.push(`${field.key}: ${fieldResult.errors[j]}`);
+        }
       } else if (fieldResult.data !== undefined) {
-        validatedData[key] = fieldResult.data;
+        validatedData[field.key] = fieldResult.data;
       }
 
-      result.warnings.push(
-        ...fieldResult.warnings.map((warn) => `${key}: ${warn}`)
-      );
+      // Batch warning processing
+      for (let j = 0; j < fieldResult.warnings.length; j++) {
+        warnings.push(`${field.key}: ${fieldResult.warnings[j]}`);
+      }
     }
 
-    // Handle extra properties - STRICT BY DEFAULT (like TypeScript)
-    const extraKeys = inputKeys.filter((key) => !schemaKeys.includes(key));
-
-    if (extraKeys.length > 0) {
-      if (this.options.allowUnknown === true) {
-        // Explicitly allow unknown properties
-        for (const key of extraKeys) {
+    // Handle extra properties efficiently using pre-computed schema keys
+    const inputKeys = Object.keys(data);
+    if (this.options.allowUnknown === true) {
+      // Allow unknown properties
+      for (let i = 0; i < inputKeys.length; i++) {
+        const key = inputKeys[i];
+        if (!this.schemaKeys.includes(key)) {
           validatedData[key] = data[key];
         }
-      } else {
-        // Strict by default - reject unknown properties
-        result.success = false;
-        result.errors.push(`Unexpected properties: ${extraKeys.join(", ")}`);
+      }
+    } else {
+      // Check for extra keys
+      const extraKeys: string[] = [];
+      for (let i = 0; i < inputKeys.length; i++) {
+        const key = inputKeys[i];
+        if (!this.schemaKeys.includes(key)) {
+          extraKeys.push(key);
+        }
+      }
+
+      if (extraKeys.length > 0) {
+        hasErrors = true;
+        errors.push(`Unexpected properties: ${extraKeys.join(", ")}`);
       }
     }
 
-    if (result.success) {
-      result.data = validatedData as T;
+    return {
+      success: !hasErrors,
+      errors,
+      warnings,
+      data: hasErrors ? undefined : (validatedData as T),
+    };
+  }
+
+  /**
+   * Validate pre-compiled string field for maximum performance
+   */
+  private validatePrecompiledStringField(
+    field: CompiledField,
+    value: any
+  ): SchemaValidationResult {
+    const { parsedConstraints } = field;
+    const { type, constraints, optional: isOptional } = parsedConstraints!;
+
+    // Fast path for undefined/null values
+    if (value === undefined) {
+      return isOptional
+        ? {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: this.options.default,
+          }
+        : {
+            success: false,
+            errors: ["Required field is missing"],
+            warnings: [],
+            data: value,
+          };
     }
 
-    return result;
+    if (value === null) {
+      return isOptional
+        ? { success: true, errors: [], warnings: [], data: null }
+        : {
+            success: false,
+            errors: ["Field cannot be null"],
+            warnings: [],
+            data: value,
+          };
+    }
+
+    // Handle array types
+    if (field.isArray) {
+      if (!Array.isArray(value)) {
+        return {
+          success: false,
+          errors: ["Expected array"],
+          warnings: [],
+          data: value,
+        };
+      }
+
+      // Check array constraints
+      if (
+        constraints.minItems !== undefined &&
+        value.length < constraints.minItems
+      ) {
+        return {
+          success: false,
+          errors: [`Array must have at least ${constraints.minItems} items`],
+          warnings: [],
+          data: value,
+        };
+      }
+
+      if (
+        constraints.maxItems !== undefined &&
+        value.length > constraints.maxItems
+      ) {
+        return {
+          success: false,
+          errors: [`Array must have at most ${constraints.maxItems} items`],
+          warnings: [],
+          data: value,
+        };
+      }
+
+      // Validate array elements
+      const validatedArray: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < value.length; i++) {
+        const elementResult = ValidationHelpers.routeTypeValidation(
+          field.elementType!,
+          value[i],
+          { ...this.options, ...constraints },
+          constraints
+        );
+        if (!elementResult.success) {
+          errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+        } else {
+          validatedArray.push(elementResult.data);
+        }
+      }
+
+      if (errors.length > 0) {
+        return { success: false, errors, warnings: [], data: value };
+      }
+
+      // Check uniqueness if required
+      if (constraints.unique) {
+        const uniqueValues = new Set(validatedArray);
+        if (uniqueValues.size !== validatedArray.length) {
+          return {
+            success: false,
+            errors: ["Array values must be unique"],
+            warnings: [],
+            data: value,
+          };
+        }
+      }
+
+      return { success: true, errors: [], warnings: [], data: validatedArray };
+    }
+
+    // Handle constant values
+    if (type.startsWith("=")) {
+      return ValidationHelpers.validateConstantType(type.slice(1), value);
+    }
+
+    // Handle union types
+    if (type.includes("|")) {
+      return ValidationHelpers.validateUnionType(type, value);
+    }
+
+    // Handle basic types using pre-parsed constraints
+    return ValidationHelpers.routeTypeValidation(
+      type,
+      value,
+      { ...this.options, ...constraints },
+      constraints
+    );
   }
 
   /**
@@ -231,56 +426,59 @@ export class InterfaceSchema<T = any> {
   }
 
   /**
-   * Validate string-based field types
+   * Validate string-based field types - optimized version
    */
   private validateStringFieldType(
     fieldType: string,
     value: any
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    // Parse constraints from field type
+    // Parse constraints once
     const {
       type: parsedType,
       constraints,
       optional: isOptional,
     } = ConstraintParser.parseConstraints(fieldType);
+
+    // Fast path for undefined/null values
+    if (value === undefined) {
+      return isOptional
+        ? {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: this.options.default,
+          }
+        : {
+            success: false,
+            errors: ["Required field is missing"],
+            warnings: [],
+            data: value,
+          };
+    }
+
+    if (value === null) {
+      return isOptional
+        ? { success: true, errors: [], warnings: [], data: null }
+        : {
+            success: false,
+            errors: ["Field cannot be null"],
+            warnings: [],
+            data: value,
+          };
+    }
+
     const isArray = parsedType.endsWith("[]");
     const elementType = isArray ? parsedType.slice(0, -2) : parsedType;
-
-    // Handle undefined values
-    if (value === undefined) {
-      if (isOptional) {
-        result.data = this.options.default;
-        return result;
-      }
-      result.success = false;
-      result.errors.push("Required field is missing");
-      return result;
-    }
-
-    // Handle null values
-    if (value === null) {
-      if (isOptional) {
-        result.data = null;
-        return result;
-      }
-      result.success = false;
-      result.errors.push("Field cannot be null");
-      return result;
-    }
 
     // Handle array types
     if (isArray) {
       if (!Array.isArray(value)) {
-        result.success = false;
-        result.errors.push("Expected array");
-        return result;
+        return {
+          success: false,
+          errors: ["Expected array"],
+          warnings: [],
+          data: value,
+        };
       }
 
       // Apply parsed constraints to options
@@ -291,53 +489,62 @@ export class InterfaceSchema<T = any> {
         enhancedOptions.minItems !== undefined &&
         value.length < enhancedOptions.minItems
       ) {
-        result.success = false;
-        result.errors.push(
-          `Array must have at least ${enhancedOptions.minItems} items`
-        );
-        return result;
+        return {
+          success: false,
+          errors: [
+            `Array must have at least ${enhancedOptions.minItems} items`,
+          ],
+          warnings: [],
+          data: value,
+        };
       }
 
       if (
         enhancedOptions.maxItems !== undefined &&
         value.length > enhancedOptions.maxItems
       ) {
-        result.success = false;
-        result.errors.push(
-          `Array must have at most ${enhancedOptions.maxItems} items`
-        );
-        return result;
+        return {
+          success: false,
+          errors: [`Array must have at most ${enhancedOptions.maxItems} items`],
+          warnings: [],
+          data: value,
+        };
       }
 
+      // Validate array elements
       const validatedArray: any[] = [];
+      const errors: string[] = [];
+
       for (let i = 0; i < value.length; i++) {
         const elementResult = this.validateStringFieldType(
           elementType,
           value[i]
         );
         if (!elementResult.success) {
-          result.success = false;
-          result.errors.push(
-            `Element ${i}: ${elementResult.errors.join(", ")}`
-          );
+          errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
         } else {
           validatedArray.push(elementResult.data);
         }
       }
 
+      if (errors.length > 0) {
+        return { success: false, errors, warnings: [], data: value };
+      }
+
       // Check uniqueness if required
-      if (enhancedOptions.unique && result.success) {
+      if (enhancedOptions.unique) {
         const uniqueValues = new Set(validatedArray);
         if (uniqueValues.size !== validatedArray.length) {
-          result.success = false;
-          result.errors.push("Array values must be unique");
+          return {
+            success: false,
+            errors: ["Array values must be unique"],
+            warnings: [],
+            data: value,
+          };
         }
       }
 
-      if (result.success) {
-        result.data = validatedArray;
-      }
-      return result;
+      return { success: true, errors: [], warnings: [], data: validatedArray };
     }
 
     // Note: Conditional "when" syntax is handled at the field level, not here

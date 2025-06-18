@@ -1,96 +1,135 @@
 /**
  * Constraint Parser Module
- * 
- * Handles parsing of constraint syntax like "string(3,20)", "number(0,100)?", etc.
- * Extracted from InterfaceSchema to improve maintainability.
+ *
+ * Optimized parsing of constraint syntax like "string(3,20)", "number(0,100)?", etc.
+ * Uses caching and pre-compiled patterns for better performance.
  */
 
 export interface ParsedConstraints {
   type: string;
   constraints: any;
-  optional: boolean; 
+  optional: boolean;
 }
 
+// Cache for parsed constraints to avoid repeated parsing
+const parseCache = new Map<string, ParsedConstraints>();
+
+// Pre-compiled regex patterns for better performance
+const CONSTRAINT_PATTERN = /^([a-zA-Z\[\]]+)\(([^)]*)\)$/;
+const REGEX_PATTERN = /^\/(.+)\/$/;
+const COMMA_SPLIT = /\s*,\s*/;
+const NUMERIC_PATTERN = /^-?\d+(\.\d+)?$/;
+
 /**
- * Parses constraint syntax from field type strings
+ * Optimized constraint parser with caching
  */
 export class ConstraintParser {
   /**
-   * Parse constraint syntax like "string(3,20)", "number(0,100)?", etc.
+   * Parse constraint syntax with aggressive caching
    */
   static parseConstraints(fieldType: string): ParsedConstraints {
+    // Check cache first
+    const cached = parseCache.get(fieldType);
+    if (cached) {
+      return cached;
+    }
+
+    const result = this.parseConstraintsInternal(fieldType);
+
+    // Cache the result (limit cache size to prevent memory leaks)
+    if (parseCache.size < 1000) {
+      parseCache.set(fieldType, result);
+    }
+
+    return result;
+  }
+
+  /**
+   * Internal parsing logic - optimized for speed
+   */
+  private static parseConstraintsInternal(
+    fieldType: string
+  ): ParsedConstraints {
     let optional = false;
     let type = fieldType;
     let constraints: any = {};
 
-    // Check if optional (ends with ?)
-    if (type.endsWith("?")) {
+    // Check if optional (ends with ?) - optimized check
+    if (type.charCodeAt(type.length - 1) === 63) {
+      // 63 is '?'
       optional = true;
       type = type.slice(0, -1);
     }
 
-    // Parse constraints: "string(3,20)", "number(0,100)", "string[]?(1,10)"
-    const constraintMatch = type.match(/^([a-zA-Z\[\]]+)\(([^)]*)\)$/);
+    // Parse constraints using pre-compiled regex
+    const constraintMatch = type.match(CONSTRAINT_PATTERN);
     if (constraintMatch) {
       const [, baseType, constraintStr] = constraintMatch;
       type = baseType;
 
-      // Parse constraint parameters
-      if (constraintStr.trim()) {
-        // Handle regex patterns: "string(/^[a-z]+$/)"
-        if (constraintStr.startsWith("/") && constraintStr.endsWith("/")) {
-          const pattern = constraintStr.slice(1, -1);
-          constraints.pattern = new RegExp(pattern);
-        }
-        // Handle min,max constraints: "string(3,20)", "number(0,100)"
-        else if (constraintStr.includes(",")) {
-          const [minStr, maxStr] = constraintStr
-            .split(",")
-            .map((s) => s.trim());
-
-          if (minStr) {
-            const minVal = parseFloat(minStr);
-            if (!isNaN(minVal)) {
-              if (baseType.includes("[]")) {
-                constraints.minItems = minVal;
-              } else if (baseType === "string" || baseType.includes("string")) {
-                constraints.minLength = minVal;
-              } else {
-                constraints.min = minVal;
-              }
-            }
-          }
-
-          if (maxStr) {
-            const maxVal = parseFloat(maxStr);
-            if (!isNaN(maxVal)) {
-              if (baseType.includes("[]")) {
-                constraints.maxItems = maxVal;
-              } else if (baseType === "string" || baseType.includes("string")) {
-                constraints.maxLength = maxVal;
-              } else {
-                constraints.max = maxVal;
-              }
-            }
-          }
-        }
-        // Handle single value: "string(20)" -> max length
-        else {
-          const val = parseFloat(constraintStr);
-          if (!isNaN(val)) {
-            if (baseType.includes("[]")) {
-              constraints.maxItems = val;
-            } else if (baseType === "string" || baseType.includes("string")) {
-              constraints.maxLength = val;
-            } else {
-              constraints.max = val;
-            }
-          }
-        }
+      if (constraintStr) {
+        constraints = this.parseConstraintString(constraintStr, baseType);
       }
     }
 
     return { type, constraints, optional };
+  }
+
+  /**
+   * Parse constraint string efficiently
+   */
+  private static parseConstraintString(
+    constraintStr: string,
+    baseType: string
+  ): any {
+    const constraints: any = {};
+
+    // Handle regex patterns first
+    const regexMatch = constraintStr.match(REGEX_PATTERN);
+    if (regexMatch) {
+      constraints.pattern = new RegExp(regexMatch[1]);
+      return constraints;
+    }
+
+    // Handle min,max constraints
+    if (constraintStr.includes(",")) {
+      const parts = constraintStr.split(COMMA_SPLIT);
+      const [minStr, maxStr] = parts;
+
+      if (minStr && NUMERIC_PATTERN.test(minStr)) {
+        const minVal = parseFloat(minStr);
+        this.setConstraintValue(constraints, baseType, "min", minVal);
+      }
+
+      if (maxStr && NUMERIC_PATTERN.test(maxStr)) {
+        const maxVal = parseFloat(maxStr);
+        this.setConstraintValue(constraints, baseType, "max", maxVal);
+      }
+    } else if (NUMERIC_PATTERN.test(constraintStr)) {
+      // Single value constraint
+      const val = parseFloat(constraintStr);
+      this.setConstraintValue(constraints, baseType, "max", val);
+    }
+
+    return constraints;
+  }
+
+  /**
+   * Set constraint value based on type - optimized logic
+   */
+  private static setConstraintValue(
+    constraints: any,
+    baseType: string,
+    constraintType: "min" | "max",
+    value: number
+  ): void {
+    if (baseType.includes("[]")) {
+      constraints[constraintType === "min" ? "minItems" : "maxItems"] = value;
+    } else if (baseType === "string" || baseType.includes("string")) {
+      constraints[constraintType === "min" ? "minLength" : "maxLength"] = value;
+    } else {
+      constraints[constraintType] = value;
+    }
   }
 
   /**
@@ -150,25 +189,39 @@ export class ConstraintParser {
     }
 
     // Validate length constraints
-    if (constraints.minLength !== undefined && constraints.maxLength !== undefined) {
+    if (
+      constraints.minLength !== undefined &&
+      constraints.maxLength !== undefined
+    ) {
       if (constraints.minLength > constraints.maxLength) {
         errors.push("Minimum length cannot be greater than maximum length");
       }
     }
 
     // Validate array constraints
-    if (constraints.minItems !== undefined && constraints.maxItems !== undefined) {
+    if (
+      constraints.minItems !== undefined &&
+      constraints.maxItems !== undefined
+    ) {
       if (constraints.minItems > constraints.maxItems) {
         errors.push("Minimum items cannot be greater than maximum items");
       }
     }
 
     // Validate negative constraints
-    if (constraints.min !== undefined && constraints.min < 0 && type === "positive") {
+    if (
+      constraints.min !== undefined &&
+      constraints.min < 0 &&
+      type === "positive"
+    ) {
       errors.push("Positive type cannot have negative minimum value");
     }
 
-    if (constraints.max !== undefined && constraints.max > 0 && type === "negative") {
+    if (
+      constraints.max !== undefined &&
+      constraints.max > 0 &&
+      type === "negative"
+    ) {
       errors.push("Negative type cannot have positive maximum value");
     }
 
@@ -183,9 +236,26 @@ export class ConstraintParser {
   }
 
   /**
+   * Clear cache for memory management
+   */
+  static clearCache(): void {
+    parseCache.clear();
+  }
+
+  /**
+   * Get cache statistics
+   */
+  static getCacheStats(): { size: number; hitRate: number } {
+    return {
+      size: parseCache.size,
+      hitRate: 0, // Would need hit/miss tracking for accurate rate
+    };
+  }
+
+  /**
    * Get constraint description for error messages
    */
-  static getConstraintDescription(constraints: any, type: string): string {
+  static getConstraintDescription(constraints: any, _type?: string): string {
     const descriptions: string[] = [];
 
     if (constraints.min !== undefined) {
@@ -227,7 +297,7 @@ export class ConstraintParser {
     if (constraintStr.includes(";")) {
       const parts = constraintStr.split(";");
       for (const part of parts) {
-        const [key, value] = part.split(":").map(s => s.trim());
+        const [key, value] = part.split(":").map((s) => s.trim());
         if (key && value) {
           switch (key) {
             case "min":

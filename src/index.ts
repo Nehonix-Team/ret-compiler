@@ -74,6 +74,16 @@ export {
   QuickSchemas,
 } from "./core/schema/mode/interfaces/Interface";
 
+// Superior Performance Interface (Next Generation)
+export {
+  Interface as SuperiorInterface,
+  LiveValidator,
+  ValidationError,
+} from "./core/performance/SuperiorInterface";
+export { HighPerformanceValidator } from "./core/performance/HighPerformanceValidator";
+export { OptimizedParser } from "./core/performance/OptimizedParser";
+export { PerformanceBenchmark } from "./core/performance/benchmark";
+
 // Extensions (Advanced Features)
 export {
   Smart,
