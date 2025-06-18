@@ -92,5 +92,5 @@ export class Make {
 /**
  * future improvements:
  *
- *  fromType and fromInterface (see @see {@link "./TODO.md"})
+ *  fromType and fromInterface (see @see {@link "/TODOS/TS_COMPILER.todo.md"})
  */

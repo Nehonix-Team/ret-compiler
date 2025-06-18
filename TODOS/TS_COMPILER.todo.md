@@ -1,5 +1,5 @@
 # Fortify Schema - TODO & Contributing Guide
-
+ 
 This document outlines the current development status, high-priority tasks, and guidelines for contributing to Fortify Schema.
 
 ## Current Development Status
