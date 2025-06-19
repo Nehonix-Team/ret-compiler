@@ -379,6 +379,11 @@ export class ConditionalParser {
       return ASTBuilder.createLiteral(pattern, "string", position);
     }
 
+    // Handle parentheses patterns (like (temp|disposable|10min) or @(company|org|gov))
+    if (this.check(TokenType.LPAREN) || this.check(TokenType.AT)) {
+      return this.parseComplexPattern();
+    }
+
     // Handle complex patterns with special characters
     if (
       this.check(TokenType.CARET) ||
@@ -452,6 +457,15 @@ export class ConditionalParser {
       return ASTBuilder.createLiteral(value, "string", position);
     }
 
+    // Handle complex patterns with parentheses (like @(company|org|gov))
+    if (
+      this.check(TokenType.AT) ||
+      this.check(TokenType.CARET) ||
+      this.check(TokenType.IDENTIFIER)
+    ) {
+      return this.parseComplexPattern();
+    }
+
     if (this.match(TokenType.IDENTIFIER)) {
       const identifier = this.previous().value;
 
@@ -506,6 +520,52 @@ export class ConditionalParser {
     }
 
     throw new Error(`Expected literal value, got ${this.peek().type}`);
+  }
+
+  /**
+   * Parse complex patterns with parentheses and special characters
+   * Handles patterns like @(company|org|gov), (temp|disposable|10min), etc.
+   */
+  private parseComplexPattern(): LiteralNode {
+    const position = this.peek().position;
+    let pattern = "";
+    let depth = 0;
+
+    // Build the complete pattern by consuming tokens
+    while (!this.isAtEnd()) {
+      const token = this.peek();
+
+      // Stop at conditional operators or end of expression
+      if (
+        token.type === TokenType.CONDITIONAL_THEN ||
+        token.type === TokenType.COLON ||
+        token.type === TokenType.AND ||
+        token.type === TokenType.OR
+      ) {
+        break;
+      }
+
+      // Handle parentheses depth tracking
+      if (token.type === TokenType.LPAREN) {
+        depth++;
+      } else if (token.type === TokenType.RPAREN) {
+        depth--;
+        // If we close all parentheses, include this token and stop
+        if (depth < 0) {
+          break;
+        }
+      }
+
+      // Add token to pattern
+      pattern += this.advance().value;
+
+      // If we've closed all parentheses, we're done
+      if (depth === 0 && pattern.includes(")")) {
+        break;
+      }
+    }
+
+    return ASTBuilder.createLiteral(pattern, "string", position);
   }
 
   /**

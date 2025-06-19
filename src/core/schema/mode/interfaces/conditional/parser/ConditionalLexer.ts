@@ -170,6 +170,12 @@ export class ConditionalLexer {
       return;
     }
 
+    // Handle forward slash patterns (like /secure/, /admin/)
+    if (char === "/" && this.isRegexSlashContext()) {
+      this.scanSlashPattern();
+      return;
+    }
+
     // Handle regex patterns after ~ operator
     if (this.isRegexContext()) {
       this.scanRegexPattern();
@@ -426,6 +432,49 @@ export class ConditionalLexer {
       lastToken.type === TokenType.MATCHES ||
       lastToken.type === TokenType.NOT_MATCHES
     );
+  }
+
+  /**
+   * Check if we're in a context where forward slashes should be treated as regex delimiters
+   */
+  private isRegexSlashContext(): boolean {
+    // Look for method calls like .contains() or .startsWith()
+    if (this.tokens.length < 2) return false;
+
+    const lastToken = this.tokens[this.tokens.length - 1];
+    const secondLastToken = this.tokens[this.tokens.length - 2];
+
+    // Check if we're inside method arguments like .contains(/pattern/)
+    return (
+      lastToken.type === TokenType.LPAREN &&
+      (secondLastToken.type === TokenType.CONTAINS ||
+        secondLastToken.type === TokenType.NOT_CONTAINS ||
+        secondLastToken.type === TokenType.STARTS_WITH ||
+        secondLastToken.type === TokenType.ENDS_WITH)
+    );
+  }
+
+  /**
+   * Scan slash-delimited pattern (like /secure/, /admin/)
+   */
+  private scanSlashPattern(): void {
+    let pattern = "";
+
+    // Skip the opening slash (already consumed)
+    while (!this.isAtEnd() && this.peek() !== "/") {
+      pattern += this.advance();
+    }
+
+    if (this.peek() === "/") {
+      this.advance(); // Consume closing slash
+      this.addToken(TokenType.STRING, pattern);
+    } else {
+      this.addError(
+        ErrorType.SYNTAX_ERROR,
+        "Unterminated regex pattern",
+        "Add closing / to complete the pattern"
+      );
+    }
   }
 
   /**
