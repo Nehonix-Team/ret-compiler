@@ -65,14 +65,23 @@ export class ValidationHelpers {
   }
 
   /**
-   * Validate union types (e.g., "pending|accepted|rejected")
+   * Validate union types (e.g., "pending|accepted|rejected" or "(user|admin|guest)")
    * Optimized with Set for O(1) lookup instead of array includes
+   * Now handles parentheses for grouped unions
    */
   static validateUnionType(
     unionType: string,
     value: any
   ): SchemaValidationResult {
-    const allowedValues = new Set(unionType.split("|").map((v) => v.trim()));
+    // Strip parentheses if present
+    let cleanUnionType = unionType.trim();
+    if (cleanUnionType.startsWith("(") && cleanUnionType.endsWith(")")) {
+      cleanUnionType = cleanUnionType.slice(1, -1);
+    }
+
+    const allowedValues = new Set(
+      cleanUnionType.split("|").map((v) => v.trim())
+    );
     const stringValue = String(value);
 
     if (!allowedValues.has(stringValue)) {

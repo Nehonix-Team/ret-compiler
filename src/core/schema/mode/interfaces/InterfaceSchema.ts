@@ -11,8 +11,14 @@ import {
   SchemaOptions,
 } from "../../../types/SchemaValidator.type";
 import { SchemaValidationResult } from "../../../types/types";
-import { ConditionalSyntaxUtils } from "../../extensions/components/ConditionalValidation/utils/SyntaxParser";
+
 import { ConstraintParser, TypeGuards, ValidationHelpers } from "./validators";
+
+// Import our conditional validation system
+import { ConditionalParser } from "./conditional/parser/ConditionalParser";
+import { ConditionalEvaluator } from "./conditional/evaluator/ConditionalEvaluator";
+import { ASTAnalyzer } from "./conditional/parser/ConditionalAST";
+import { ConditionalNode } from "./conditional/types/ConditionalTypes";
 
 /**
  * Interface Schema class for TypeScript-like schema definitions
@@ -31,18 +37,36 @@ interface CompiledField {
   isArray?: boolean;
   elementType?: string;
   isOptional?: boolean;
+  // conditional validation
+  ConditionalAST?: ConditionalNode;
 }
 
 export class InterfaceSchema<T = any> {
   private compiledFields: CompiledField[] = [];
   private schemaKeys: string[] = [];
+  private ConditionalParser: ConditionalParser;
 
   constructor(
     private definition: SchemaInterface,
     private options: SchemaOptions = {}
   ) {
+    // Initialize conditional parser
+    this.ConditionalParser = new ConditionalParser({
+      allowNestedConditionals: true,
+      maxNestingDepth: 5,
+      strictMode: false,
+      enableDebug: false,
+    });
+
     // Pre-compile schema at initialization
     this.precompileSchema();
+  }
+
+  /**
+   * Check if a field type uses conditional syntax
+   */
+  private isConditionalSyntax(fieldType: string): boolean {
+    return fieldType.includes("when ") && fieldType.includes(" *? ");
   }
 
   /**
@@ -62,12 +86,33 @@ export class InterfaceSchema<T = any> {
       };
 
       if (typeof fieldType === "string") {
-        // Check for conditional syntax
-        if (ConditionalSyntaxUtils.isConditional(fieldType)) {
+        // Check for conditional syntax (when ... *? ... : ...)
+        if (this.isConditionalSyntax(fieldType)) {
           compiled.isConditional = true;
-          compiled.conditionalConfig = ConditionalSyntaxUtils.parse(fieldType);
+          compiled.isConditional = true;
+
+          // Parse with parser
+          const { ast, errors } = this.ConditionalParser.parse(fieldType);
+          if (ast && errors.length === 0) {
+            compiled.ConditionalAST = ast;
+          } else {
+            // If parsing fails, treat as regular field type
+            console.warn(
+              `Failed to parse conditional expression: ${fieldType}`,
+              errors
+            );
+            const parsed = ConstraintParser.parseConstraints(fieldType);
+            compiled.parsedConstraints = parsed;
+            compiled.isOptional = parsed.optional;
+            compiled.isArray = parsed.type.endsWith("[]");
+            compiled.elementType = compiled.isArray
+              ? parsed.type.slice(0, -2)
+              : parsed.type;
+            compiled.isConditional = false;
+            compiled.isConditional = false;
+          }
         } else {
-          // Pre-parse constraints
+          // Pre-parse constraints for regular field types
           const parsed = ConstraintParser.parseConstraints(fieldType);
           compiled.parsedConstraints = parsed;
           compiled.isOptional = parsed.optional;
@@ -77,6 +122,7 @@ export class InterfaceSchema<T = any> {
             : parsed.type;
         }
       } else if (TypeGuards.isConditionalValidation(fieldType)) {
+        // Object-based conditional validation (keep for backward compatibility)
         compiled.isConditional = true;
         compiled.conditionalConfig = fieldType;
       }
@@ -113,11 +159,21 @@ export class InterfaceSchema<T = any> {
 
       // Use pre-compiled information to skip parsing
       if (field.isConditional) {
-        fieldResult = this.validateConditionalFieldWithContext(
-          field.conditionalConfig,
-          value,
-          data
-        );
+        if (field.isConditional && field.ConditionalAST) {
+          // Use conditional validation
+          fieldResult = this.validateEnhancedConditionalField(
+            field.ConditionalAST,
+            value,
+            data
+          );
+        } else {
+          // Use legacy conditional validation
+          fieldResult = this.validateConditionalFieldWithContext(
+            field.conditionalConfig,
+            value,
+            data
+          );
+        }
       } else if (field.isString && field.parsedConstraints) {
         // Use pre-parsed constraints for string fields
         fieldResult = this.validatePrecompiledStringField(field, value);
@@ -256,11 +312,10 @@ export class InterfaceSchema<T = any> {
       const errors: string[] = [];
 
       for (let i = 0; i < value.length; i++) {
-        const elementResult = ValidationHelpers.routeTypeValidation(
+        // Use validateStringFieldType to handle union types properly
+        const elementResult = this.validateStringFieldType(
           field.elementType!,
-          value[i],
-          { ...this.options, ...constraints },
-          constraints
+          value[i]
         );
         if (!elementResult.success) {
           errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
@@ -410,13 +465,8 @@ export class InterfaceSchema<T = any> {
 
     // Handle string field types
     if (typeof fieldType === "string") {
-      // Check if it's conditional validation syntax (both new and legacy)
-      if (ConditionalSyntaxUtils.isConditional(fieldType)) {
-        const conditionalConfig = ConditionalSyntaxUtils.parse(fieldType);
-        if (conditionalConfig) {
-          return this.validateConditionalField(conditionalConfig, value);
-        }
-      }
+      // conditional validation is handled in the main validation loop
+      // This method is only for direct field type validation
       return this.validateStringFieldType(fieldType, value);
     }
 
@@ -482,30 +532,22 @@ export class InterfaceSchema<T = any> {
       }
 
       // Apply parsed constraints to options
-      const enhancedOptions = { ...this.options, ...constraints };
+      const Options = { ...this.options, ...constraints };
 
       // Check array constraints
-      if (
-        enhancedOptions.minItems !== undefined &&
-        value.length < enhancedOptions.minItems
-      ) {
+      if (Options.minItems !== undefined && value.length < Options.minItems) {
         return {
           success: false,
-          errors: [
-            `Array must have at least ${enhancedOptions.minItems} items`,
-          ],
+          errors: [`Array must have at least ${Options.minItems} items`],
           warnings: [],
           data: value,
         };
       }
 
-      if (
-        enhancedOptions.maxItems !== undefined &&
-        value.length > enhancedOptions.maxItems
-      ) {
+      if (Options.maxItems !== undefined && value.length > Options.maxItems) {
         return {
           success: false,
-          errors: [`Array must have at most ${enhancedOptions.maxItems} items`],
+          errors: [`Array must have at most ${Options.maxItems} items`],
           warnings: [],
           data: value,
         };
@@ -532,7 +574,7 @@ export class InterfaceSchema<T = any> {
       }
 
       // Check uniqueness if required
-      if (enhancedOptions.unique) {
+      if (Options.unique) {
         const uniqueValues = new Set(validatedArray);
         if (uniqueValues.size !== validatedArray.length) {
           return {
@@ -557,27 +599,32 @@ export class InterfaceSchema<T = any> {
       );
     }
 
-    // Handle union types (e.g., "pending|accepted|rejected")
+    // Handle union types (e.g., "pending|accepted|rejected" or "(user|admin|guest)")
     if (elementType.includes("|")) {
       return ValidationHelpers.validateUnionType(elementType, value);
     }
 
-    // Handle basic types - pass the original fieldType to preserve constraints
-    return this.validateBasicType(fieldType, value);
+    // Handle basic types - pass the elementType for proper validation
+    return this.validateBasicType(elementType, value);
   }
 
   /**
-   * Validate basic types with enhanced constraints
+   * Validate basic types with constraints
    */
   private validateBasicType(
     fieldType: string,
     value: any
   ): SchemaValidationResult {
+    // Handle union types before constraint parsing (e.g., "(user|admin|guest)")
+    if (fieldType.includes("|")) {
+      return ValidationHelpers.validateUnionType(fieldType, value);
+    }
+
     // Parse constraints from field type
     const { type, constraints } = ConstraintParser.parseConstraints(fieldType);
 
     // Apply parsed constraints to options
-    const enhancedOptions = { ...this.options, ...constraints };
+    const Options = { ...this.options, ...constraints };
 
     // Check for Record types first
     if (type.startsWith("record<") && type.endsWith(">")) {
@@ -593,9 +640,192 @@ export class InterfaceSchema<T = any> {
     return ValidationHelpers.routeTypeValidation(
       type,
       value,
-      enhancedOptions,
+      Options,
       constraints
     );
+  }
+
+  /**
+   * Validate enhanced conditional field using our new AST-based system
+   */
+  private validateEnhancedConditionalField(
+    ast: ConditionalNode,
+    value: any,
+    fullData: any
+  ): SchemaValidationResult {
+    try {
+      // Evaluate the conditional expression against the full data
+      const evaluationResult = ConditionalEvaluator.evaluate(ast, fullData, {
+        strict: this.options.strict || false,
+        debug: false,
+      });
+
+      if (!evaluationResult.success) {
+        return {
+          success: false,
+          errors: evaluationResult.errors,
+          warnings: [],
+          data: value,
+        };
+      }
+
+      // Get the expected schema from the evaluation result
+      const expectedSchema = evaluationResult.value;
+
+      if (expectedSchema === undefined) {
+        // No schema constraint, accept the value
+        return {
+          success: true,
+          errors: [],
+          warnings: [],
+          data: value,
+        };
+      }
+
+      // If the expected schema is a constant value (starts with =), validate against it
+      if (typeof expectedSchema === "string") {
+        // Handle constant values that start with =
+        if (expectedSchema.startsWith("=")) {
+          const expectedValue = expectedSchema.slice(1); // Remove the = prefix
+
+          // Handle special constant values
+          let actualExpectedValue: any = expectedValue;
+          if (expectedValue === "null") {
+            actualExpectedValue = null;
+          } else if (expectedValue === "true") {
+            actualExpectedValue = true;
+          } else if (expectedValue === "false") {
+            actualExpectedValue = false;
+          } else if (/^\d+(\.\d+)?$/.test(expectedValue)) {
+            actualExpectedValue = parseFloat(expectedValue);
+          }
+
+          // For conditional fields, set the value to the constant instead of validating input
+          return {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: actualExpectedValue, // Set the field to the constant value
+          };
+        }
+
+        // Handle non-constant string schemas (like "boolean", "string", etc.)
+        // These should be validated as types, not as literal string values
+        if (expectedSchema === "boolean") {
+          if (typeof value !== "boolean") {
+            return {
+              success: false,
+              errors: [`Expected boolean, got ${typeof value}`],
+              warnings: [],
+              data: value,
+            };
+          }
+          return {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+          };
+        }
+
+        if (expectedSchema === "string") {
+          if (typeof value !== "string") {
+            return {
+              success: false,
+              errors: [`Expected string, got ${typeof value}`],
+              warnings: [],
+              data: value,
+            };
+          }
+          return {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+          };
+        }
+
+        if (expectedSchema === "number") {
+          if (typeof value !== "number") {
+            return {
+              success: false,
+              errors: [`Expected number, got ${typeof value}`],
+              warnings: [],
+              data: value,
+            };
+          }
+          return {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+          };
+        }
+      }
+
+      // For other schema types, validate the value against the schema
+      if (typeof expectedSchema === "string") {
+        // Handle array types specially
+        if (expectedSchema.endsWith("[]") || expectedSchema.endsWith("[]?")) {
+          const isOptional = expectedSchema.endsWith("[]?");
+
+          if (value === null || value === undefined) {
+            if (isOptional) {
+              return {
+                success: true,
+                errors: [],
+                warnings: [],
+                data: value,
+              };
+            } else {
+              return {
+                success: false,
+                errors: [`Field cannot be null`],
+                warnings: [],
+                data: value,
+              };
+            }
+          }
+
+          if (!Array.isArray(value)) {
+            return {
+              success: false,
+              errors: [`Expected array, got ${typeof value}`],
+              warnings: [],
+              data: value,
+            };
+          }
+
+          // For arrays, just validate that it's an array - don't validate individual elements
+          // against the conditional expression since that doesn't make sense
+          return {
+            success: true,
+            errors: [],
+            warnings: [],
+            data: value,
+          };
+        }
+
+        return this.validateStringFieldType(expectedSchema, value);
+      }
+
+      // Accept the value if we can't determine the schema
+      return {
+        success: true,
+        errors: [],
+        warnings: [],
+        data: value,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        errors: [
+          `conditional validation error: ${error instanceof Error ? error.message : String(error)}`,
+        ],
+        warnings: [],
+        data: value,
+      };
+    }
   }
 
   /**

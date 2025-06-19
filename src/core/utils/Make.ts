@@ -1,8 +1,4 @@
 import {
-  InterfaceSchemaFromType,
-  TypeToSchema,
-} from "../schema/mode/interfaces/types/interface.type";
-import {
   ConstantValue,
   UnionValue,
   SchemaInterface,

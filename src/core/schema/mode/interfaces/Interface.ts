@@ -37,7 +37,7 @@ import {
   SchemaFieldType,
   UnionValue,
 } from "../../../types/SchemaValidator.type";
-import { InferSchemaType } from "./types/interface.type";
+import { InferSchemaType } from "./typescript/TypeInference";
 
 /**
  * Create a schema using TypeScript interface-like syntax with full type inference
@@ -144,6 +144,26 @@ export type {
   ConstantValue,
 } from "../../../types/SchemaValidator.type";
 export { InterfaceSchema } from "./InterfaceSchema";
+
+// Re-export TypeScript integration
+export { TypeScriptIntegration, IDE, TypeInference } from "./typescript";
+export type {
+  ConditionalExpression,
+  TypeInferenceResult,
+  ConditionalResult,
+  FieldPaths,
+  GetValueByPath,
+  ValidateConditional,
+} from "./typescript";
+
+// Re-export validators for advanced usage
+export {
+  TypeValidators,
+  ConstraintParser,
+  TypeGuards,
+  ValidationHelpers,
+} from "./validators";
+export type { ParsedConstraints } from "./validators";
 
 /**
  * Available field types for schema definitions

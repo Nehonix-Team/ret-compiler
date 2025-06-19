@@ -352,4 +352,3 @@ permissions: When.field("role")
 permissions: "when role.in(user,guest) *? string[]? : string[]";
 ```
 
-This comprehensive reference should help you understand why `!=` works at runtime but doesn't show IDE errors, and provides alternatives for full TypeScript support.
