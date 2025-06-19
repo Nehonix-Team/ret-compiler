@@ -18,7 +18,7 @@ Fortify Schema revolutionizes data validation by providing the industry's first 
 | Resource                                                                           | Description                                                |
 | ---------------------------------------------------------------------------------- | ---------------------------------------------------------- |
 | **[Complete Documentation](./docs/README.md)**                                     | Full documentation index with organized sections           |
-| **[Conditional Validation Guide](./docs/CONDITIONAL_VALIDATION_COMPREHENSIVE.md)** | **World-class conditional validation with 20+ operators**  |
+| **[Conditional Validation Guide](./docs/FULL%20CONDITIONAL_VALIDATION%20DOC.md)** | **World-class conditional validation with 20+ operators**  |
 | **[Quick Reference](./docs/QUICK-REFERENCE.md)**                                   | Cheat sheet for common patterns and syntax                 |
 | **[Field Types Reference](./docs/FIELD-TYPES.md)**                                 | Comprehensive guide to all available types and constraints |
 | **[Real-World Examples](./docs/EXAMPLES.md)**                                      | Production-ready schemas for enterprise use                |
