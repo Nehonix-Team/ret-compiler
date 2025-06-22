@@ -34,7 +34,6 @@ curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o
 # Install a specific version 
 curl -L https://sdk.nehonix.space/pkgs/mods/vscode/[version (e.g: 0.1.0)]/fortify-schema.vsix -o fortify-schema.vsix
 
-# To install a specific version, use
 code --install-extension fortify-schema.vsix
 ```
 
