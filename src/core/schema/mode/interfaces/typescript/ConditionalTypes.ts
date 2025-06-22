@@ -1048,7 +1048,7 @@ export namespace Runtime {
     // Parse different syntax formats
     let condition: string, thenValue: string, elseValue: string;
 
-    // Revolutionary syntax: when condition *? then : else
+    // syntax: when condition *? then : else
     let match = expression.match(/when\s+(.+?)\s*\*\?\s*(.+?)\s*:\s*(.+)/);
     if (match) {
       [, condition, thenValue, elseValue] = match;
@@ -1500,7 +1500,7 @@ export namespace Documentation {
   export function generateSyntaxDocs(): string {
     return `# Conditional Syntax Reference
 
-## Revolutionary Syntax (Recommended)
+## Syntax (Recommended)
 \`\`\`
 when <condition> *? <then_value> : <else_value>
 \`\`\`

@@ -468,7 +468,7 @@ const FileManagementSchema = Interface({
   filepath: "string",
   fileType: "document|image|video|audio|code",
   permissions: "string",
-
+ 
   // String starts with checks
   tempFileAction: "when filename.startsWith(temp_) *? =delete : =keep",
   backupFileAction: "when filename.startsWith(backup_) *? =archive : =process",

@@ -1,5 +1,5 @@
 /**
- * Auto Documentation - Revolutionary schema documentation generator
+ * Auto Documentation - schema documentation generator
  * 
  * This module automatically generates beautiful documentation from schemas,
  * including API docs, type definitions, and interactive examples.

@@ -58,7 +58,7 @@ export class Make {
   }
 
   /**
-   * Infer schema from TypeScript type - Revolutionary type-to-schema conversion
+   * Infer schema from TypeScript type - type-to-schema conversion
    *
    * ⚠️  IMPORTANT: Compile-time mode (without sample) currently returns "any" placeholder
    * 🚀 RECOMMENDED: Use runtime mode with sample data for proper validation

@@ -6,7 +6,7 @@ import { When } from "../core/schema/extensions";
 import { InterfaceSchema } from "../core/schema/mode/interfaces/InterfaceSchema";
 
 describe("Conditional Validation Implementation", () => {
-  describe("Revolutionary *? Syntax", () => {
+  describe("*? Syntax", () => {
     it("should validate when condition *? then : else syntax", () => {
       const schema = new InterfaceSchema({
         role: "string",
@@ -98,7 +98,10 @@ describe("Conditional Validation Implementation", () => {
     it("should validate using When.field() builder", () => {
       const schema = new InterfaceSchema({
         status: "string",
-        details: When.field("status").is("active").then("string").else("string?"),
+        details: When.field("status")
+          .is("active")
+          .then("string")
+          .else("string?"),
       });
 
       // Active status requires details
@@ -233,7 +236,8 @@ describe("Conditional Validation Implementation", () => {
       const schema = new InterfaceSchema({
         userType: "string",
         subscription: "string?",
-        features: "when userType=premium *? string[] : when subscription.exists *? string[] : string[]?",
+        features:
+          "when userType=premium *? string[] : when subscription.exists *? string[] : string[]?",
       });
 
       // Premium user should have features
@@ -247,7 +251,10 @@ describe("Conditional Validation Implementation", () => {
 
     it("should validate conditional fields without full data context", () => {
       const schema = new InterfaceSchema({
-        conditionalField: When.field("otherField").is("value").then("string").else("number"),
+        conditionalField: When.field("otherField")
+          .is("value")
+          .then("string")
+          .else("number"),
       });
 
       // Should handle gracefully when dependent field is missing

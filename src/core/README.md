@@ -1,6 +1,6 @@
 # FortifyJS Schema System
 
-A revolutionary schema validation system with **TypeScript interface-like syntax** that's incredibly easy to use and completely separate from validators.
+A schema validation system with **TypeScript interface-like syntax** that's incredibly easy to use and completely separate from validators.
 
 ## 🎯 The Problem with Current Schema Libraries
 

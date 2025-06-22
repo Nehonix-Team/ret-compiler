@@ -126,7 +126,7 @@ version: Make.const("1.0")    // ✅ CORRECT: Explicit constant declaration
 
 ## Conditional Syntax Examples
 
-### 1. Revolutionary Syntax (Recommended)
+### 1. ntax (Recommended)
 ```typescript
 const UserSchema = Interface({
   role: "admin|user|guest",

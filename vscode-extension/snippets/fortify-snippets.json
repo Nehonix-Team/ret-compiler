@@ -1,0 +1,200 @@
+{
+  "Fortify Interface Schema": {
+    "prefix": "fortify-interface",
+    "body": [
+      "const ${1:SchemaName} = Interface({",
+      "  ${2:fieldName}: \"${3:string}\",",
+      "  $0",
+      "});"
+    ],
+    "description": "Create a new Fortify Interface schema"
+  },
+  "String with constraints": {
+    "prefix": "string-constraint",
+    "body": "\"string(${1:min},${2:max})${3:?}\"",
+    "description": "String type with length constraints"
+  },
+  "Number with constraints": {
+    "prefix": "number-constraint",
+    "body": "\"number(${1:min},${2:max})${3:?}\"",
+    "description": "Number type with value constraints"
+  },
+  "Integer with constraints": {
+    "prefix": "int-constraint",
+    "body": "\"int(${1:min},${2:max})${3:?}\"",
+    "description": "Integer type with value constraints"
+  },
+  "Array with constraints": {
+    "prefix": "array-constraint",
+    "body": "\"${1:string}[](${2:min},${3:max})${4:?}\"",
+    "description": "Array type with size constraints"
+  },
+  "Union type": {
+    "prefix": "union-type",
+    "body": "\"${1:value1}|${2:value2}|${3:value3}${4:?}\"",
+    "description": "Union type with multiple values"
+  },
+  "Constant value": {
+    "prefix": "constant-value",
+    "body": "\"=${1:constantValue}\"",
+    "description": "Constant value type"
+  },
+  "Email type": {
+    "prefix": "email-type",
+    "body": "\"email${1:?}\"",
+    "description": "Email format validation"
+  },
+  "URL type": {
+    "prefix": "url-type",
+    "body": "\"url${1:?}\"",
+    "description": "URL format validation"
+  },
+  "UUID type": {
+    "prefix": "uuid-type",
+    "body": "\"uuid${1:?}\"",
+    "description": "UUID format validation"
+  },
+  "Phone type": {
+    "prefix": "phone-type",
+    "body": "\"phone${1:?}\"",
+    "description": "Phone number format validation"
+  },
+  "Conditional when": {
+    "prefix": "when-conditional",
+    "body": "\"when ${1:field}${2:=}${3:value} *? ${4:thenType} : ${5:elseType}\"",
+    "description": "Conditional validation with when clause"
+  },
+  "When equals": {
+    "prefix": "when-equals",
+    "body": "\"when ${1:field}=${2:value} *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - equals"
+  },
+  "When not equals": {
+    "prefix": "when-not-equals",
+    "body": "\"when ${1:field}!=${2:value} *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - not equals"
+  },
+  "When greater than": {
+    "prefix": "when-greater",
+    "body": "\"when ${1:field}>${2:value} *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - greater than"
+  },
+  "When less than": {
+    "prefix": "when-less",
+    "body": "\"when ${1:field}<${2:value} *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - less than"
+  },
+  "When in array": {
+    "prefix": "when-in",
+    "body": "\"when ${1:field}.in(${2:value1},${3:value2}) *? ${4:thenType} : ${5:elseType}\"",
+    "description": "Conditional validation - field in array"
+  },
+  "When contains": {
+    "prefix": "when-contains",
+    "body": "\"when ${1:field}.contains(${2:substring}) *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - string contains"
+  },
+  "When starts with": {
+    "prefix": "when-starts",
+    "body": "\"when ${1:field}.startsWith(${2:prefix}) *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - string starts with"
+  },
+  "When ends with": {
+    "prefix": "when-ends",
+    "body": "\"when ${1:field}.endsWith(${2:suffix}) *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - string ends with"
+  },
+  "When exists": {
+    "prefix": "when-exists",
+    "body": "\"when ${1:field}.exists *? ${2:thenType} : ${3:elseType}\"",
+    "description": "Conditional validation - field exists"
+  },
+  "When not exists": {
+    "prefix": "when-not-exists",
+    "body": "\"when ${1:field}.!exists *? ${2:thenType} : ${3:elseType}\"",
+    "description": "Conditional validation - field does not exist"
+  },
+  "When empty": {
+    "prefix": "when-empty",
+    "body": "\"when ${1:field}.empty *? ${2:thenType} : ${3:elseType}\"",
+    "description": "Conditional validation - field is empty"
+  },
+  "When not empty": {
+    "prefix": "when-not-empty",
+    "body": "\"when ${1:field}.!empty *? ${2:thenType} : ${3:elseType}\"",
+    "description": "Conditional validation - field is not empty"
+  },
+  "When null": {
+    "prefix": "when-null",
+    "body": "\"when ${1:field}.null *? ${2:thenType} : ${3:elseType}\"",
+    "description": "Conditional validation - field is null"
+  },
+  "When not null": {
+    "prefix": "when-not-null",
+    "body": "\"when ${1:field}.!null *? ${2:thenType} : ${3:elseType}\"",
+    "description": "Conditional validation - field is not null"
+  },
+  "When regex match": {
+    "prefix": "when-regex",
+    "body": "\"when ${1:field}~${2:^pattern$} *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - regex match"
+  },
+  "When regex not match": {
+    "prefix": "when-not-regex",
+    "body": "\"when ${1:field}!~${2:^pattern$} *? ${3:thenType} : ${4:elseType}\"",
+    "description": "Conditional validation - regex not match"
+  },
+  "Logical AND condition": {
+    "prefix": "when-and",
+    "body": "\"when ${1:field1}=${2:value1} && ${3:field2}=${4:value2} *? ${5:thenType} : ${6:elseType}\"",
+    "description": "Conditional validation with AND logic"
+  },
+  "Logical OR condition": {
+    "prefix": "when-or",
+    "body": "\"when ${1:field1}=${2:value1} || ${3:field2}=${4:value2} *? ${5:thenType} : ${6:elseType}\"",
+    "description": "Conditional validation with OR logic"
+  },
+  "Nested object": {
+    "prefix": "nested-object",
+    "body": [
+      "${1:fieldName}: {",
+      "  ${2:subField}: \"${3:string}\",",
+      "  $0",
+      "}"
+    ],
+    "description": "Nested object definition"
+  },
+  "Array of objects": {
+    "prefix": "array-objects",
+    "body": [
+      "${1:fieldName}: [{",
+      "  ${2:subField}: \"${3:string}\",",
+      "  $0",
+      "}]"
+    ],
+    "description": "Array of objects definition"
+  },
+  "Complete user schema": {
+    "prefix": "user-schema",
+    "body": [
+      "const UserSchema = Interface({",
+      "  id: \"positive\",",
+      "  email: \"email\",",
+      "  name: \"string(2,50)\",",
+      "  age: \"int(18,120)?\",",
+      "  isActive: \"boolean?\",",
+      "  role: \"user|admin|moderator\",",
+      "  createdAt: \"date\",",
+      "  profile: {",
+      "    bio: \"string(,500)?\",",
+      "    avatar: \"url?\",",
+      "    preferences: {",
+      "      theme: \"light|dark|auto\",",
+      "      notifications: \"boolean\"",
+      "    }",
+      "  }",
+      "});"
+    ],
+    "description": "Complete user schema example"
+  }
+}

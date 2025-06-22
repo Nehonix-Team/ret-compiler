@@ -4,6 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
 [![Build Status](https://github.com/Nehonix-Team/fortify-schema/workflows/CI/badge.svg)](https://github.com/Nehonix-Team/fortify-schema/actions)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/fortify-schema)](https://bundlephobia.com/package/fortify-schema)
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension%20Available-blue)](https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix)
 
 <div align="center">
   <img src="https://sdk.nehonix.space/sdks/assets/fortify%20schema.jpg" alt="Fortify Schema Logo" width="250" />
@@ -13,7 +14,47 @@
 
 What if schema validation looked exactly like TypeScript interfaces? Fortify Schema brings tomorrow's validation patterns to today's TypeScript developers. We're not competing with existing libraries - we're showing what validation will look like in 2025.
 
-**Interface-native syntax. Revolutionary conditional validation. Perfect TypeScript integration.**
+**Interface-native syntax. conditional validation. Perfect TypeScript integration. Enhanced VS Code support.**
+
+## 🚀 NEW: VS Code Extension Available!
+
+**Enhanced development experience with syntax highlighting, autocomplete, and validation**
+
+<div align="center">
+  <img src="https://sdk.nehonix.space/sdks/assets/vscode-extension-preview.png" alt="VS Code Extension Preview" width="600" />
+</div>
+
+### Install the VS Code Extension
+
+**Option 1: Direct Download**
+```bash
+# Download and install the latest version
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsx
+
+# Install a specific version 
+curl -L https://sdk.nehonix.space/sdks/pkgs/mods/vscode/[version (e.g: 0.1.0)] -o fortify-schema.vsx
+
+# To install a specific version, use
+code --install-extension fortify-schema.vsx
+```
+
+**Option 2: VS Code Marketplace** *(Coming Soon)*
+- Search for "Fortify Schema" in the VS Code Extensions marketplace
+
+### Extension Features
+
+- **🎨 Syntax Highlighting**: Beautiful syntax highlighting for conditional validation
+- **🔍 IntelliSense**: Smart autocomplete for field types and constraints
+- **⚡ Real-time Validation**: Instant feedback on schema syntax
+- **📖 Hover Documentation**: Detailed help text for operators and syntax
+- **🔧 Error Detection**: Catch syntax errors before runtime
+- **🎯 Conditional Logic Highlighting**: Clear visual distinction for conditional validation syntax
+
+The extension recognizes Fortify Schema syntax in:
+- `.ts` and `.js` files
+- String literals containing schema definitions
+- Conditional validation expressions
+- All Fortify Schema operators and syntax patterns
 
 ## Documentation Navigation
 
@@ -25,6 +66,7 @@ What if schema validation looked exactly like TypeScript interfaces? Fortify Sch
 | **[Field Types Reference](./docs/FIELD-TYPES.md)**                                | Comprehensive guide to all available types and constraints |
 | **[Real-World Examples](./docs/EXAMPLES.md)**                                     | Production-ready schemas for enterprise use                |
 | **[Migration Guide](./docs/MIGRATION.md)**                                        | Step-by-step migration from Zod, Joi, Yup                  |
+| **[VS Code Extension Guide](#vs-code-extension-setup)**                           | Complete setup and usage guide for the VS Code extension   |
 | **[Quick Start](#quick-start-guide)**                                             | Get up and running in 5 minutes                            |
 | **[Schema Transformation](#schema-transformation-with-mod)**                      | Transform and combine schemas with Mod utilities           |
 
@@ -46,17 +88,17 @@ z.object({
 **2024+: Interface Era (Fortify Schema)**
 
 ```typescript
-// The future of validation
+// The future of validation with VS Code extension support
 Interface({
   name: "string(2,50)",
   role: "admin|user",
-  permissions: "when role=admin *? string[] : string[]?",
+  permissions: "string[]",
 });
 ```
 
-**The difference? 70% less code, perfect TypeScript alignment, and conditional validation that actually works.**
+**The difference? 70% less code, perfect TypeScript alignment, conditional validation that actually works, and now enhanced VS Code support.**
 
-Fortify Schema isn't just another validation library - it's the evolution of how we think about data validation in TypeScript. We bring interface-native syntax to runtime validation, making schemas that look and feel exactly like TypeScript interfaces while providing revolutionary conditional validation capabilities.
+Fortify Schema isn't just another validation library - it's the evolution of how we think about data validation in TypeScript. We bring interface-native syntax to runtime validation, making schemas that look and feel exactly like TypeScript interfaces while providing conditional validation capabilities and a superior development experience.
 
 ### Key Features
 
@@ -66,6 +108,7 @@ Fortify Schema isn't just another validation library - it's the evolution of how
 - **TypeScript inference** - IDE understands conditional types
 - **Nested conditions** - Multi-level conditional logic support
 - **Business rule modeling** - Express complex domain logic naturally
+- **VS Code syntax highlighting** - Beautiful visual feedback for conditional logic
 
 **Developer Experience**
 
@@ -73,6 +116,7 @@ Fortify Schema isn't just another validation library - it's the evolution of how
 - **Type inference** reduces manual type definitions
 - **Compile-time validation** catches errors early
 - **Rich IDE support** with autocomplete and error detection
+- **VS Code extension** with enhanced syntax highlighting and IntelliSense
 
 **Performance & Reliability**
 
@@ -83,7 +127,7 @@ Fortify Schema isn't just another validation library - it's the evolution of how
 
 ### Early Access to the Future
 
-**Current Status: Revolutionary Beta**
+**Current Status: Beta**
 
 Fortify Schema represents the next generation of TypeScript validation. While established libraries serve today's needs, we're building tomorrow's validation patterns.
 
@@ -93,6 +137,7 @@ Fortify Schema represents the next generation of TypeScript validation. While es
 - **Greenfield applications**: New projects that can benefit from modern validation approaches
 - **Complex business logic**: Applications requiring sophisticated conditional validation
 - **TypeScript enthusiasts**: Developers who want validation that feels native to TypeScript
+- **VS Code users**: Developers who want enhanced IDE support for schema validation
 
 **When to Consider Established Libraries:**
 
@@ -100,7 +145,93 @@ Fortify Schema represents the next generation of TypeScript validation. While es
 - **Risk-averse environments**: Teams preferring battle-tested solutions
 - **Simple validation needs**: Basic schemas without conditional logic
 
-**The Trade-off:** Choose between today's proven patterns or tomorrow's revolutionary approach. Early adopters of jQuery (2005), React (2013), and TypeScript (2017) gained significant competitive advantages. Fortify Schema offers the same opportunity for validation.
+**The Trade-off:** Choose between today's proven patterns or tomorrow's approach. Early adopters of jQuery (2005), React (2013), and TypeScript (2017) gained significant competitive advantages. Fortify Schema offers the same opportunity for validation.
+
+---
+
+## VS Code Extension Setup
+
+### Installation
+
+**Method 1: Direct Installation**
+```bash
+# Download the extension
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsx
+
+# Install in VS Code
+code --install-extension fortify-schema.vsx
+```
+
+**Method 2: Manual Installation**
+1. Download the `.vsx` file from [https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix](https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix)
+2. Open VS Code
+3. Go to Extensions (Ctrl+Shift+X)
+4. Click the "..." menu and select "Install from VSIX..."
+5. Select the downloaded `.vsx` file
+
+### Extension Features in Action
+
+**Syntax Highlighting**
+```typescript
+// Beautiful syntax highlighting for conditional validation
+const UserSchema = Interface({
+  role: "admin|user|guest",
+  
+  // Conditional syntax is highlighted with distinct colors
+  permissions: "when role=admin *? string[] : string[]?",
+  
+  // Operators are clearly distinguished
+  maxProjects: "when accountType.in(free,trial) *? int(1,3) : int(1,)",
+  
+  // String operators get special highlighting
+  backupAction: "when filename.startsWith(backup_) *? =archive : =keep",
+});
+```
+
+**IntelliSense Support**
+- Type `"when ` to see available conditional operators
+- Autocomplete for field types: `string`, `number`, `email`, `uuid`, etc.
+- Constraint suggestions: `string(min,max)`, `number(min,max)`, etc.
+- Operator completion: `.in()`, `.startsWith()`, `.contains()`, etc.
+
+**Error Detection**
+```typescript
+// The extension catches syntax errors
+const schema = Interface({
+  // ❌ Error: Invalid syntax highlighted in red
+  invalid: "when role=admin ? string[] : string[]?", // Missing *
+  
+  // ✅ Correct: Proper syntax highlighted in green
+  valid: "when role=admin *? string[] : string[]?",
+});
+```
+
+**Hover Documentation**
+Hover over any part of your schema to see:
+- Operator documentation
+- Syntax examples
+- Type information
+- Constraint explanations
+
+### Supported File Types
+
+The extension activates for:
+- `.ts` (TypeScript files)
+- `.js` (JavaScript files)
+- `.tsx` (TypeScript React files)
+- `.jsx` (JavaScript React files)
+
+### Configuration
+
+Add to your VS Code settings for optimal experience:
+
+```json
+{
+  "editor.semanticHighlighting.enabled": true,
+  "typescript.suggest.autoImports": true,
+  "typescript.preferences.quoteStyle": "double"
+}
+```
 
 ---
 
@@ -138,7 +269,7 @@ const UserSchema = z.object({
 // 8 lines, 312 characters, complex method chaining
 ```
 
-**Fortify Schema Approach:**
+**Fortify Schema Approach (with VS Code Extension):**
 
 ```typescript
 import { Interface } from "fortify-schema";
@@ -153,9 +284,10 @@ const UserSchema = Interface({
   role: "admin|user",
 });
 // 8 lines, 156 characters, TypeScript-like syntax
+// Beautiful syntax highlighting with VS Code extension
 ```
 
-**Result: 50% fewer characters, zero learning curve, perfect type inference**
+**Result: 50% fewer characters, zero learning curve, perfect type inference, enhanced VS Code support**
 
 ### Conditional Validation
 
@@ -179,10 +311,11 @@ const schema = z
   );
 ```
 
-**Fortify Schema Solution:**
+**Fortify Schema Solution (with VS Code Extension):**
 
 ```typescript
 // Enterprise user management with advanced conditional validation
+// Beautiful syntax highlighting makes complex logic readable
 const EnterpriseUserSchema = Interface({
   // Core user information
   id: "uuid",
@@ -192,6 +325,7 @@ const EnterpriseUserSchema = Interface({
   accountType: "enterprise|professional|standard|trial",
 
   // Conditional permissions based on role and account type
+  // VS Code extension highlights conditional syntax beautifully
   systemPermissions: "when role.in(admin,manager) *? string[] : string[]?",
 
   // Department access (managers get elevated access)
@@ -239,11 +373,13 @@ if (result.success) {
 - Up to 70% reduction in schema definition code
 - TypeScript interface-like syntax developers already know
 - Single import for most validation scenarios
+- Enhanced VS Code support with syntax highlighting
 
 **Superior Type Safety**
 
 - Exact literal types instead of generic unions
 - Perfect IDE integration with autocomplete and error detection
+- VS Code extension with real-time syntax validation
 
 **Enterprise Performance**
 
@@ -293,14 +429,14 @@ UserSchema.safeParse({
 
 ### Conditional Validation with Perfect Type Inference
 
-**The world's first schema library with conditional validation that provides complete TypeScript inference support**
+**The world's first schema library with conditional validation that provides complete TypeScript inference support and enhanced VS Code experience**
 
 ```typescript
 const UserSchema = Interface({
   role: "admin|user|guest",
   accountType: "free|premium|enterprise",
 
-  // Advanced conditional syntax - Crystal clear, no confusion
+  // Advanced conditional syntax with beautiful VS Code highlighting
   permissions: "when role=admin *? string[] : string[]?",
   maxProjects: "when accountType=free *? int(1,3) : int(1,)",
   paymentMethod: "when accountType!=free *? string : string?",
@@ -332,14 +468,14 @@ const invalidUser = {
 
 **Three Approaches Available:**
 
-1. **Advanced Conditional Syntax** (Crystal clear + Perfect TypeScript inference)
+1. **Advanced Conditional Syntax** (Crystal clear + Perfect TypeScript inference + VS Code highlighting)
 2. **Parentheses Syntax** (Clear structure, runtime only)
 3. **Import-based Syntax** (Fluent API, most powerful)
 
 ```typescript
 import { When } from 'fortify-schema';
 
-// Advanced conditional syntax (Recommended - Full TypeScript support)
+// Advanced conditional syntax (Recommended - Full TypeScript support + VS Code highlighting)
 permissions: "when role=admin *? string[] : string[]?",
 
 // Parentheses syntax (Runtime validation only - limited TypeScript inference)
@@ -356,6 +492,7 @@ permissions: When.field("role").is("admin").then("string[]").else("string[]?")
 - **No conflicts**: Doesn't interfere with optional `?` operator
 - **Intuitive**: Reads like natural language
 - **Professional**: Clean and elegant syntax
+- **VS Code support**: Beautiful syntax highlighting and IntelliSense
 
 **Note**: The parentheses syntax works perfectly at runtime but has limited TypeScript inference due to nested parentheses in template literal types. Use the `*?` syntax for the best developer experience.
 
@@ -367,10 +504,18 @@ permissions: When.field("role").is("admin").then("string[]").else("string[]?")
 npm install fortify-schema
 ```
 
+**VS Code Extension** (Recommended):
+```bash
+# Download and install the VS Code extension
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsx
+code --install-extension fortify-schema.vsx
+```
+
 **Requirements:**
 
 - TypeScript 4.5+
 - Node.js 14+
+- VS Code (recommended for enhanced development experience)
 
 ---
 
@@ -382,6 +527,7 @@ npm install fortify-schema
 import { Interface } from "fortify-schema";
 
 // Define your schema like a TypeScript interface
+// Enhanced with VS Code syntax highlighting
 const UserSchema = Interface({
   id: "number",
   email: "email",
@@ -502,7 +648,7 @@ import { Make } from 'fortify-schema';
 
 ### Conditional Validation
 
-Fortify Schema provides the first conditional validation system with complete TypeScript inference:
+Fortify Schema provides the first conditional validation system with complete TypeScript inference and VS Code support:
 
 #### Advanced Conditional Syntax (Recommended)
 
@@ -510,7 +656,7 @@ Fortify Schema provides the first conditional validation system with complete Ty
 {
   role: "admin|user|guest",
 
-  // Advanced conditional syntax - Crystal clear
+  // Advanced conditional syntax with VS Code highlighting
   permissions: "when role=admin *? string[] : string[]?",
 
   // Multiple conditions with different operators
@@ -607,6 +753,7 @@ import { When } from 'fortify-schema';
 - **No confusion** with optional `?` operator
 - **Crystal clear** where condition ends and logic begins
 - **Natural language** flow that's easy to read
+- **VS Code support** - Beautiful syntax highlighting for conditional expressions
 
 **Complete TypeScript Integration:**
 
@@ -614,6 +761,7 @@ import { When } from 'fortify-schema';
 - ✅ Exact type inference based on conditions
 - ✅ IDE autocomplete and error detection
 - ✅ Runtime validation with full data context
+- ✅ VS Code extension with enhanced syntax highlighting
 
 ---
 
@@ -679,6 +827,41 @@ import { When } from 'fortify-schema';
 
 ## Schema Transformation with Mod
 
+The `Mod` utility provides powerful schema transformation capabilities:
+
+### Combining Schemas
+
+```typescript
+const UserSchema = Interface({ id: "number", name: "string" });
+const ProfileSchema = Interface({ bio: "string?", avatar: "url?" });
+
+// Merge multiple schemas
+const CompleteSchema = Mod.merge(UserSchema, ProfileSchema);
+```
+
+### Selecting Fields
+
+```typescript
+const UserSchema = Interface({
+  id: "number",
+  name: "string",
+  email: "email",
+  password: "string",
+  createdAt: "date",
+});
+
+// Pick specific fields
+const PublicSchema = Mod.pick(UserSchema, ["id", "name", "email"]);
+
+// Omit sensitive fields
+const SafeSchema = Mod.omit(UserSchema, ["password"]);
+```
+
+### Modifying Field Requirements
+
+```typescript
+// Make all fields optional
+const
 The `Mod` utility provides powerful schema transformation capabilities:
 
 ### Combining Schemas

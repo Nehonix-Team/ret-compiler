@@ -1,0 +1,128 @@
+{
+  "name": "fortify-schema-vscode",
+  "displayName": "Fortify Schema",
+  "description": "VSCode extension for Fortify Schema - The Future of TypeScript Validation",
+  "version": "0.1.0",
+  "publisher": "NEHONIX",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Snippets",
+    "Other"
+  ],
+  "keywords": [
+    "typescript",
+    "validation",
+    "schema",
+    "fortify",
+    "conditional-validation",
+    "interface-syntax"
+  ],
+  "activationEvents": [
+    "onLanguage:typescript",
+    "onLanguage:javascript"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "grammars": [
+      {
+        "scopeName": "source.ts.fortify",
+        "path": "./syntaxes/fortify-embedded.tmGrammar.json",
+        "injectTo": [
+          "source.ts",
+          "source.tsx"
+        ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/fortify-snippets.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "fortify.validateSchema",
+        "title": "Validate Fortify Schema",
+        "category": "Fortify"
+      },
+      {
+        "command": "fortify.generateTypes",
+        "title": "Generate TypeScript Types",
+        "category": "Fortify"
+      },
+      {
+        "command": "fortify.formatSchema",
+        "title": "Format Schema",
+        "category": "Fortify"
+      },
+      {
+        "command": "fortify.applyColorScheme",
+        "title": "Apply Fortify Color Scheme",
+        "category": "Fortify"
+      },
+      {
+        "command": "fortify.listColorSchemes",
+        "title": "List Available Color Schemes",
+        "category": "Fortify"
+      }
+    ],
+    "configuration": {
+      "title": "Fortify Schema",
+      "properties": {
+        "fortify.enableSyntaxHighlighting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable syntax highlighting for Fortify Schema strings"
+        },
+        "fortify.enableAutocompletion": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable autocompletion for schema definitions"
+        },
+        "fortify.enableValidation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable real-time schema validation"
+        },
+        "fortify.enableHoverInfo": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show type information on hover"
+        },
+        "fortify.colorTheme": {
+          "type": "string",
+          "default": "default",
+          "description": "Color theme for syntax highlighting. Available themes: default, defaultv2, vibrant, minimal, cool, cyberpunk, pastel_dream. Use 'Fortify: Apply Color Scheme' command to see all options."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "npm run generate-grammar && tsc -p ./",
+    "watch": "npm run generate-grammar && tsc -watch -p ./",
+    "generate-grammar": "tsc -p ./ && node ./out/syntax/Grammar.js",
+    "push:ext": "tsc -p ./ && node ./push.ext.js",
+    "build": "node ext.build.js",
+    "precompile": "npm run generate-grammar"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nehonix-Team/fortify-schema.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nehonix-Team/fortify-schema/issues"
+  },
+  "homepage": "https://github.com/Nehonix-Team/fortify-schema#readme",
+  "license": "MIT"
+}

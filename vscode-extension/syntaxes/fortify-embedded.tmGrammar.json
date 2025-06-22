@@ -1,0 +1,273 @@
+{
+  "name": "Fortify Schema Embedded",
+  "scopeName": "source.ts.fortify",
+  "injectionSelector": "L:source.ts -comment -string, L:source.tsx -comment -string",
+  "patterns": [
+    {
+      "include": "#fortify-schema-strings"
+    }
+  ],
+  "repository": {
+    "fortify-schema-strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.fortify",
+          "begin": "\"(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)).*\")",
+          "end": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.fortify"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.fortify"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-conditional-syntax"
+            },
+            {
+              "include": "#fortify-basic-types"
+            },
+            {
+              "include": "#fortify-format-types"
+            },
+            {
+              "include": "#fortify-numeric-types"
+            },
+            {
+              "include": "#fortify-constraints"
+            },
+            {
+              "include": "#fortify-arrays"
+            },
+            {
+              "include": "#fortify-optional"
+            },
+            {
+              "include": "#fortify-unions"
+            },
+            {
+              "include": "#fortify-constants"
+            },
+            {
+              "include": "#fortify-methods"
+            },
+            {
+              "include": "#fortify-operators"
+            }
+          ]
+        },
+        {
+          "name": "string.template.fortify",
+          "begin": "`(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)|\\$\\{[^}]*\\}).*`)",
+          "end": "`",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.fortify"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.fortify"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-conditional-syntax"
+            },
+            {
+              "include": "#fortify-basic-types"
+            },
+            {
+              "include": "#fortify-format-types"
+            },
+            {
+              "include": "#fortify-numeric-types"
+            },
+            {
+              "include": "#fortify-constraints"
+            },
+            {
+              "include": "#fortify-arrays"
+            },
+            {
+              "include": "#fortify-optional"
+            },
+            {
+              "include": "#fortify-unions"
+            },
+            {
+              "include": "#fortify-constants"
+            },
+            {
+              "include": "#fortify-methods"
+            },
+            {
+              "include": "#fortify-operators"
+            },
+            {
+              "include": "#fortify-template-expressions"
+            }
+          ]
+        }
+      ]
+    },
+    "fortify-conditional-syntax": {
+      "patterns": [
+        {
+          "name": "keyword.control.fortify.when",
+          "match": "\\b(when)\\b"
+        },
+        {
+          "name": "keyword.operator.fortify.conditional-then",
+          "match": "(\\*\\?)"
+        },
+        {
+          "name": "punctuation.separator.fortify.conditional-else",
+          "match": ":"
+        },
+        {
+          "name": "keyword.operator.fortify.logical",
+          "match": "(&&|\\|\\|)"
+        },
+        {
+          "name": "keyword.operator.fortify.comparison",
+          "match": "(!=|>=|<=|!~|=|>|<|~)"
+        }
+      ]
+    },
+    "fortify-basic-types": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.fortify.basic-type",
+          "match": "\\b(string|number|boolean|date|any)\\b"
+        }
+      ]
+    },
+    "fortify-format-types": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.fortify.format-type",
+          "match": "\\b(email|url|uuid|phone|slug|username)\\b"
+        }
+      ]
+    },
+    "fortify-numeric-types": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.fortify.numeric-type",
+          "match": "\\b(int|positive|negative|float)\\b"
+        }
+      ]
+    },
+    "fortify-constraints": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.fortify.constraint",
+          "begin": "\\(",
+          "end": "\\)",
+          "patterns": [
+            {
+              "name": "constant.numeric.fortify.constraint-value",
+              "match": "\\d+(?:\\.\\d+)?"
+            },
+            {
+              "name": "punctuation.separator.fortify.constraint",
+              "match": ","
+            }
+          ]
+        }
+      ]
+    },
+    "fortify-arrays": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.fortify.array",
+          "match": "\\[\\](\\([^)]*\\))?"
+        }
+      ]
+    },
+    "fortify-optional": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.fortify.optional",
+          "match": "\\?"
+        }
+      ]
+    },
+    "fortify-unions": {
+      "patterns": [
+        {
+          "name": "constant.other.fortify.union-separator",
+          "match": "\\|"
+        }
+      ]
+    },
+    "fortify-constants": {
+      "patterns": [
+        {
+          "name": "constant.other.fortify.constant-value",
+          "match": "=\\w+"
+        }
+      ]
+    },
+    "fortify-methods": {
+      "patterns": [
+        {
+          "name": "support.function.fortify.method",
+          "match": "\\.(in|contains|startsWith|endsWith|between|exists|empty|null|!in|!contains|!startsWith|!endsWith|!between|!exists|!empty|!null)\\b"
+        },
+        {
+          "name": "punctuation.definition.fortify.method-call",
+          "begin": "\\(",
+          "end": "\\)",
+          "patterns": [
+            {
+              "name": "string.unquoted.fortify.method-argument",
+              "match": "[^,)]+"
+            },
+            {
+              "name": "punctuation.separator.fortify.method-argument",
+              "match": ","
+            }
+          ]
+        }
+      ]
+    },
+    "fortify-operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.fortify.field-access",
+          "match": "\\."
+        }
+      ]
+    },
+    "fortify-template-expressions": {
+      "patterns": [
+        {
+          "name": "meta.embedded.expression.fortify",
+          "begin": "\\$\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.template-expression.begin.fortify"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.template-expression.end.fortify"
+            }
+          },
+          "patterns": [
+            {
+              "include": "source.ts"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

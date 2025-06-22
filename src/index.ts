@@ -3,7 +3,7 @@
  *
  * This file contains type definitions for the SecureArray architecture
  *
- * @author Nehonix
+ * @author Nehonix 
  * @license GNU Affero General Public License v3
  *
  * Copyright (c) 2025 Nehonix Team. All rights reserved.
@@ -30,7 +30,7 @@
 /**
  * Fortify Schema - TypeScript Interface-like Schema Validation
  *
- * A revolutionary schema validation system with TypeScript interface-like syntax
+ * A schema validation system with TypeScript interface-like syntax
  * that's incredibly easy to use and much safer than traditional schema libraries.
  *
  * @example Interface-based (Recommended)

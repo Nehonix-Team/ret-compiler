@@ -1,5 +1,5 @@
 /**
- * Real-time Validation - Revolutionary live validation system
+ * Real-time Validation - live validation system
  *
  * This module provides real-time validation with reactive updates,
  * perfect for forms and live data validation.
@@ -320,7 +320,7 @@ class LiveValidator {
       try {
         listener(result);
       } catch (error) {
-        console.error("Error in validation listener:", error);
+        // console.error("Error in validation listener:", error);
       }
     });
   }
