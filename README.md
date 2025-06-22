@@ -21,7 +21,7 @@ What if schema validation looked exactly like TypeScript interfaces? Fortify Sch
 **Enhanced development experience with syntax highlighting, autocomplete, and validation**
 
 <div align="center">
-  <img src="https://sdk.nehonix.space/sdks/assets/vscode-extension-preview.png" alt="VS Code Extension Preview" width="600" />
+  <img src="https://sdk.nehonix.space/sdks/assets/vscode-extension-preview.gif" alt="VS Code Extension Preview" width="600" />
 </div>
 
 ### Install the VS Code Extension
@@ -29,13 +29,13 @@ What if schema validation looked exactly like TypeScript interfaces? Fortify Sch
 **Option 1: Direct Download**
 ```bash
 # Download and install the latest version
-curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsx
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
 
 # Install a specific version 
-curl -L https://sdk.nehonix.space/sdks/pkgs/mods/vscode/[version (e.g: 0.1.0)] -o fortify-schema.vsx
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/[version (e.g: 0.1.0)]/fortify-schema.vsix -o fortify-schema.vsix
 
 # To install a specific version, use
-code --install-extension fortify-schema.vsx
+code --install-extension fortify-schema.vsix
 ```
 
 **Option 2: VS Code Marketplace** *(Coming Soon)*
@@ -156,10 +156,10 @@ Fortify Schema represents the next generation of TypeScript validation. While es
 **Method 1: Direct Installation**
 ```bash
 # Download the extension
-curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsx
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
 
-# Install in VS Code
-code --install-extension fortify-schema.vsx
+# Install in VS Code 
+code --install-extension fortify-schema.vsix
 ```
 
 **Method 2: Manual Installation**
@@ -507,8 +507,8 @@ npm install fortify-schema
 **VS Code Extension** (Recommended):
 ```bash
 # Download and install the VS Code extension
-curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsx
-code --install-extension fortify-schema.vsx
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
+code --install-extension fortify-schema.vsix
 ```
 
 **Requirements:**

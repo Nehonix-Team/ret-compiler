@@ -4,6 +4,7 @@
   "description": "VSCode extension for Fortify Schema - The Future of TypeScript Validation",
   "version": "0.1.0",
   "publisher": "NEHONIX",
+  "icon": "public/assets/ms-icon-144x144.png",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -108,6 +109,10 @@
     "generate-grammar": "tsc -p ./ && node ./out/syntax/Grammar.js",
     "push:ext": "tsc -p ./ && node ./push.ext.js",
     "build": "node ext.build.js",
+    "git": "node ../git-push.js",
+    "git:ps1": "powershell.exe -File ../scripts/git-push.ps1",
+    "git:bat": "../scripts/git-push.bat",
+    "git:sh": "bash ../scripts/git-push.sh",
     "precompile": "npm run generate-grammar"
   },
   "devDependencies": {

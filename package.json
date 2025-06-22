@@ -39,7 +39,11 @@
     "build:cjs": "node scripts/build-cjs.cjs",
     "build:esm": "node scripts/build-esm.mjs",
     "prepublishOnly": "npm run build && npm run manual:build",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "git": "node git-push.js",
+    "git:ps1": "powershell.exe -File ./scripts/git-push.ps1",
+    "git:bat": "./scripts/git-push.bat",
+    "git:sh": "bash ./scripts/git-push.sh"
   },
   "keywords": [
     "schema",

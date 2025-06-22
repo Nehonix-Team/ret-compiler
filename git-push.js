@@ -3,10 +3,10 @@ import { platform } from "os";
 
 const isWindows = platform() === "win32";
 
-// Helper function to run a command and return a promise
-function runCommand(command, args, description) { 
+// function to run a command and return a promise
+function runCommand(command, args, description) {
   return new Promise((resolve, reject) => {
-    console.log(` 👨‍🔧 👨‍💻 Starting: ${description}`);
+    console.log(` 👨‍🔧👨‍💻Starting: ${description}`);
     console.log("=".repeat(50));
 
     const child = spawn(command, args, {
@@ -33,22 +33,30 @@ function runCommand(command, args, description) {
 }
 
 // Main execution
-async function buildExtension() {
+async function pushCommits() {
   try {
-    console.log("✨ Building extension...");
+    console.log("✨ Pushing commits...");
 
     // First command: vsce package
-    await runCommand("vsce", ["package"], "Building VSCode extension package");
+    if (isWindows) {
+      await runCommand(
+        "npm",
+        ["run", "git:ps1"],
+        "Pushing commit to the repo."
+      );
+    } else {
+      await runCommand("npm", ["run", "git:sh"], "Pushing commit to the repo.");
+    }
 
-    // Second command: npm run push:ext (only runs if first succeeded)
-    await runCommand("npm", ["run", "push:ext"], "Publishing extension");
+    // // Second command: npm run push:ext (only runs if first succeeded)
+    // await runCommand("npm", ["run", "push:ext"], "Publishing extension");
 
     console.log("🎉 All commands completed successfully!");
   } catch (error) {
-    console.error("💥 Build process failed:", error.message);
+    console.error("💥 Commits process failed:", error);
     process.exit(1);
   }
 }
 
 // Run the build process
-buildExtension();
+pushCommits();
