@@ -443,7 +443,7 @@ export class InterfaceSchema<T = any> {
     return ValidationHelpers.routeTypeValidation(
       type,
       value,
-      { ...this.options, ...constraints },
+      { ...constraints, ...this.options },
       constraints
     );
   }
@@ -616,8 +616,8 @@ export class InterfaceSchema<T = any> {
         };
       }
 
-      // Apply parsed constraints to options
-      const Options = { ...this.options, ...constraints };
+      // Apply parsed constraints to options, but preserve important options like loose
+      const Options = { ...constraints, ...this.options };
 
       // Check array constraints
       if (Options.minItems !== undefined && value.length < Options.minItems) {
@@ -710,8 +710,8 @@ export class InterfaceSchema<T = any> {
 
 
 
-    // Apply parsed constraints to options
-    const Options = { ...this.options, ...constraints };
+    // Apply parsed constraints to options, but preserve important options like loose
+    const Options = { ...constraints, ...this.options };
 
 
 
@@ -895,7 +895,7 @@ export class InterfaceSchema<T = any> {
             errors: [],
             warnings: [],
             data: value,
-          }; 
+          };
         }
 
         return this.validateStringFieldType(expectedSchema, value);

@@ -41,7 +41,7 @@ async function buildExtension() {
     await runCommand("vsce", ["package"], "Building VSCode extension package");
 
     // Second command: npm run push:ext (only runs if first succeeded)
-    await runCommand("npm", ["run", "push:ext"], "Publishing extension");
+    await runCommand("npm", ["run", "push:ext"], "Building extension");
 
     console.log("🎉 All commands completed successfully!");
   } catch (error) {

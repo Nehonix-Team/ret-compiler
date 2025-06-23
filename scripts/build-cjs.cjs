@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 
 // CommonJS test to verify the build works
-const { Interface, Make } = require('../dist/cjs/index.js');
+const { Interface } = require('../dist/cjs/index.js');
 
 console.log('🧪 Testing CommonJS build...');
 
 try {
-  // Test basic interface
+  // Test basic interface - simplified for loose mode testing
   const UserSchema = Interface({
     id: "number",
     name: "string",
     email: "email",
-    status: Make.union("active", "inactive"),
-    role: Make.const("user")
+    status: "active|inactive",
+    role: "=user"  // Constant value
   });
 
   // Test strict validation (should pass)
@@ -58,8 +58,9 @@ try {
     role: "user"
   });
 
-  if (looseResult.success && looseResult.warnings.some(w => w.includes('String converted to number'))) {
+  if (looseResult.success && looseResult.data.id === 1 && looseResult.warnings.some(w => w.includes('String converted to number'))) {
     console.log('✅ Loose mode test passed - correctly converted string to number');
+    console.log('   Warnings:', looseResult.warnings);
   } else {
     console.log('❌ Loose mode test failed');
     console.log('Result:', looseResult);

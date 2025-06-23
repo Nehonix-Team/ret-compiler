@@ -12,10 +12,10 @@ import { FortifyHoverProvider } from "./providers/HoverProvider";
 import { FortifySemanticTokensProvider } from "./providers/SemanticTokensProvider";
 import {
   FortifyColorThemeManager,
-  FortifyColorSchemes, 
+  FortifyColorSchemes,
 } from "./themes/FortifyColorTheme";
 
-/**   
+/**
  * Extension activation - called when the extension is activated
  */
 export function activate(context: vscode.ExtensionContext) {
@@ -70,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
         document.languageId === "javascript"
       ) {
         diagnosticsProvider.updateDiagnostics(document);
-      } 
+      }
     }
   );
 
@@ -186,6 +186,38 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
+  const cleanupThemesCommand = vscode.commands.registerCommand(
+    "fortify.cleanupThemes",
+    async () => {
+      try {
+        const result = await vscode.window.showWarningMessage(
+          "This will remove all Fortify Schema color customizations from your VSCode settings. Continue?",
+          { modal: true },
+          "Yes, Remove Themes",
+          "Cancel"
+        );
+
+        if (result === "Yes, Remove Themes") {
+          const success = await cleanupFortifySettings();
+
+          if (success) {
+            vscode.window.showInformationMessage(
+              "✅ Fortify Schema themes and settings have been removed successfully!"
+            );
+          } else {
+            vscode.window.showErrorMessage(
+              "❌ Failed to remove some Fortify Schema settings. Please check the output panel."
+            );
+          }
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Failed to cleanup themes: ${error}`
+        );
+      }
+    }
+  );
+
   // Add all disposables to context
   context.subscriptions.push(
     completionProvider,
@@ -197,7 +229,8 @@ export function activate(context: vscode.ExtensionContext) {
     generateTypesCommand,
     formatSchemaCommand,
     applyColorSchemeCommand,
-    listColorSchemesCommand
+    listColorSchemesCommand,
+    cleanupThemesCommand
   );
 
   // Apply default color scheme if none is set
@@ -214,9 +247,114 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 /**
- * Extension deactivation - called when the extension is deactivated
+ * Cleanup all Fortify Schema settings and themes
  */
-export function deactivate() {
+async function cleanupFortifySettings(): Promise<boolean> {
+  try {
+    console.log("🧹 Cleaning up Fortify Schema settings...");
+
+    // Remove color scheme customizations
+    const colorCleanupSuccess = await FortifyColorThemeManager.removeColorScheme(
+      vscode.ConfigurationTarget.Global
+    );
+
+    // Remove Fortify-specific configuration settings
+    const config = vscode.workspace.getConfiguration("fortify");
+    const fortifySettings = config.inspect("colorTheme");
+
+    if (fortifySettings?.globalValue !== undefined) {
+      await config.update(
+        "colorTheme",
+        undefined,
+        vscode.ConfigurationTarget.Global
+      );
+    }
+
+    // Also clean up workspace-level settings if they exist
+    if (fortifySettings?.workspaceValue !== undefined) {
+      await config.update(
+        "colorTheme",
+        undefined,
+        vscode.ConfigurationTarget.Workspace
+      );
+    }
+
+    // Clean up any other Fortify-related settings
+    const allConfig = vscode.workspace.getConfiguration();
+    const semanticTokens = allConfig.get("editor.semanticTokenColorCustomizations") as any;
+
+    if (semanticTokens?.rules) {
+      // Remove any remaining Fortify-specific semantic token rules
+      const cleanedRules = Object.keys(semanticTokens.rules)
+        .filter(key => !key.includes("fortify") && !key.includes("Fortify"))
+        .reduce((obj: any, key) => {
+          obj[key] = semanticTokens.rules[key];
+          return obj;
+        }, {});
+
+      // If no rules remain, remove the entire semantic token customization
+      if (Object.keys(cleanedRules).length === 0) {
+        await allConfig.update(
+          "editor.semanticTokenColorCustomizations",
+          undefined,
+          vscode.ConfigurationTarget.Global
+        );
+      } else {
+        await allConfig.update(
+          "editor.semanticTokenColorCustomizations",
+          { ...semanticTokens, rules: cleanedRules },
+          vscode.ConfigurationTarget.Global
+        );
+      }
+    }
+
+    console.log("✅ Fortify Schema settings cleanup completed");
+    return colorCleanupSuccess;
+
+  } catch (error) {
+    console.error("❌ Failed to cleanup Fortify Schema settings:", error);
+    return false;
+  }
+}
+
+/**
+ * Extension deactivation - called when the extension is deactivated
+ * Now includes automatic cleanup of themes and settings
+ */
+export async function deactivate() {
+  console.log("👋 Fortify Schema extension deactivating...");
+
+  try {
+    // Show cleanup option to user
+    const shouldCleanup = await vscode.window.showInformationMessage(
+      "Fortify Schema extension is being deactivated. Would you like to remove the color themes and settings?",
+      { modal: false },
+      "Yes, Clean Up",
+      "No, Keep Settings"
+    );
+
+    if (shouldCleanup === "Yes, Clean Up") {
+      const success = await cleanupFortifySettings();
+
+      if (success) {
+        vscode.window.showInformationMessage(
+          "✅ Fortify Schema themes and settings have been removed. Your VSCode theme is now back to default."
+        );
+      } else {
+        vscode.window.showWarningMessage(
+          "⚠️ Some Fortify Schema settings could not be removed automatically. You may need to reset your color theme manually."
+        );
+      }
+    } else {
+      vscode.window.showInformationMessage(
+        "Fortify Schema settings have been kept. You can manually remove them using the 'Fortify: Cleanup Themes' command if needed."
+      );
+    }
+
+  } catch (error) {
+    console.error("Error during extension deactivation:", error);
+  }
+
   console.log("👋 Fortify Schema extension deactivated");
 }
 

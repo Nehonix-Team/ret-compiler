@@ -105,25 +105,47 @@ class FortifyColorThemeManager {
         }
     }
     /**
-     * Remove Fortify color customizations
+     * Remove Fortify color customizations completely
      */
     static async removeColorScheme(target = vscode.ConfigurationTarget.Global) {
         try {
             const config = vscode.workspace.getConfiguration();
             const currentColors = config.get("editor.semanticTokenColorCustomizations") || {};
             if (currentColors.rules) {
-                // Remove Fortify-specific rules
+                // Remove ALL Fortify-specific rules (case-insensitive)
                 const filteredRules = Object.keys(currentColors.rules)
-                    .filter((key) => !key.includes("fortify"))
+                    .filter((key) => !key.toLowerCase().includes("fortify") &&
+                    !key.includes("type.fortify") &&
+                    !key.includes("keyword.fortify") &&
+                    !key.includes("operator.fortify") &&
+                    !key.includes("function.fortify") &&
+                    !key.includes("variable.fortify") &&
+                    !key.includes("enumMember.fortify") &&
+                    !key.includes("punctuation.fortify") &&
+                    !key.includes("number.fortify") &&
+                    !key.includes("string.fortify"))
                     .reduce((obj, key) => {
                     obj[key] = currentColors.rules[key];
                     return obj;
                 }, {});
-                const updatedColors = {
-                    ...currentColors,
-                    rules: filteredRules,
-                };
-                await config.update("editor.semanticTokenColorCustomizations", updatedColors, target);
+                // If no rules remain, remove the entire semantic token customization
+                if (Object.keys(filteredRules).length === 0) {
+                    await config.update("editor.semanticTokenColorCustomizations", undefined, target);
+                    console.log("✅ Removed entire semantic token customization (was Fortify-only)");
+                }
+                else {
+                    const updatedColors = {
+                        ...currentColors,
+                        rules: filteredRules,
+                    };
+                    await config.update("editor.semanticTokenColorCustomizations", updatedColors, target);
+                    console.log("✅ Removed Fortify-specific semantic token rules");
+                }
+            }
+            // Also clean up both Global and Workspace targets to be thorough
+            if (target === vscode.ConfigurationTarget.Global) {
+                // Also clean workspace settings
+                await this.removeColorScheme(vscode.ConfigurationTarget.Workspace);
             }
             return true;
         }

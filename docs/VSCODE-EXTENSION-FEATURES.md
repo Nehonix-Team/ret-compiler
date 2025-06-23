@@ -1,208 +1,275 @@
-# Fortify Schema VSCode Extension - Enhanced Features
+# Fortify Schema VSCode Extension - User Guide
 
-## 🎉 **New Features Added**
+## Overview
 
-### ✅ **1. Fixed Negative Number Constraint Validation**
+The Fortify Schema VSCode Extension helps you write and validate schema definitions with intelligent code completion and error detection. This guide covers the latest features and improvements to enhance your development experience.
 
-**Problem Solved:** The extension was incorrectly flagging valid negative number constraints as invalid.
+## What's New
 
-**Before:**
+### Recent Improvements
+
+**Fixed Negative Number Validation**: The extension now correctly handles negative number constraints without showing false errors.
+
+**Added Ignore Comments**: You can now suppress validation warnings for specific lines using special comments.
+
+**Enhanced Auto-completion**: Improved IntelliSense with better suggestions for constraints and ignore comments.
+
+## Features
+
+### 1. Negative Number Constraints
+
+You can now use negative numbers in your constraints without getting validation errors.
+
+#### Supported Patterns
+
 ```typescript
-coordinates: "number(-90,90)" // ❌ Error: Invalid constraint: "-90"
+// Geographic coordinates
+latitude: "number(-90,90)"
+longitude: "number(-180,180)"
+
+// Financial data
+balance: "number(-999999,999999)"
+profitLoss: "number(-100000,100000)"
+
+// Scientific measurements
+temperature: "number(-273,1000)"
+velocity: "number(-300,300)"
+
+// Percentage changes
+changePercent: "number(-100,100)"
 ```
 
-**After:**
+#### Common Use Cases
+
+**Geographic Data**
 ```typescript
-coordinates: "number(-90,90)" // ✅ Valid - no error
+const LocationSchema = Interface({
+  latitude: "number(-90,90)",      // Valid latitude range
+  longitude: "number(-180,180)",   // Valid longitude range
+  elevation: "number(-500,9000)"   // Below/above sea level
+});
 ```
 
-**Supported Negative Constraint Patterns:**
-- `"number(-90,90)"` - Range from -90 to 90
-- `"number(-180,180)"` - Range from -180 to 180  
-- `"number(-999,999)"` - Large negative to positive range
-- `"number(-0.001,0.001)"` - Small decimal ranges
-- `"number(-100,)"` - Minimum negative value only
-- `"number(,-1)"` - Maximum negative value only
-
-### ✅ **2. @fortify-ignore Comment Feature**
-
-**New Feature:** Suppress validation warnings using special comments.
-
-**Usage Examples:**
-
+**Financial Applications**
 ```typescript
-// Line-above ignore
+const FinanceSchema = Interface({
+  accountBalance: "number(-999999,999999)", // Can be negative (debt)
+  monthlyProfit: "number(-100000,100000)",  // Profit or loss
+  changePercent: "number(-100,100)"         // Percentage change
+});
+```
+
+**Scientific Data**
+```typescript
+const SensorSchema = Interface({
+  temperature: "number(-273,1000)",  // Celsius (absolute zero to high)
+  velocity: "number(-300,300)",      // Can be negative (direction)
+  acceleration: "number(-50,50)"     // Positive/negative acceleration
+});
+```
+
+### 2. Ignore Comments
+
+Sometimes you need to use custom validation types that the extension doesn't recognize. Use ignore comments to suppress validation warnings.
+
+#### How to Use Ignore Comments
+
+**Line Above (Recommended)**
+```typescript
 // @fortify-ignore
-customField: "invalid-type", // No validation error
+customField: "MyCustomValidator<T>",
+```
 
-// Inline ignore  
+**Inline Comment**
+```typescript
 field: "custom-type", // @fortify-ignore
+```
 
-// Block comment ignore
-/* @fortify-ignore */ field: "invalid-type",
+**Block Comment**
+```typescript
+/* @fortify-ignore */
+field: "invalid-type",
+```
 
-// Multi-line block
+**Multi-line Block**
+```typescript
 /*
  * @fortify-ignore
- * This field uses custom validation
+ * This field uses custom validation from another library
  */
-complexField: "custom-validator-type"
+complexField: "ThirdPartyValidator"
 ```
 
-**When to Use:**
-- Custom validation types not recognized by Fortify
-- Legacy code migration
-- Experimental schema patterns
-- Third-party type integrations
+#### When to Use Ignore Comments
 
-### ✅ **3. Enhanced IntelliSense Completion**
+- **Custom validation types** not recognized by Fortify
+- **Legacy code migration** where you're gradually adopting Fortify
+- **Experimental patterns** you're testing
+- **Third-party integrations** with their own validation systems
 
-**New Completions Added:**
-
-#### **@fortify-ignore Completions**
-- Type `@` in comments to get `@fortify-ignore` suggestions
-- Auto-completion for `// @fortify-ignore`
-- Auto-completion for `/* @fortify-ignore */`
-
-#### **Negative Number Constraint Completions**
-- `number(-90,90)` - Geographic coordinates
-- `number(-180,180)` - Longitude ranges
-- `number(-100,100)` - Percentage changes
-- `number(-999,999)` - General negative/positive ranges
-
-#### **Enhanced Constraint Snippets**
-- `string(2,50)` - Length constraints with placeholders
-- `number(0,100)` - Range constraints with placeholders
-- `string(1,)` - Minimum length only
-- `number(,100)` - Maximum value only
-
-## 🚀 **Real-World Use Cases**
-
-### **Geographic Data**
+#### Example: Mixed Schema
 ```typescript
-const locationSchema = Interface({
-  latitude: "number(-90,90)",      // ✅ Valid latitude range
-  longitude: "number(-180,180)",   // ✅ Valid longitude range
-  elevation: "number(-500,9000)"   // ✅ Below/above sea level
-});
-```
-
-### **Financial Data**
-```typescript
-const financeSchema = Interface({
-  balance: "number(-999999,999999)", // ✅ Can be negative (debt)
-  profit: "number(-100000,100000)",  // ✅ Profit/loss
-  changePercent: "number(-100,100)"  // ✅ Percentage change
-});
-```
-
-### **Scientific Data**
-```typescript
-const scienceSchema = Interface({
-  temperature: "number(-273,1000)",  // ✅ Celsius (absolute zero to high)
-  velocity: "number(-300,300)",      // ✅ Can be negative (direction)
-  acceleration: "number(-50,50)"     // ✅ Positive/negative acceleration
-});
-```
-
-### **Custom Types with Ignore**
-```typescript
-const customSchema = Interface({
-  // @fortify-ignore - Uses custom validation library
-  complexField: "MyCustomValidator<T>",
+const MixedSchema = Interface({
+  // Standard Fortify validation
+  name: "string(1,100)",
+  age: "number(0,150)",
   
-  // Standard validation still works
-  normalField: "string(1,100)",
+  // @fortify-ignore - Custom validation library
+  complexField: "MyCustomValidator<User>",
   
-  coordinates: "number(-90,90)" // No longer shows false errors
+  // Geographic data (now works correctly)
+  coordinates: "number(-90,90)"
 });
 ```
 
-## 📋 **Feature Comparison**
+### 3. Enhanced Auto-completion
 
-| Feature | Before | After |
-|---------|--------|-------|
-| **Negative Constraints** | ❌ False errors | ✅ Correctly validated |
-| **Ignore Comments** | ❌ Not supported | ✅ Full support |
-| **Completion for Ignore** | ❌ Manual typing | ✅ Auto-completion |
-| **Negative Number Snippets** | ❌ Not available | ✅ Smart suggestions |
-| **Real-world Patterns** | ❌ Limited | ✅ Comprehensive |
+The extension now provides smarter suggestions as you type.
 
-## 🔧 **Technical Implementation**
+#### Auto-completion Features
 
-### **Constraint Validation Fix**
-- **Updated regex:** `^-?\d*\.?\d*$` (now allows negative numbers)
-- **Before:** `^\d*\.?\d*$` (positive only)
-- **Impact:** Eliminates false positive errors for valid negative constraints
-
-### **Ignore Comment Detection**
-- **Line-above detection:** Checks previous line for `@fortify-ignore`
-- **Inline detection:** Checks same line for ignore comments
-- **Block comment support:** Handles `/* @fortify-ignore */` patterns
-- **Smart parsing:** Ignores comments inside strings
-
-### **Enhanced Completions**
-- **Context-aware:** Only shows ignore completions in comments
-- **Snippet support:** Provides placeholders for constraint values
-- **Documentation:** Rich hover information with examples
-- **Sorting:** Prioritizes relevant completions
-
-## 🎯 **Benefits**
-
-### **For Developers**
-- ✅ **No more false errors** on valid negative constraints
-- ✅ **Flexible validation** with ignore comments
-- ✅ **Faster development** with smart completions
-- ✅ **Better IntelliSense** for real-world patterns
-
-### **For Teams**
-- ✅ **Easier migration** from other validation libraries
-- ✅ **Custom type support** without extension modifications
-- ✅ **Consistent patterns** across geographic/financial data
-- ✅ **Professional development experience**
-
-### **For Production**
-- ✅ **Real-world constraint support** (coordinates, temperatures, finances)
-- ✅ **Gradual adoption** with selective validation disabling
-- ✅ **Legacy code compatibility** with ignore comments
-- ✅ **Robust validation** for negative number ranges
-
-## 📖 **Usage Guide**
-
-### **1. Install/Update Extension**
-```bash
-# Install from VSCode marketplace
-# Or update to latest version with these fixes
-```
-
-### **2. Use Negative Constraints**
-```typescript
-const schema = Interface({
-  temperature: "number(-40,50)",    // ✅ No error
-  coordinates: "number(-180,180)",  // ✅ No error
-  balance: "number(-999999,999999)" // ✅ No error
-});
-```
-
-### **3. Add Ignore Comments**
-```typescript
-// Type '@' in a comment to get auto-completion
-// @fortify-ignore
-customField: "my-custom-type"
-```
-
-### **4. Leverage Enhanced Completions**
-- Type `number(` to see constraint snippets
+**Constraint Snippets**
 - Type `string(` to see length constraint options
-- Type `@` in comments for ignore completions
+- Type `number(` to see range constraint examples
+- Includes placeholders for easy editing
 
-## 🔮 **Future Enhancements**
+**Ignore Comment Completion**
+- Type `@` in any comment to get `@fortify-ignore` suggestions
+- Works in both line and block comments
 
-- **Selective ignore:** `@fortify-ignore specific-rule`
-- **Ignore blocks:** Multi-line ignore regions
-- **Custom constraint validation:** User-defined constraint patterns
-- **Performance optimizations:** Faster validation for large files
+**Negative Number Patterns**
+- Common patterns like `number(-90,90)` for coordinates
+- Financial ranges like `number(-999,999)`
+- Scientific ranges with negative values
+
+## Getting Started
+
+### Installation
+
+1. Open VSCode
+2. Go to Extensions (Ctrl+Shift+X)
+3. Search for "Fortify Schema"
+4. Click Install
+
+### Basic Usage
+
+1. **Create a schema file** (usually with `.ts` or `.js` extension)
+
+2. **Import Fortify** (if using TypeScript/JavaScript):
+```typescript
+import { Interface } from 'your-fortify-library';
+```
+
+3. **Define your schema**:
+```typescript
+const UserSchema = Interface({
+  name: "string(1,50)",
+  email: "string(5,100)",
+  age: "number(0,150)",
+  balance: "number(-999999,999999)" // Now works without errors!
+});
+```
+
+4. **Use ignore comments** when needed:
+```typescript
+const CustomSchema = Interface({
+  standardField: "string(1,100)",
+  
+  // @fortify-ignore
+  customField: "MySpecialValidator"
+});
+```
+
+## Tips and Best Practices
+
+### Constraint Best Practices
+
+**Be Specific with Ranges**
+```typescript
+// Good - specific business rules
+age: "number(0,150)",
+price: "number(0.01,999999.99)",
+percentage: "number(0,100)"
+
+// Better - real-world constraints
+latitude: "number(-90,90)",
+longitude: "number(-180,180)"
+```
+
+**Use Appropriate String Lengths**
+```typescript
+// Good - reasonable limits
+username: "string(3,20)",
+email: "string(5,100)",
+description: "string(0,500)"
+```
+
+### Using Ignore Comments Effectively
+
+**Document Why You're Ignoring**
+```typescript
+/*
+ * @fortify-ignore
+ * Using Zod validator for complex nested validation
+ * TODO: Migrate to Fortify when nested objects are supported
+ */
+complexData: "z.object({...})"
+```
+
+**Use Sparingly**
+- Only ignore validation when absolutely necessary
+- Consider if you can restructure to use standard Fortify patterns
+- Document the reason for ignoring validation
+
+### Migration Tips
+
+**Gradual Migration**
+```typescript
+const MigrationSchema = Interface({
+  // New fields - use Fortify
+  newField: "string(1,100)",
+  
+  // @fortify-ignore - Legacy field during migration
+  legacyField: "OldValidationType",
+  
+  // Updated fields - now use proper constraints
+  coordinates: "number(-90,90)" // Fixed - no more false errors
+});
+```
+
+## Troubleshooting
+
+### Common Issues
+
+**Q: I'm still seeing errors for negative numbers**
+A: Make sure you have the latest version of the extension installed. Update through VSCode's Extensions panel.
+
+**Q: Ignore comments aren't working**  
+A: Ensure the comment format is exactly `@fortify-ignore` (case-sensitive) and is in a proper comment block.
+
+**Q: Auto-completion isn't showing up**
+A: Make sure you're in a TypeScript/JavaScript file and that the extension is active (check the status bar).
+
+### Getting Help
+
+If you encounter issues:
+1. Check that you have the latest extension version
+2. Restart VSCode
+3. Check the VSCode output panel for any error messages
+4. Consult the extension's documentation or support channels
+
+## Summary
+
+The updated Fortify Schema VSCode Extension provides:
+
+- ✅ **Accurate validation** for negative number constraints
+- ✅ **Flexible ignore system** for custom validation types  
+- ✅ **Smart auto-completion** for faster development
+- ✅ **Real-world pattern support** for geographic, financial, and scientific data
+- ✅ **Professional development experience** with fewer false errors
+
+These improvements make the extension more practical for real-world applications while maintaining the robust validation that makes Fortify Schema valuable.
 
 ---
 
-**The Fortify Schema VSCode extension now provides a professional, robust development experience with support for real-world validation patterns!** 🚀
+*Happy coding with Fortify Schema! 🚀*

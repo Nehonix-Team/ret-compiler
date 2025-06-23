@@ -60,15 +60,15 @@ const level4Schema = Interface({
   user: {
     id: "positive",
     profile: {
-      name: "string(2,50)",
+      name: "string(2,50)",  
       email: "email",
-      address: {
+      address: { 
         street: "string",
-        city: "string",
+        city: "string", 
         country: "string",
         coordinates: {
           lat: "number(-90,90)",
-          lng: "number(-180,180)"
+          lng: "number(-180,180)" 
         }
       },
       preferences: {

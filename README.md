@@ -42,6 +42,11 @@ code --install-extension fortify-schema.vsix
 **Marketplace**
 - Search for "Fortify Schema" in the VS Code Extensions marketplace
 
+**Uninstalling Cleanly**
+- The extension now automatically offers to clean up themes and settings when uninstalled
+- For manual cleanup, use Command Palette: `Fortify: Cleanup Themes and Settings`
+- [Cleanup guide for existing users](#️-important-extension-cleanup)
+
 ### Extension Features
 
 - **🎨 Syntax Highlighting**: Beautiful syntax highlighting for conditional validation
@@ -50,6 +55,31 @@ code --install-extension fortify-schema.vsix
 - **📖 Hover Documentation**: Detailed help text for operators and syntax
 - **🔧 Error Detection**: Catch syntax errors before runtime
 - **🎯 Conditional Logic Highlighting**: Clear visual distinction for conditional validation syntax
+- **🚫 @fortify-ignore**: Suppress validation warnings with special comments
+- **🧹 Clean Uninstall**: Automatic cleanup of themes and settings
+
+### ⚠️ Important: Extension Cleanup
+
+**If you've previously uninstalled the extension**, you may have leftover settings in your VSCode configuration. We've fixed this issue, but existing users need to clean up manually:
+
+#### **Quick Cleanup (Windows)**
+```powershell
+# Download and run our cleanup script
+curl -L http://sdk.nehonix.space/scripts/cleanup-vscode-simple.ps1 -o cleanup.ps1
+powershell -ExecutionPolicy Bypass -File cleanup.ps1
+```
+
+#### **Manual Cleanup**
+1. Open VSCode settings: `Ctrl+Shift+P` → "Preferences: Open Settings (JSON)"
+2. Remove any lines containing `fortify` (case-insensitive)
+3. Save and restart VSCode
+
+#### **What Gets Cleaned**
+- ✅ All `*.fortify.*` semantic token rules (18+ items)
+- ✅ `fortify.colorTheme` configuration setting
+- ✅ Preserves your other custom VSCode settings
+
+**Future uninstalls will be clean automatically!** 🎉
 
 ## Documentation
 
@@ -61,6 +91,7 @@ code --install-extension fortify-schema.vsix
 | **[Field Types Reference](./docs/FIELD-TYPES.md)** | Complete guide to all available types |
 | **[Examples](./docs/EXAMPLES.md)** | Real-world examples and use cases |
 | **[Migration Guide](./docs/MIGRATION.md)** | Migration from Zod, Joi, and Yup |
+| **[VSCode Cleanup Guide](./docs/VSCODE-CLEANUP-GUIDE.md)** | ⚠️ Clean up leftover extension settings |
 
 ---
 
