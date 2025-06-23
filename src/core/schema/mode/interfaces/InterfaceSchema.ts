@@ -17,7 +17,7 @@ import { ConstraintParser, TypeGuards, ValidationHelpers } from "./validators";
 // Import our conditional validation system
 import { ConditionalParser } from "./conditional/parser/ConditionalParser";
 import { ConditionalEvaluator } from "./conditional/evaluator/ConditionalEvaluator";
-import { ASTAnalyzer } from "./conditional/parser/ConditionalAST";
+
 import { ConditionalNode } from "./conditional/types/ConditionalTypes";
 
 // Import performance optimization system
@@ -69,8 +69,10 @@ export class InterfaceSchema<T = any> {
     // Pre-compile schema at initialization
     this.precompileSchema();
 
-    // Apply performance optimizations
-    this.applyOptimizations();
+    // Apply performance optimizations (skip if requested to prevent circular dependency)
+    if (!this.options.skipOptimization) {
+      this.applyOptimizations();
+    }
   }
 
   /**
@@ -90,7 +92,10 @@ export class InterfaceSchema<T = any> {
     // Apply optimizations based on complexity
     if (this.schemaComplexity > 15) {
       // High complexity - use advanced optimizations
-      this.compiledValidator = SchemaCompiler.compileSchema(this.definition, this.options);
+      this.compiledValidator = SchemaCompiler.compileSchema(
+        this.definition,
+        this.options
+      );
       this.isOptimized = true;
     } else if (this.schemaComplexity > 5) {
       // Medium complexity - use caching
@@ -112,7 +117,7 @@ export class InterfaceSchema<T = any> {
     for (const field of this.compiledFields) {
       if (field.isConditional) complexity += 5;
       if (field.isArray) complexity += 2;
-      if (typeof field.originalType === 'object') complexity += 3;
+      if (typeof field.originalType === "object") complexity += 3;
     }
 
     return complexity;
@@ -708,12 +713,8 @@ export class InterfaceSchema<T = any> {
     // Parse constraints from field type
     const { type, constraints } = ConstraintParser.parseConstraints(fieldType);
 
-
-
     // Apply parsed constraints to options, but preserve important options like loose
     const Options = { ...constraints, ...this.options };
-
-
 
     // Check for Record types first
     if (type.startsWith("record<") && type.endsWith(">")) {
@@ -732,7 +733,6 @@ export class InterfaceSchema<T = any> {
       Options,
       constraints
     );
-
 
     return result;
   }

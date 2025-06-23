@@ -17,7 +17,7 @@ export class SchemaCompiler {
     hits: 0,
     misses: 0,
     compilations: 0,
-    optimizations: 0
+    optimizations: 0,
   };
 
   /**
@@ -50,7 +50,11 @@ export class SchemaCompiler {
     const metadata = this.analyzeSchemaComplexity(schemaDefinition);
 
     // Generate optimized validator
-    const validator = this.generateOptimizedValidator(schemaDefinition, metadata, options);
+    const validator = this.generateOptimizedValidator(
+      schemaDefinition,
+      metadata,
+      options
+    );
 
     // Apply optimization strategies
     const optimizedValidator = this.applyOptimizations(validator);
@@ -67,7 +71,7 @@ export class SchemaCompiler {
    */
   private static analyzeSchemaComplexity(
     schema: Record<string, SchemaFieldType>
-  ): CompiledValidator['metadata'] {
+  ): CompiledValidator["metadata"] {
     let fieldCount = 0;
     let nestingLevel = 0;
     let hasUnions = false;
@@ -78,29 +82,29 @@ export class SchemaCompiler {
       fieldCount++;
       nestingLevel = Math.max(nestingLevel, depth);
 
-      if (typeof field === 'string') {
-        if (field.includes('|')) hasUnions = true;
-        if (field.includes('[]')) hasArrays = true;
-        if (field.includes('when')) hasConditionals = true;
-      } else if (typeof field === 'object' && field !== null) {
-        if ('union' in field) hasUnions = true;
+      if (typeof field === "string") {
+        if (field.includes("|")) hasUnions = true;
+        if (field.includes("[]")) hasArrays = true;
+        if (field.includes("when")) hasConditionals = true;
+      } else if (typeof field === "object" && field !== null) {
+        if ("union" in field) hasUnions = true;
         else {
           // Nested object
-          Object.values(field).forEach(nestedField =>
+          Object.values(field).forEach((nestedField) =>
             analyzeField(nestedField, depth + 1)
           );
         }
       }
     };
 
-    Object.values(schema).forEach(field => analyzeField(field));
+    Object.values(schema).forEach((field) => analyzeField(field));
 
     const complexity = this.calculateComplexityScore({
       fieldCount,
       nestingLevel,
       hasUnions,
       hasArrays,
-      hasConditionals
+      hasConditionals,
     });
 
     return {
@@ -109,14 +113,16 @@ export class SchemaCompiler {
       nestingLevel,
       hasUnions,
       hasArrays,
-      hasConditionals
+      hasConditionals,
     };
   }
 
   /**
    * Calculate complexity score for optimization decisions
    */
-  private static calculateComplexityScore(metadata: Omit<CompiledValidator['metadata'], 'complexity'>): number {
+  private static calculateComplexityScore(
+    metadata: Omit<CompiledValidator["metadata"], "complexity">
+  ): number {
     let score = metadata.fieldCount;
     score += metadata.nestingLevel * 3; // Nesting is expensive
     score += metadata.hasUnions ? 2 : 0;
@@ -130,7 +136,7 @@ export class SchemaCompiler {
    */
   private static generateOptimizedValidator(
     schema: Record<string, SchemaFieldType>,
-    metadata: CompiledValidator['metadata'],
+    metadata: CompiledValidator["metadata"],
     options: any
   ): CompiledValidator {
     // Generate validation function based on complexity
@@ -140,7 +146,7 @@ export class SchemaCompiler {
       validate,
       metadata,
       cacheKey: this.generateCacheKey(schema, options),
-      compiledAt: Date.now()
+      compiledAt: Date.now(),
     };
   }
 
@@ -149,7 +155,7 @@ export class SchemaCompiler {
    */
   private static createValidationFunction(
     schema: Record<string, SchemaFieldType>,
-    metadata: CompiledValidator['metadata'],
+    metadata: CompiledValidator["metadata"],
     options: any
   ): (value: any) => SchemaValidationResult {
     // For simple schemas, use fast path
@@ -174,19 +180,22 @@ export class SchemaCompiler {
     options: any
   ): (value: any) => SchemaValidationResult {
     // Pre-compile all field validators
-    const fieldValidators = new Map<string, (value: any) => SchemaValidationResult>();
+    const fieldValidators = new Map<
+      string,
+      (value: any) => SchemaValidationResult
+    >();
 
     for (const [key, fieldType] of Object.entries(schema)) {
       fieldValidators.set(key, this.compileFieldValidator(fieldType, options));
     }
 
     return (value: any): SchemaValidationResult => {
-      if (typeof value !== 'object' || value === null) {
+      if (typeof value !== "object" || value === null) {
         return {
           success: false,
-          errors: ['Expected object'],
+          errors: ["Expected object"],
           warnings: [],
-          data: value
+          data: value,
         };
       }
 
@@ -197,7 +206,7 @@ export class SchemaCompiler {
       for (const [key, validator] of fieldValidators) {
         const result = validator(value[key]);
         if (!result.success) {
-          errors.push(`${key}: ${result.errors.join(', ')}`);
+          errors.push(`${key}: ${result.errors.join(", ")}`);
         } else {
           validatedData[key] = result.data;
         }
@@ -207,7 +216,7 @@ export class SchemaCompiler {
         success: errors.length === 0,
         errors,
         warnings: [],
-        data: validatedData
+        data: validatedData,
       };
     };
   }
@@ -234,9 +243,12 @@ export class SchemaCompiler {
     schema: Record<string, SchemaFieldType>,
     options: any
   ): (value: any) => SchemaValidationResult {
-    // Import the actual Interface validation logic
-    const { Interface } = require('../mode/interfaces/Interface');
-    const tempSchema = Interface(schema);
+    // Create a simple validator without triggering optimization to prevent circular dependency
+    const { InterfaceSchema } = require("../mode/interfaces/InterfaceSchema");
+    const tempSchema = new InterfaceSchema(schema, {
+      ...options,
+      skipOptimization: true,
+    });
     return (value: any) => tempSchema.safeParse(value);
   }
 
@@ -247,68 +259,124 @@ export class SchemaCompiler {
     fieldType: SchemaFieldType,
     options: any
   ): (value: any) => SchemaValidationResult {
-    if (typeof fieldType === 'string') {
+    if (typeof fieldType === "string") {
       // Pre-parse the field type for optimization
-      const { ValidationHelpers } = require('../mode/interfaces/validators/ValidationHelpers');
-      const { ConstraintParser } = require('../mode/interfaces/validators/ConstraintParser');
+      const {
+        ValidationHelpers,
+      } = require("../mode/interfaces/validators/ValidationHelpers");
+      const {
+        ConstraintParser,
+      } = require("../mode/interfaces/validators/ConstraintParser");
 
       const parsed = ConstraintParser.parseConstraints(fieldType);
       const { type, constraints, optional } = parsed;
 
       // Return optimized validator based on type
-      if (type.includes('|')) {
+      if (type.includes("|")) {
         // Union type - use cached validation
-        const { OptimizedUnionValidator } = require('../mode/interfaces/validators/UnionCache');
+        const {
+          OptimizedUnionValidator,
+        } = require("../mode/interfaces/validators/UnionCache");
         return (value: any): SchemaValidationResult => {
           if (value === undefined && optional) {
-            return { success: true, errors: [], warnings: [], data: options.default };
+            return {
+              success: true,
+              errors: [],
+              warnings: [],
+              data: options.default,
+            };
           }
           const result = OptimizedUnionValidator.validateUnion(type, value);
           return {
             success: result.isValid,
             errors: result.isValid ? [] : [result.error!],
             warnings: [],
-            data: result.isValid ? value : undefined
+            data: result.isValid ? value : undefined,
           };
         };
       }
 
-      if (type === 'string') {
+      if (type === "string") {
         // Optimized string validator
         return (value: any): SchemaValidationResult => {
           if (value === undefined && optional) {
-            return { success: true, errors: [], warnings: [], data: options.default };
+            return {
+              success: true,
+              errors: [],
+              warnings: [],
+              data: options.default,
+            };
           }
-          if (typeof value !== 'string') {
-            return { success: false, errors: ['Expected string'], warnings: [], data: value };
+          if (typeof value !== "string") {
+            return {
+              success: false,
+              errors: ["Expected string"],
+              warnings: [],
+              data: value,
+            };
           }
           if (constraints.minLength && value.length < constraints.minLength) {
-            return { success: false, errors: [`String too short (min: ${constraints.minLength})`], warnings: [], data: value };
+            return {
+              success: false,
+              errors: [`String too short (min: ${constraints.minLength})`],
+              warnings: [],
+              data: value,
+            };
           }
           if (constraints.maxLength && value.length > constraints.maxLength) {
-            return { success: false, errors: [`String too long (max: ${constraints.maxLength})`], warnings: [], data: value };
+            return {
+              success: false,
+              errors: [`String too long (max: ${constraints.maxLength})`],
+              warnings: [],
+              data: value,
+            };
           }
           return { success: true, errors: [], warnings: [], data: value };
         };
       }
 
-      if (type === 'number' || type === 'int') {
+      if (type === "number" || type === "int") {
         // Optimized number validator
         return (value: any): SchemaValidationResult => {
           if (value === undefined && optional) {
-            return { success: true, errors: [], warnings: [], data: options.default };
+            return {
+              success: true,
+              errors: [],
+              warnings: [],
+              data: options.default,
+            };
           }
-          if (typeof value !== 'number' || isNaN(value)) {
-            return { success: false, errors: ['Expected number'], warnings: [], data: value };
+          if (typeof value !== "number" || isNaN(value)) {
+            return {
+              success: false,
+              errors: ["Expected number"],
+              warnings: [],
+              data: value,
+            };
           }
-          if (type === 'int' && !Number.isInteger(value)) {
-            return { success: false, errors: ['Expected integer'], warnings: [], data: value };
+          if (type === "int" && !Number.isInteger(value)) {
+            return {
+              success: false,
+              errors: ["Expected integer"],
+              warnings: [],
+              data: value,
+            };
           }
           if (constraints.min !== undefined && value < constraints.min) {
-            return { success: false, errors: [`Number too small (min: ${constraints.min})`], warnings: [], data: value };
+            return {
+              success: false,
+              errors: [`Number too small (min: ${constraints.min})`],
+              warnings: [],
+              data: value,
+            };
           }
           if (constraints.max !== undefined && value > constraints.max) {
-            return { success: false, errors: [`Number too large (max: ${constraints.max})`], warnings: [], data: value };
+            return {
+              success: false,
+              errors: [`Number too large (max: ${constraints.max})`],
+              warnings: [],
+              data: value,
+            };
           }
           return { success: true, errors: [], warnings: [], data: value };
         };
@@ -316,7 +384,12 @@ export class SchemaCompiler {
 
       // Fallback to ValidationHelpers for complex types
       return (value: any): SchemaValidationResult => {
-        return ValidationHelpers.routeTypeValidation(type, value, options, constraints);
+        return ValidationHelpers.routeTypeValidation(
+          type,
+          value,
+          options,
+          constraints
+        );
       };
     }
 
@@ -334,31 +407,44 @@ export class SchemaCompiler {
       fields: new Map(),
       validators: new Map(),
       paths: [],
-      isFlat: true
+      isFlat: true,
     };
 
     const compileLevel = (obj: any, path: string[] = []): void => {
       for (const [key, value] of Object.entries(obj)) {
         const currentPath = [...path, key];
-        const pathKey = currentPath.join('.');
+        const pathKey = currentPath.join(".");
 
         compiledStructure.paths.push(pathKey);
 
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
           // Compile field validator
           const validator = this.compileFieldValidator(value, options);
           compiledStructure.validators.set(pathKey, validator);
-          compiledStructure.fields.set(pathKey, { type: 'primitive', validator });
-        } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          compiledStructure.fields.set(pathKey, {
+            type: "primitive",
+            validator,
+          });
+        } else if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
           // Nested object
           compiledStructure.isFlat = false;
-          compiledStructure.fields.set(pathKey, { type: 'object', schema: value });
+          compiledStructure.fields.set(pathKey, {
+            type: "object",
+            schema: value,
+          });
           compileLevel(value, currentPath);
         } else if (Array.isArray(value) && value.length === 1) {
           // Array of objects
-          compiledStructure.fields.set(pathKey, { type: 'array', itemSchema: value[0] });
-          if (typeof value[0] === 'object') {
-            compileLevel(value[0], [...currentPath, '[]']);
+          compiledStructure.fields.set(pathKey, {
+            type: "array",
+            itemSchema: value[0],
+          });
+          if (typeof value[0] === "object") {
+            compileLevel(value[0], [...currentPath, "[]"]);
           }
         }
       }
@@ -371,13 +457,16 @@ export class SchemaCompiler {
   /**
    * Validate using pre-compiled structure
    */
-  private static validateWithCompiledStructure(value: any, structure: any): SchemaValidationResult {
-    if (typeof value !== 'object' || value === null) {
+  private static validateWithCompiledStructure(
+    value: any,
+    structure: any
+  ): SchemaValidationResult {
+    if (typeof value !== "object" || value === null) {
       return {
         success: false,
-        errors: ['Expected object'],
+        errors: ["Expected object"],
         warnings: [],
-        data: value
+        data: value,
       };
     }
 
@@ -387,12 +476,12 @@ export class SchemaCompiler {
     // Fast path for flat structures
     if (structure.isFlat) {
       for (const [pathKey, validator] of structure.validators) {
-        const fieldKey = pathKey.split('.').pop();
+        const fieldKey = pathKey.split(".").pop();
         const fieldValue = value[fieldKey!];
         const result = validator(fieldValue);
 
         if (!result.success) {
-          errors.push(`${fieldKey}: ${result.errors.join(', ')}`);
+          errors.push(`${fieldKey}: ${result.errors.join(", ")}`);
         } else if (result.data !== undefined) {
           validatedData[fieldKey!] = result.data;
         }
@@ -400,14 +489,14 @@ export class SchemaCompiler {
     } else {
       // Complex nested validation
       for (const path of structure.paths) {
-        const pathParts = path.split('.');
+        const pathParts = path.split(".");
         const fieldValue = this.getValueByPath(value, pathParts);
         const field = structure.fields.get(path);
 
-        if (field.type === 'primitive') {
+        if (field.type === "primitive") {
           const result = field.validator(fieldValue);
           if (!result.success) {
-            errors.push(`${path}: ${result.errors.join(', ')}`);
+            errors.push(`${path}: ${result.errors.join(", ")}`);
           } else {
             this.setValueByPath(validatedData, pathParts, result.data);
           }
@@ -419,7 +508,7 @@ export class SchemaCompiler {
       success: errors.length === 0,
       errors,
       warnings: [],
-      data: errors.length === 0 ? validatedData : undefined
+      data: errors.length === 0 ? validatedData : undefined,
     };
   }
 
@@ -453,7 +542,9 @@ export class SchemaCompiler {
   /**
    * Apply optimization strategies based on schema characteristics
    */
-  private static applyOptimizations(validator: CompiledValidator): CompiledValidator {
+  private static applyOptimizations(
+    validator: CompiledValidator
+  ): CompiledValidator {
     let optimized = validator;
 
     for (const strategy of this.optimizationStrategies) {
@@ -472,32 +563,32 @@ export class SchemaCompiler {
   private static registerOptimizationStrategies(): void {
     // Union optimization strategy
     this.optimizationStrategies.push({
-      name: 'union-caching',
+      name: "union-caching",
       condition: (metadata) => metadata.hasUnions,
       optimize: (validator) => {
         // Apply union caching optimization
         return validator;
-      }
+      },
     });
 
     // Array optimization strategy
     this.optimizationStrategies.push({
-      name: 'array-batching',
+      name: "array-batching",
       condition: (metadata) => metadata.hasArrays,
       optimize: (validator) => {
         // Apply array batching optimization
         return validator;
-      }
+      },
     });
 
     // Nested object optimization
     this.optimizationStrategies.push({
-      name: 'nested-flattening',
+      name: "nested-flattening",
       condition: (metadata) => metadata.nestingLevel > 2,
       optimize: (validator) => {
         // Apply nested object flattening
         return validator;
-      }
+      },
     });
   }
 
@@ -528,11 +619,13 @@ export class SchemaCompiler {
    * Get compilation statistics
    */
   static getStats() {
-    const hitRate = this.compilationStats.hits / (this.compilationStats.hits + this.compilationStats.misses);
+    const hitRate =
+      this.compilationStats.hits /
+      (this.compilationStats.hits + this.compilationStats.misses);
     return {
       ...this.compilationStats,
       hitRate: hitRate || 0,
-      cacheSize: this.compiledCache.size
+      cacheSize: this.compiledCache.size,
     };
   }
 
@@ -541,6 +634,11 @@ export class SchemaCompiler {
    */
   static clearCache(): void {
     this.compiledCache.clear();
-    this.compilationStats = { hits: 0, misses: 0, compilations: 0, optimizations: 0 };
+    this.compilationStats = {
+      hits: 0,
+      misses: 0,
+      compilations: 0,
+      optimizations: 0,
+    };
   }
 }
