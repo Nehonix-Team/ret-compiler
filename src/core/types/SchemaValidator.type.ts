@@ -36,6 +36,7 @@ export interface SchemaInterface {
     [key: string]: SchemaFieldType | ConstantValue | OptionalConstantValue | SchemaInterface | SchemaInterface[] | any;
 }
 
+
 /**
  * Field type definitions using string literals and objects
  */
@@ -132,4 +133,9 @@ export interface SchemaOptions {
     required?: boolean;
     default?: any;
     loose?: boolean; // Allow type coercion (opposite of strict)
+
+    // Performance options
+    enablePerformanceMonitoring?: boolean;
+    enableOptimizations?: boolean;
+    cacheValidation?: boolean;
 }

@@ -1,32 +1,83 @@
 {
-  "timestamp": "2025-06-23T09:50:46.885Z",
-  "environment": {
-    "node": "v22.12.0",
+  "metadata": {
+    "timestamp": "2025-06-23T11:07:37.136Z",
+    "nodeVersion": "v22.12.0",
     "platform": "win32",
     "arch": "x64",
-    "memory": "5MB"
+    "fortifyVersion": "1.0.0",
+    "zodVersion": "3.25.67"
   },
-  "benchmarks": [
+  "summary": {
+    "totalTests": 4,
+    "fortifyWins": 3,
+    "zodWins": 1,
+    "averageSpeedup": 0.9171935656398523,
+    "overallWinner": "Zod",
+    "memoryUsage": {
+      "totalMB": 9.576972961425781,
+      "perSchemaKB": 9.8068203125
+    }
+  },
+  "detailedResults": [
     {
-      "name": "Core Performance",
-      "description": "Core validation performance metrics",
-      "status": "success",
-      "output": "=== PERFORMANCE COMPARISON ===\n\n1. Constraint Parser Cache Performance:\nFirst run (no cache): 7.58ms\nSecond run (no cache): 2.92ms\nThird run (with cache): 2.74ms\nCache speedup: 1.07x\n\n2. Schema Validation Performance:\n1000 validations: 18.91ms (0.0189ms avg, 52891 ops/sec)\n5000 validations: 72.52ms (0.0145ms avg, 68948 ops/sec)\n10000 validations: 88.76ms (0.0089ms avg, 112664 ops/sec)\n\n3. Memory Usage Test:\nMemory used for 50,000 validations: 0.18 MB\nMemory per validation: 4 bytes\n\n4. Cache Statistics:\nConstraint parser cache size: 9 entries\n\n5. Complex Schema Performance:\nComplex schema (5000 validations): 129.38ms\nComplex schema average: 0.0259ms per validation\nComplex schema ops/sec: 38645\n\nPerformance comparison completed! 📊",
-      "timestamp": "2025-06-23T09:50:48.008Z"
+      "testName": "Simple Schema",
+      "winner": "Fortify",
+      "speedup": 1.1876170319900552,
+      "fortify": {
+        "totalTime": 50.8408,
+        "averageTime": 0.00508408,
+        "operationsPerSecond": 196692.42026089283
+      },
+      "zod": {
+        "totalTime": 60.379400000000004,
+        "averageTime": 0.00603794,
+        "operationsPerSecond": 165619.3999940377
+      }
     },
     {
-      "name": "Precompilation Optimization",
-      "description": "Schema compilation and caching performance",
-      "status": "success",
-      "output": "=== PRE-COMPILATION OPTIMIZATION BENCHMARK ===\n\n\nSimple Schema (3 fields):\n──────────────────────────────────────────────────\n✅ 20000 validations: 66.07ms\n✅ Average time: 0.0033ms per validation\n✅ Throughput: 302731 operations/second\n✅ Memory per validation: ~0.02 KB\n\nMedium Schema (6 fields):\n──────────────────────────────────────────────────\n✅ 15000 validations: 85.26ms\n✅ Average time: 0.0057ms per validation\n✅ Throughput: 175942 operations/second\n✅ Memory per validation: ~0.06 KB\n\nComplex Schema (nested objects):\n──────────────────────────────────────────────────\n✅ 10000 validations: 180.42ms\n✅ Average time: 0.0180ms per validation\n✅ Throughput: 55426 operations/second\n✅ Memory per validation: ~0.12 KB\n\n=== CONSTRAINT PARSER CACHE PERFORMANCE ===\n──────────────────────────────────────────────────\nCold cache (first run): 4.21ms\nWarm cache (cached): 3.57ms\nCache speedup: 1.18x faster\nCache size: 9 entries\n\n=== MEMORY EFFICIENCY TEST ===\n──────────────────────────────────────────────────\nMemory for 1000 schema instances: 0.00 MB\nMemory per schema: 0.00 KB\nValidated 1000 different schemas: 3.24ms\nAverage per schema: 0.0032ms\n\n=== OPTIMIZATION SUMMARY ===\n──────────────────────────────────────────────────\n✅ Pre-compilation eliminates repeated parsing overhead\n✅ Constraint caching provides significant speedup\n✅ Memory usage is optimized for production workloads\n✅ Performance scales well with schema complexity\n✅ Ready for high-throughput validation scenarios\n\nPre-compilation benchmark completed! 🚀",
-      "timestamp": "2025-06-23T09:50:48.583Z"
+      "testName": "Complex Schema",
+      "winner": "Fortify",
+      "speedup": 1.0658287782446485,
+      "fortify": {
+        "totalTime": 72.61110000000002,
+        "averageTime": 0.014522220000000004,
+        "operationsPerSecond": 68859.99523488831
+      },
+      "zod": {
+        "totalTime": 77.39100000000002,
+        "averageTime": 0.015478200000000004,
+        "operationsPerSecond": 64606.99564548848
+      }
     },
     {
-      "name": "Fortify vs Zod",
-      "description": "Direct performance comparison with Zod",
-      "status": "success",
-      "output": "=== FORTIFY SCHEMA vs ZOD PERFORMANCE COMPARISON ===\n\n📊 Test 1: Simple Schema (5 fields)\n──────────────────────────────────────────────────\n\nSimple Schema:\n  Fortify Schema: 35.09ms (0.0035ms avg, 284986 ops/sec)\n  Zod:           57.08ms (0.0057ms avg, 175190 ops/sec)\n  Winner: 🏆 Fortify (1.63x faster)\n\n📊 Test 2: Complex Schema (nested objects)\n──────────────────────────────────────────────────\n\nComplex Schema:\n  Fortify Schema: 71.87ms (0.0144ms avg, 69570 ops/sec)\n  Zod:           55.84ms (0.0112ms avg, 89539 ops/sec)\n  Winner: 🏆 Zod (0.78x slower)\n\n📊 Test 3: Array Validation\n──────────────────────────────────────────────────\n\nArray Schema:\n  Fortify Schema: 26.86ms (0.0034ms avg, 297817 ops/sec)\n  Zod:           27.05ms (0.0034ms avg, 295783 ops/sec)\n  Winner: 🏆 Fortify (1.01x faster)\n\n📊 Test 4: Union Types\n──────────────────────────────────────────────────\n\nUnion Types:\n  Fortify Schema: 24.40ms (0.0020ms avg, 491727 ops/sec)\n  Zod:           8.75ms (0.0007ms avg, 1371679 ops/sec)\n  Winner: 🏆 Zod (0.36x slower)\n\n📊 Memory Usage Comparison\n──────────────────────────────────────────────────\nMemory for 1000 schema instances: 9.75 MB\nMemory per schema pair: 9.99 KB\n\n🏆 PERFORMANCE SUMMARY\n==================================================\nFortify Schema wins: 2/4 tests\nZod wins: 2/4 tests\nAverage performance: Zod is 0.94x slower\n\n📋 Detailed Results:\n  Simple Schema: Fortify wins (1.63x)\n  Complex Schema: Zod wins (0.78x)\n  Array Schema: Fortify wins (1.01x)\n  Union Types: Zod wins (0.36x)\n\n✅ Benchmark completed successfully!\n\nNote: Results may vary based on Node.js version, system specs, and data complexity.\nThese benchmarks test core validation performance only.",
-      "timestamp": "2025-06-23T09:50:49.245Z"
+      "testName": "Array Schema",
+      "winner": "Fortify",
+      "speedup": 1.081868815490193,
+      "fortify": {
+        "totalTime": 41.15120000000002,
+        "averageTime": 0.0051439000000000025,
+        "operationsPerSecond": 194405.02342580524
+      },
+      "zod": {
+        "totalTime": 44.520200000000045,
+        "averageTime": 0.0055650250000000056,
+        "operationsPerSecond": 179693.7120677803
+      }
+    },
+    {
+      "testName": "Union Types",
+      "winner": "Zod",
+      "speedup": 0.333459636834513,
+      "fortify": {
+        "totalTime": 27.183200000000056,
+        "averageTime": 0.0022652666666666712,
+        "operationsPerSecond": 441449.1303452123
+      },
+      "zod": {
+        "totalTime": 9.064499999999953,
+        "averageTime": 0.0007553749999999961,
+        "operationsPerSecond": 1323845.7719675726
+      }
     }
   ]
 }

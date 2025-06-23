@@ -20,6 +20,11 @@ import { ConditionalEvaluator } from "./conditional/evaluator/ConditionalEvaluat
 import { ASTAnalyzer } from "./conditional/parser/ConditionalAST";
 import { ConditionalNode } from "./conditional/types/ConditionalTypes";
 
+// Import performance optimization system
+import { SchemaCompiler } from "../../optimization/SchemaCompiler";
+import { ObjectValidationCache } from "../../optimization/ObjectValidationCache";
+import { PerformanceMonitor } from "../../optimization/PerformanceMonitor";
+
 /**
  * Interface Schema class for TypeScript-like schema definitions
  */
@@ -45,6 +50,9 @@ export class InterfaceSchema<T = any> {
   private compiledFields: CompiledField[] = [];
   private schemaKeys: string[] = [];
   private ConditionalParser: ConditionalParser;
+  private compiledValidator?: any;
+  private schemaComplexity: number = 0;
+  private isOptimized: boolean = false;
 
   constructor(
     private definition: SchemaInterface,
@@ -60,6 +68,9 @@ export class InterfaceSchema<T = any> {
 
     // Pre-compile schema at initialization
     this.precompileSchema();
+
+    // Apply performance optimizations
+    this.applyOptimizations();
   }
 
   /**
@@ -67,6 +78,44 @@ export class InterfaceSchema<T = any> {
    */
   private isConditionalSyntax(fieldType: string): boolean {
     return fieldType.includes("when ") && fieldType.includes(" *? ");
+  }
+
+  /**
+   * Apply performance optimizations based on schema characteristics
+   */
+  private applyOptimizations(): void {
+    // Calculate schema complexity
+    this.schemaComplexity = this.calculateComplexity();
+
+    // Apply optimizations based on complexity
+    if (this.schemaComplexity > 15) {
+      // High complexity - use advanced optimizations
+      this.compiledValidator = SchemaCompiler.compileSchema(this.definition, this.options);
+      this.isOptimized = true;
+    } else if (this.schemaComplexity > 5) {
+      // Medium complexity - use caching
+      this.isOptimized = true;
+    }
+
+    // Start performance monitoring if enabled
+    if (this.options.enablePerformanceMonitoring) {
+      PerformanceMonitor.startMonitoring();
+    }
+  }
+
+  /**
+   * Calculate schema complexity score
+   */
+  private calculateComplexity(): number {
+    let complexity = this.compiledFields.length;
+
+    for (const field of this.compiledFields) {
+      if (field.isConditional) complexity += 5;
+      if (field.isArray) complexity += 2;
+      if (typeof field.originalType === 'object') complexity += 3;
+    }
+
+    return complexity;
   }
 
   /**
@@ -135,6 +184,42 @@ export class InterfaceSchema<T = any> {
    * Validate data against the interface schema - optimized version
    */
   validate(data: any): SchemaValidationResult<T> {
+    const startTime = performance.now();
+    const operationId = `schema-${this.schemaComplexity}`;
+
+    let result: SchemaValidationResult<T>;
+
+    // Use optimized validation path if available
+    if (this.isOptimized && this.compiledValidator) {
+      result = this.compiledValidator.validate(data);
+    } else if (this.isOptimized && this.schemaComplexity > 5) {
+      // Use cached validation for medium complexity
+      result = ObjectValidationCache.getCachedValidation(
+        data,
+        (value) => this.validateStandard(value),
+        []
+      ) as SchemaValidationResult<T>;
+    } else {
+      // Standard validation for simple schemas
+      result = this.validateStandard(data);
+    }
+
+    // Record performance metrics
+    const duration = performance.now() - startTime;
+    PerformanceMonitor.recordOperation(
+      operationId,
+      duration,
+      this.schemaComplexity,
+      this.isOptimized
+    );
+
+    return result;
+  }
+
+  /**
+   * Standard validation method (original implementation)
+   */
+  private validateStandard(data: any): SchemaValidationResult<T> {
     // Fast path for non-objects
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       return {
@@ -810,7 +895,7 @@ export class InterfaceSchema<T = any> {
             errors: [],
             warnings: [],
             data: value,
-          };
+          }; 
         }
 
         return this.validateStringFieldType(expectedSchema, value);

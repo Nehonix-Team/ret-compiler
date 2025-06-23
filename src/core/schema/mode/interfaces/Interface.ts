@@ -5,10 +5,10 @@
  *
  * @example
  * ```typescript
- * import { Interface } from "fortify-schema";
+ * import { Interface as IF} from "fortify-schema";
  *
  * // Define schema like a TypeScript interface
- * const UserSchema = Interface({
+ * const UserSchema = IF({
  *   id: "number",
  *   email: "email",
  *   name: "string",

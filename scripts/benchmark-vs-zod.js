@@ -6,6 +6,8 @@
  */
 
 const { performance } = require('perf_hooks');
+const fs = require('fs');
+const path = require('path');
 
 // Import Fortify Schema (assuming it's built)
 let Interface;
@@ -278,3 +280,177 @@ results.forEach((result, i) => {
 console.log('\n✅ Benchmark completed successfully!');
 console.log('\nNote: Results may vary based on Node.js version, system specs, and data complexity.');
 console.log('These benchmarks test core validation performance only.');
+
+// Generate benchmark reports
+generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zodWins);
+
+/**
+ * Generate comprehensive benchmark reports in both Markdown and JSON formats
+ */
+function generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zodWins) {
+  const timestamp = new Date().toISOString();
+  const testNames = ['Simple Schema', 'Complex Schema', 'Array Schema', 'Union Types'];
+
+  // Ensure docs directory exists
+  const docsDir = path.join(__dirname, '..', 'docs');
+  if (!fs.existsSync(docsDir)) {
+    fs.mkdirSync(docsDir, { recursive: true });
+  }
+
+  // Generate JSON report
+  const jsonReport = {
+    metadata: {
+      timestamp,
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      fortifyVersion: "1.0.0", // You might want to read this from package.json
+      zodVersion: getZodVersion()
+    },
+    summary: {
+      totalTests: results.length,
+      fortifyWins,
+      zodWins,
+      averageSpeedup: avgSpeedup,
+      overallWinner: avgSpeedup > 1 ? 'Fortify Schema' : 'Zod',
+      memoryUsage: {
+        totalMB: (memDiff / 1024 / 1024),
+        perSchemaKB: (memDiff / 1000 / 1024)
+      }
+    },
+    detailedResults: results.map((result, i) => ({
+      testName: testNames[i],
+      winner: result.winner,
+      speedup: result.speedup,
+      fortify: {
+        totalTime: result.fortify.time,
+        averageTime: result.fortify.avg,
+        operationsPerSecond: result.fortify.ops
+      },
+      zod: {
+        totalTime: result.zod.time,
+        averageTime: result.zod.avg,
+        operationsPerSecond: result.zod.ops
+      }
+    }))
+  };
+
+  // Write JSON report
+  const jsonPath = path.join(docsDir, 'benchmark-results.json');
+  fs.writeFileSync(jsonPath, JSON.stringify(jsonReport, null, 2));
+  console.log(`\n📄 JSON report saved to: ${jsonPath}`);
+
+  // Generate Markdown report
+  const markdownReport = generateMarkdownReport(jsonReport);
+
+  // Write Markdown report
+  const mdPath = path.join(docsDir, 'BENCHMARK-RESULTS.md');
+  fs.writeFileSync(mdPath, markdownReport);
+  console.log(`📄 Markdown report saved to: ${mdPath}`);
+}
+
+/**
+ * Generate detailed Markdown report
+ */
+function generateMarkdownReport(jsonReport) {
+  const { metadata, summary, detailedResults } = jsonReport;
+
+  return `# Fortify Schema vs Zod - Performance Benchmark Results
+
+## 📊 Executive Summary
+
+**Generated:** ${new Date(metadata.timestamp).toLocaleString()}
+**Node.js Version:** ${metadata.nodeVersion}
+**Platform:** ${metadata.platform} (${metadata.arch})
+
+### 🏆 Overall Results
+
+| Metric | Value |
+|--------|-------|
+| **Total Tests** | ${summary.totalTests} |
+| **Fortify Schema Wins** | ${summary.fortifyWins}/${summary.totalTests} tests |
+| **Zod Wins** | ${summary.zodWins}/${summary.totalTests} tests |
+| **Overall Winner** | **${summary.overallWinner}** |
+| **Average Performance** | ${summary.overallWinner} is ${Math.abs(summary.averageSpeedup).toFixed(2)}x ${summary.averageSpeedup > 1 ? 'faster' : 'slower'} |
+
+### 💾 Memory Usage
+
+- **Total Memory for 1000 schemas:** ${summary.memoryUsage.totalMB.toFixed(2)} MB
+- **Memory per schema pair:** ${summary.memoryUsage.perSchemaKB.toFixed(2)} KB
+
+## 📋 Detailed Test Results
+
+${detailedResults.map((result, i) => `
+### ${i + 1}. ${result.testName}
+
+**Winner:** 🏆 **${result.winner}** (${result.speedup.toFixed(2)}x ${result.speedup > 1 ? 'faster' : 'slower'})
+
+| Library | Total Time | Avg Time | Ops/Second |
+|---------|------------|----------|------------|
+| **Fortify Schema** | ${result.fortify.totalTime.toFixed(2)}ms | ${result.fortify.averageTime.toFixed(4)}ms | ${result.fortify.operationsPerSecond.toFixed(0)} |
+| **Zod** | ${result.zod.totalTime.toFixed(2)}ms | ${result.zod.averageTime.toFixed(4)}ms | ${result.zod.operationsPerSecond.toFixed(0)} |
+`).join('\n')}
+
+## 🎯 Performance Analysis
+
+### Strengths of Fortify Schema
+${summary.fortifyWins > 0 ? detailedResults.filter(r => r.winner === 'Fortify').map(r => `- **${r.testName}**: ${r.speedup.toFixed(2)}x faster than Zod`).join('\n') : '- No significant advantages in current tests'}
+
+### Strengths of Zod
+${summary.zodWins > 0 ? detailedResults.filter(r => r.winner === 'Zod').map(r => `- **${r.testName}**: ${(1/r.speedup).toFixed(2)}x faster than Fortify Schema`).join('\n') : '- No significant advantages in current tests'}
+
+## 📈 Performance Trends
+
+### Best Performing Test Cases
+${detailedResults
+  .sort((a, b) => b.fortify.operationsPerSecond - a.fortify.operationsPerSecond)
+  .slice(0, 2)
+  .map(r => `1. **${r.testName}**: ${r.fortify.operationsPerSecond.toFixed(0)} ops/sec`)
+  .join('\n')}
+
+### Areas for Improvement
+${detailedResults
+  .filter(r => r.winner === 'Zod')
+  .map(r => `- **${r.testName}**: Currently ${(1/r.speedup).toFixed(2)}x slower than Zod`)
+  .join('\n') || '- All test cases are competitive or better than Zod'}
+
+## 🔧 Technical Details
+
+### Test Environment
+- **Node.js:** ${metadata.nodeVersion}
+- **Platform:** ${metadata.platform}
+- **Architecture:** ${metadata.arch}
+- **Fortify Schema Version:** ${metadata.fortifyVersion}
+- **Zod Version:** ${metadata.zodVersion}
+
+### Methodology
+- Each test includes a warm-up phase of 100 iterations
+- Performance measurements exclude warm-up time
+- Memory usage measured for 1000 schema instances
+- Results averaged across multiple runs for consistency
+
+## 📝 Notes
+
+- Results may vary based on Node.js version, system specifications, and data complexity
+- These benchmarks test core validation performance only
+- Memory usage includes both libraries for fair comparison
+- All tests use equivalent validation logic between libraries
+
+---
+
+*Last updated: ${new Date(metadata.timestamp).toLocaleString()}*
+*Generated automatically by benchmark-vs-zod.js*
+`;
+}
+
+/**
+ * Get Zod version from package.json or node_modules
+ */
+function getZodVersion() {
+  try {
+    const zodPackage = require('zod/package.json');
+    return zodPackage.version;
+  } catch (error) {
+    return 'unknown';
+  }
+}
