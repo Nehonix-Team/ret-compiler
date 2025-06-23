@@ -10,4 +10,5 @@ export const reservedKeywords = [
   "null",
 ] as const;
 
-export const default_scheme = "synthwave" as const;
+export const default_scheme = "neoncyberpunk" as const;
+// export const default_scheme = "darkvoid" as const;

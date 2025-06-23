@@ -12,5 +12,6 @@ exports.reservedKeywords = [
     "empty",
     "null",
 ];
-exports.default_scheme = "synthwave";
+exports.default_scheme = "neoncyberpunk";
+// export const default_scheme = "darkvoid" as const;
 //# sourceMappingURL=default.js.map

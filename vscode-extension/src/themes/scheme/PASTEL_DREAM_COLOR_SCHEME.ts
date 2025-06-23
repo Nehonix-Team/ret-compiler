@@ -2,35 +2,36 @@ import { FortifyColorScheme } from "../color.scheme";
 
 // Pastel dream scheme - soft and aesthetic 🌸✨
 export const PASTEL_DREAM_COLOR_SCHEME: FortifyColorScheme = {
-  name: "pastel_dream",
-  description: "Soft pastel colors for a dreamy, aesthetic coding vibe 🌙",
+  name: "pasteldream",
+  description: "Soft pastel colors for comfortable long coding sessions",
   colors: {
-    // Core types - Soft pastels
-    basicType: "#81D4FA", // Soft sky blue - dreamy and calm
-    formatType: "#80CBC4", // Mint pastel - gentle and soothing
-    numericType: "#C8E6C9", // Soft sage green - natural and peaceful
-
-    // Conditional syntax - Gentle purples and corals
-    conditionalKeyword: "#CE93D8", // Soft lavender - elegant and refined
-    conditionalOperator: "#FFAB91", // Peach coral - warm and friendly
-    logicalOperator: "#9FA8DA", // Soft periwinkle - gentle logic
-    comparisonOperator: "#FFE082", // Soft butter yellow - warm comparison
-
-    // Methods - Gentle golds
-    method: "#FFF59D", // Soft champagne - luxurious but gentle
-    methodCall: "#FFECB3", // Cream yellow - inviting calls
-
-    // Values - Soft naturals
-    constant: "#DCEDC8", // Soft mint - constants like morning dew
-    unionSeparator: "#D7CCC8", // Soft taupe - subtle separation
-
-    // Structural - Muted pastels
-    constraint: "#BCAAA4", // Soft mushroom - structured but gentle
-    array: "#E1BEE7", // Soft orchid - arrays like flower petals
-    optional: "#F8BBD9", // Soft pink - optional sweetness
-
+    // Core types - pastel blue family
+    basicType: "#93C5FD", // Light blue
+    formatType: "#BFDBFE", // Very light blue
+    numericType: "#60A5FA", // Medium blue
+    
+    // Conditional syntax - pastel pink family
+    conditionalKeyword: "#F9A8D4", // Light pink
+    conditionalOperator: "#FBCFE8", // Very light pink
+    logicalOperator: "#EC4899", // Pink
+    comparisonOperator: "#FDF2F8", // Lightest pink
+    
+    // Methods - pastel green family
+    method: "#86EFAC", // Light green
+    methodCall: "#4ADE80", // Green
+    
+    // Values - pastel purple family
+    constant: "#C4B5FD", // Light violet
+    unionSeparator: "#DDD6FE", // Very light violet
+    
+    // Structural - pastel gray family
+    constraint: "#D1D5DB", // Light gray
+    array: "#E5E7EB", // Very light gray
+    optional: "#A78BFA", // Light violet
+    
     // Literals
-    numericLiteral: "#A5D6A7", // Soft mint green - gentle numbers
-    stringLiteral: "#FFCDD2", // Soft rose - strings like poetry
+    numericLiteral: "#34D399", // Emerald
+    stringLiteral: "#FBBF24", // Amber
   },
 };
+
