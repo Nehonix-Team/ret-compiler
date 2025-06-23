@@ -141,7 +141,9 @@ export class FortifySemanticTokensProvider
   /**
    * Finds all Interface({...}) blocks in the text and returns their line ranges
    */
-  private findInterfaceBlocks(text: string): Array<{ start: number; end: number }> {
+  private findInterfaceBlocks(
+    text: string
+  ): Array<{ start: number; end: number }> {
     const blocks: Array<{ start: number; end: number }> = [];
     const lines = text.split("\n");
 
@@ -180,7 +182,7 @@ export class FortifySemanticTokensProvider
           continue;
         }
 
-        if (char === '\\') {
+        if (char === "\\") {
           escapeNext = true;
           continue;
         }
@@ -191,9 +193,9 @@ export class FortifySemanticTokensProvider
         }
 
         if (!inString) {
-          if (char === '{') {
+          if (char === "{") {
             braceCount++;
-          } else if (char === '}') {
+          } else if (char === "}") {
             braceCount--;
             if (braceCount === 0) {
               return i;
@@ -209,8 +211,13 @@ export class FortifySemanticTokensProvider
   /**
    * Checks if a line is within any of the Interface blocks
    */
-  private isLineInInterfaceBlock(lineIndex: number, blocks: Array<{ start: number; end: number }>): boolean {
-    return blocks.some(block => lineIndex >= block.start && lineIndex <= block.end);
+  private isLineInInterfaceBlock(
+    lineIndex: number,
+    blocks: Array<{ start: number; end: number }>
+  ): boolean {
+    return blocks.some(
+      (block) => lineIndex >= block.start && lineIndex <= block.end
+    );
   }
 
   /**
@@ -223,12 +230,16 @@ export class FortifySemanticTokensProvider
     }
 
     // Skip URLs, file paths, and other obvious non-schema patterns
-    if (value.startsWith('http') || value.startsWith('/') || value.includes('\\')) {
+    if (
+      value.startsWith("http") ||
+      value.startsWith("/") ||
+      value.includes("\\")
+    ) {
       return false;
     }
 
     // Skip very long strings that are clearly not schemas
-    if (value.includes(' ') && value.length > 50) {
+    if (value.includes(" ") && value.length > 50) {
       return false;
     }
 
@@ -328,6 +339,14 @@ export class FortifySemanticTokensProvider
         tokenModifiers: [FortifyTokenModifier.Readonly],
       },
 
+      // Variables in conditional expressions (e.g., "accountType" in "when accountType=premium")
+      {
+        regex: /\bwhen\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[=!<>]/g,
+        tokenType: "variable",
+        tokenModifiers: [FortifyTokenModifier.Declaration],
+        captureGroup: 1, // Capture only the variable name
+      },
+
       // Note: Union patterns are handled separately in tokenizeUnions method
 
       // Numeric literals in constraints - use centralized pattern
@@ -365,8 +384,23 @@ export class FortifySemanticTokensProvider
       pattern.regex.lastIndex = 0; // Reset regex state
 
       while ((match = pattern.regex.exec(schemaText)) !== null) {
-        const matchStart = startOffset + match.index;
-        const matchLength = match[0].length;
+        let matchStart: number;
+        let matchLength: number;
+
+        // Handle capture groups for more precise highlighting
+        if (
+          (pattern as any).captureGroup &&
+          match[(pattern as any).captureGroup]
+        ) {
+          const captureGroup = (pattern as any).captureGroup;
+          const captureMatch = match[captureGroup];
+          const captureIndex = match[0].indexOf(captureMatch);
+          matchStart = startOffset + match.index + captureIndex;
+          matchLength = captureMatch.length;
+        } else {
+          matchStart = startOffset + match.index;
+          matchLength = match[0].length;
+        }
 
         // Convert absolute offset to line/character position
         const startPos = document.positionAt(matchStart);

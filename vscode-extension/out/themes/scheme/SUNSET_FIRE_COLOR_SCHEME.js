@@ -27,7 +27,8 @@ exports.SUNSET_FIRE_COLOR_SCHEME = {
         optional: "#C2410C",
         // Literals
         numericLiteral: "#F59E0B",
-        stringLiteral: "#F97316", // Orange
+        stringLiteral: "#F97316",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=SUNSET_FIRE_COLOR_SCHEME.js.map

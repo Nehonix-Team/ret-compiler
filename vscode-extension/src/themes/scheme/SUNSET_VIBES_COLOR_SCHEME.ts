@@ -33,5 +33,6 @@ export const SUNSET_VIBES_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#7CB342", // Tropical green
     stringLiteral: "#FF5722", // Fire orange - strings like flames
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

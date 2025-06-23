@@ -27,7 +27,8 @@ exports.NEON_CYBERPUNK_COLOR_SCHEME = {
         optional: "#8A2BE2",
         // Literals
         numericLiteral: "#00FF00",
-        stringLiteral: "#FFFF00", // Yellow
+        stringLiteral: "#FFFF00",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=NEON_CYBERPUNK_COLOR_SCHEME.js.map

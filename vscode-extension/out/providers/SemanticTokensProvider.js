@@ -115,7 +115,7 @@ class FortifySemanticTokensProvider {
                     escapeNext = false;
                     continue;
                 }
-                if (char === '\\') {
+                if (char === "\\") {
                     escapeNext = true;
                     continue;
                 }
@@ -124,10 +124,10 @@ class FortifySemanticTokensProvider {
                     continue;
                 }
                 if (!inString) {
-                    if (char === '{') {
+                    if (char === "{") {
                         braceCount++;
                     }
-                    else if (char === '}') {
+                    else if (char === "}") {
                         braceCount--;
                         if (braceCount === 0) {
                             return i;
@@ -142,7 +142,7 @@ class FortifySemanticTokensProvider {
      * Checks if a line is within any of the Interface blocks
      */
     isLineInInterfaceBlock(lineIndex, blocks) {
-        return blocks.some(block => lineIndex >= block.start && lineIndex <= block.end);
+        return blocks.some((block) => lineIndex >= block.start && lineIndex <= block.end);
     }
     /**
      * Determines if a string could potentially be a Fortify schema string
@@ -153,11 +153,13 @@ class FortifySemanticTokensProvider {
             return false;
         }
         // Skip URLs, file paths, and other obvious non-schema patterns
-        if (value.startsWith('http') || value.startsWith('/') || value.includes('\\')) {
+        if (value.startsWith("http") ||
+            value.startsWith("/") ||
+            value.includes("\\")) {
             return false;
         }
         // Skip very long strings that are clearly not schemas
-        if (value.includes(' ') && value.length > 50) {
+        if (value.includes(" ") && value.length > 50) {
             return false;
         }
         // Within Interface blocks, be more permissive - highlight most short strings
@@ -227,6 +229,13 @@ class FortifySemanticTokensProvider {
                 tokenType: "enumMember",
                 tokenModifiers: [FortifyTokenModifier.Readonly],
             },
+            // Variables in conditional expressions (e.g., "accountType" in "when accountType=premium")
+            {
+                regex: /\bwhen\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[=!<>]/g,
+                tokenType: "variable",
+                tokenModifiers: [FortifyTokenModifier.Declaration],
+                captureGroup: 1, // Capture only the variable name
+            },
             // Note: Union patterns are handled separately in tokenizeUnions method
             // Numeric literals in constraints - use centralized pattern
             {
@@ -258,8 +267,21 @@ class FortifySemanticTokensProvider {
             let match;
             pattern.regex.lastIndex = 0; // Reset regex state
             while ((match = pattern.regex.exec(schemaText)) !== null) {
-                const matchStart = startOffset + match.index;
-                const matchLength = match[0].length;
+                let matchStart;
+                let matchLength;
+                // Handle capture groups for more precise highlighting
+                if (pattern.captureGroup &&
+                    match[pattern.captureGroup]) {
+                    const captureGroup = pattern.captureGroup;
+                    const captureMatch = match[captureGroup];
+                    const captureIndex = match[0].indexOf(captureMatch);
+                    matchStart = startOffset + match.index + captureIndex;
+                    matchLength = captureMatch.length;
+                }
+                else {
+                    matchStart = startOffset + match.index;
+                    matchLength = match[0].length;
+                }
                 // Convert absolute offset to line/character position
                 const startPos = document.positionAt(matchStart);
                 // Add token to builder

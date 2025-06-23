@@ -26,5 +26,6 @@ export const MIDNIGHT_GALAXY_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#12C2E9", // Electric blue
     stringLiteral: "#C471F5", // Magenta cosmos
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

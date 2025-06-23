@@ -36,5 +36,6 @@ export const CYBERPUNK_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#64DD17", // Bright green - energetic numbers
     stringLiteral: "#FF5722", // Electric red-orange - hot strings
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

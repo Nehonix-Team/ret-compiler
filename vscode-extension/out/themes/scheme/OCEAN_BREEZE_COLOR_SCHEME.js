@@ -27,7 +27,8 @@ exports.OCEAN_BREEZE_COLOR_SCHEME = {
         optional: "#0F766E",
         // Literals
         numericLiteral: "#10B981",
-        stringLiteral: "#06B6D4", // Cyan
+        stringLiteral: "#06B6D4",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=OCEAN_BREEZE_COLOR_SCHEME.js.map

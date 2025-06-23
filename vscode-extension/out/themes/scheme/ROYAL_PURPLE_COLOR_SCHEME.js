@@ -27,7 +27,8 @@ exports.ROYAL_PURPLE_COLOR_SCHEME = {
         optional: "#581C87",
         // Literals
         numericLiteral: "#D97706",
-        stringLiteral: "#A855F7", // Purple
+        stringLiteral: "#A855F7",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=ROYAL_PURPLE_COLOR_SCHEME.js.map

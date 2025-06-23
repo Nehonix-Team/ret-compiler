@@ -22,6 +22,7 @@ export interface FortifyColorScheme {
 
     // Values and constants
     constant: string;
+    variable: string; // Variables in conditional expressions
     unionSeparator: string;
 
     // Structural elements

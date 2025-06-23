@@ -27,7 +27,8 @@ exports.SUNSET_VIBES_COLOR_SCHEME = {
         optional: "#AB47BC",
         // Literals
         numericLiteral: "#7CB342",
-        stringLiteral: "#FF5722", // Fire orange - strings like flames
+        stringLiteral: "#FF5722",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=SUNSET_VIBES_COLOR_SCHEME.js.map

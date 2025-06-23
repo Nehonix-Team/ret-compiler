@@ -10,6 +10,7 @@ exports.DARK_VOID_COLOR_SCHEME = {
         basicType: "#00D4FF",
         formatType: "#00A8CC",
         numericType: "#0080A0",
+        variable: "#FF0000",
         // Conditional syntax - bright orange family
         conditionalKeyword: "#FF8C00",
         conditionalOperator: "#FFA500",

@@ -27,7 +27,8 @@ exports.AUTUMN_LEAVES_COLOR_SCHEME = {
         optional: "#8B4513",
         // Literals
         numericLiteral: "#DEB887",
-        stringLiteral: "#F4A460", // Sandy brown
+        stringLiteral: "#F4A460",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=AUTUMN_LEAVES_COLOR_SCHEME.js.map

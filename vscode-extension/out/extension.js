@@ -12,6 +12,7 @@ const CompletionProvider_1 = require("./providers/CompletionProvider");
 const FortifyDiagnostics_1 = require("./providers/FortifyDiagnostics");
 const HoverProvider_1 = require("./providers/HoverProvider");
 const SemanticTokensProvider_1 = require("./providers/SemanticTokensProvider");
+const DefinitionProvider_1 = require("./providers/DefinitionProvider");
 const FortifyColorTheme_1 = require("./themes/FortifyColorTheme");
 /**
  * Extension activation - called when the extension is activated
@@ -30,6 +31,8 @@ function activate(context) {
     const hoverProvider = vscode.languages.registerHoverProvider(["typescript", "javascript"], new HoverProvider_1.FortifyHoverProvider());
     // Register semantic tokens provider for enhanced syntax highlighting
     const semanticTokensProvider = vscode.languages.registerDocumentSemanticTokensProvider(["typescript", "javascript"], new SemanticTokensProvider_1.FortifySemanticTokensProvider(), SemanticTokensProvider_1.FortifySemanticTokensProvider.legend);
+    // Register definition provider for go-to-definition functionality
+    const definitionProvider = vscode.languages.registerDefinitionProvider(["typescript", "javascript"], new DefinitionProvider_1.FortifyDefinitionProvider());
     // Register diagnostics provider for validation
     const diagnosticsProvider = new FortifyDiagnostics_1.FortifyDiagnosticsProvider();
     // Watch for document changes to provide real-time validation
@@ -131,7 +134,7 @@ function activate(context) {
         }
     });
     // Add all disposables to context
-    context.subscriptions.push(completionProvider, hoverProvider, semanticTokensProvider, documentChangeListener, documentOpenListener, validateCommand, generateTypesCommand, formatSchemaCommand, applyColorSchemeCommand, listColorSchemesCommand, cleanupThemesCommand);
+    context.subscriptions.push(completionProvider, hoverProvider, semanticTokensProvider, definitionProvider, documentChangeListener, documentOpenListener, validateCommand, generateTypesCommand, formatSchemaCommand, applyColorSchemeCommand, listColorSchemesCommand, cleanupThemesCommand);
     // Apply default color scheme if none is set
     const currentScheme = FortifyColorTheme_1.FortifyColorThemeManager.getCurrentScheme();
     if (currentScheme) {
@@ -166,7 +169,7 @@ async function cleanupFortifySettings() {
         if (semanticTokens?.rules) {
             // Remove any remaining Fortify-specific semantic token rules
             const cleanedRules = Object.keys(semanticTokens.rules)
-                .filter(key => !key.includes("fortify") && !key.includes("Fortify"))
+                .filter((key) => !key.includes("fortify") && !key.includes("Fortify"))
                 .reduce((obj, key) => {
                 obj[key] = semanticTokens.rules[key];
                 return obj;

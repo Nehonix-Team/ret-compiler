@@ -30,7 +30,8 @@ exports.CYBERPUNK_COLOR_SCHEME = {
         optional: "#E040FB",
         // Literals
         numericLiteral: "#64DD17",
-        stringLiteral: "#FF5722", // Electric red-orange - hot strings
+        stringLiteral: "#FF5722",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=CYBERPUNK_COLOR_SCHEME.js.map

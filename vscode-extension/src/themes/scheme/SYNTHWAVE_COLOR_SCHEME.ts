@@ -33,5 +33,6 @@ export const SYNTHWAVE_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#32CD32", // Lime green - retro terminal numbers
     stringLiteral: "#FF69B4", // Hot pink - strings like neon signs
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

@@ -67,7 +67,8 @@ class FortifyColorThemeManager {
                     "function.fortify.method": scheme.colors.method,
                     "function.fortify.methodCall": scheme.colors.methodCall,
                     // Variables and constants
-                    variable: scheme.colors.constant,
+                    variable: scheme.colors.variable,
+                    "variable.fortify.variable": scheme.colors.variable,
                     "variable.fortify.constant": scheme.colors.constant,
                     "variable.readonly": scheme.colors.constant,
                     // Enum members (union literals and constants)

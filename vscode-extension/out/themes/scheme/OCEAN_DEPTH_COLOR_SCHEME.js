@@ -27,7 +27,8 @@ exports.OCEAN_DEPTH_COLOR_SCHEME = {
         optional: "#7E57C2",
         // Literals
         numericLiteral: "#00897B",
-        stringLiteral: "#F57C00", // Sunset orange - strings like beach fire
+        stringLiteral: "#F57C00",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=OCEAN_DEPTH_COLOR_SCHEME.js.map

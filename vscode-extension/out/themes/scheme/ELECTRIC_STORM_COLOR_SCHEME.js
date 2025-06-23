@@ -21,7 +21,8 @@ exports.ELECTRIC_STORM_COLOR_SCHEME = {
         array: "#6080FF",
         optional: "#FF80C0",
         numericLiteral: "#00FF40",
-        stringLiteral: "#FF4040", // Electric red
+        stringLiteral: "#FF4040",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=ELECTRIC_STORM_COLOR_SCHEME.js.map

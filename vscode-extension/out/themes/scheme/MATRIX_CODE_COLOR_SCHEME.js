@@ -27,7 +27,8 @@ exports.MATRIX_CODE_COLOR_SCHEME = {
         optional: "#B8860B",
         // Literals
         numericLiteral: "#FFFF00",
-        stringLiteral: "#FFA500", // Orange - strings break the matrix
+        stringLiteral: "#FFA500",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=MATRIX_CODE_COLOR_SCHEME.js.map

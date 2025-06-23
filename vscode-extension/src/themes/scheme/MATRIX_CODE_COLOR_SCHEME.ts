@@ -32,5 +32,6 @@ export const MATRIX_CODE_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#FFFF00", // Yellow - numbers glow different
     stringLiteral: "#FFA500", // Orange - strings break the matrix
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

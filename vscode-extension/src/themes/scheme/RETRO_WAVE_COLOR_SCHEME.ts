@@ -32,5 +32,6 @@ export const RETRO_WAVE_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#00CED1", // Dark turquoise - retro numbers
     stringLiteral: "#FF7F50", // Coral - strings like laser text
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

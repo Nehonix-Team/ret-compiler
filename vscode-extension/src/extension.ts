@@ -10,6 +10,7 @@ import { FortifyCompletionProvider } from "./providers/CompletionProvider";
 import { FortifyDiagnosticsProvider } from "./providers/FortifyDiagnostics";
 import { FortifyHoverProvider } from "./providers/HoverProvider";
 import { FortifySemanticTokensProvider } from "./providers/SemanticTokensProvider";
+import { FortifyDefinitionProvider } from "./providers/DefinitionProvider";
 import {
   FortifyColorThemeManager,
   FortifyColorSchemes,
@@ -46,6 +47,12 @@ export function activate(context: vscode.ExtensionContext) {
       new FortifySemanticTokensProvider(),
       FortifySemanticTokensProvider.legend
     );
+
+  // Register definition provider for go-to-definition functionality
+  const definitionProvider = vscode.languages.registerDefinitionProvider(
+    ["typescript", "javascript"],
+    new FortifyDefinitionProvider()
+  );
 
   // Register diagnostics provider for validation
   const diagnosticsProvider = new FortifyDiagnosticsProvider();
@@ -211,9 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
           }
         }
       } catch (error) {
-        vscode.window.showErrorMessage(
-          `Failed to cleanup themes: ${error}`
-        );
+        vscode.window.showErrorMessage(`Failed to cleanup themes: ${error}`);
       }
     }
   );
@@ -223,6 +228,7 @@ export function activate(context: vscode.ExtensionContext) {
     completionProvider,
     hoverProvider,
     semanticTokensProvider,
+    definitionProvider,
     documentChangeListener,
     documentOpenListener,
     validateCommand,
@@ -254,9 +260,10 @@ async function cleanupFortifySettings(): Promise<boolean> {
     console.log("🧹 Cleaning up Fortify Schema settings...");
 
     // Remove color scheme customizations
-    const colorCleanupSuccess = await FortifyColorThemeManager.removeColorScheme(
-      vscode.ConfigurationTarget.Global
-    );
+    const colorCleanupSuccess =
+      await FortifyColorThemeManager.removeColorScheme(
+        vscode.ConfigurationTarget.Global
+      );
 
     // Remove Fortify-specific configuration settings
     const config = vscode.workspace.getConfiguration("fortify");
@@ -281,12 +288,14 @@ async function cleanupFortifySettings(): Promise<boolean> {
 
     // Clean up any other Fortify-related settings
     const allConfig = vscode.workspace.getConfiguration();
-    const semanticTokens = allConfig.get("editor.semanticTokenColorCustomizations") as any;
+    const semanticTokens = allConfig.get(
+      "editor.semanticTokenColorCustomizations"
+    ) as any;
 
     if (semanticTokens?.rules) {
       // Remove any remaining Fortify-specific semantic token rules
       const cleanedRules = Object.keys(semanticTokens.rules)
-        .filter(key => !key.includes("fortify") && !key.includes("Fortify"))
+        .filter((key) => !key.includes("fortify") && !key.includes("Fortify"))
         .reduce((obj: any, key) => {
           obj[key] = semanticTokens.rules[key];
           return obj;
@@ -310,7 +319,6 @@ async function cleanupFortifySettings(): Promise<boolean> {
 
     console.log("✅ Fortify Schema settings cleanup completed");
     return colorCleanupSuccess;
-
   } catch (error) {
     console.error("❌ Failed to cleanup Fortify Schema settings:", error);
     return false;
@@ -350,7 +358,6 @@ export async function deactivate() {
         "Fortify Schema settings have been kept. You can manually remove them using the 'Fortify: Cleanup Themes' command if needed."
       );
     }
-
   } catch (error) {
     console.error("Error during extension deactivation:", error);
   }

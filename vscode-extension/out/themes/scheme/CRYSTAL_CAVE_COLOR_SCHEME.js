@@ -21,7 +21,8 @@ exports.CRYSTAL_CAVE_COLOR_SCHEME = {
         array: "#483D8B",
         optional: "#DA70D6",
         numericLiteral: "#00CED1",
-        stringLiteral: "#FF1493", // Deep pink
+        stringLiteral: "#FF1493",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=CRYSTAL_CAVE_COLOR_SCHEME.js.map

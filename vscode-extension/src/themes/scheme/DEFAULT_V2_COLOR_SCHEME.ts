@@ -31,5 +31,6 @@ export const DEFAULT_V2_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#B5CEA8", // Light green
     stringLiteral: "#CE9178", // Orange for strings
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

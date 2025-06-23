@@ -27,5 +27,6 @@ export const ELECTRIC_STORM_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#00FF40", // Spring green
     stringLiteral: "#FF4040", // Electric red
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

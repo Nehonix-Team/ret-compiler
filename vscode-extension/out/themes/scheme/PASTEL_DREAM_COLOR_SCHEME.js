@@ -27,7 +27,8 @@ exports.PASTEL_DREAM_COLOR_SCHEME = {
         optional: "#A78BFA",
         // Literals
         numericLiteral: "#34D399",
-        stringLiteral: "#FBBF24", // Amber
+        stringLiteral: "#FBBF24",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=PASTEL_DREAM_COLOR_SCHEME.js.map

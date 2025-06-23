@@ -22,6 +22,7 @@ exports.DEFAULT_VIBRANT = {
         methodCall: "#FF9800",
         // Values - green family
         constant: "#4CAF50",
+        variable: "#F44336",
         unionSeparator: "#607D8B",
         // Structural - varied colors
         constraint: "#795548",
@@ -53,6 +54,7 @@ exports.DEFAULT_MINIMAL = {
         methodCall: "#B8A965",
         // Values - muted greens
         constant: "#8FA876",
+        variable: "#C67C7C",
         unionSeparator: "#777777",
         // Structural - grays
         constraint: "#666666",

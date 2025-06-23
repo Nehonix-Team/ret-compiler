@@ -27,5 +27,6 @@ export const VOLCANIC_ASH_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#00D2D3", // Turquoise accent
     stringLiteral: "#FF9FF3", // Pink quartz
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

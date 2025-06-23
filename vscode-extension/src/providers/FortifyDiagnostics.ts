@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { FortifyPatterns } from "../syntax/FortifyPatterns";
 import { FortifySyntaxUtils } from "../syntax/FortifySyntaxDefinitions";
 
 /**
@@ -26,7 +25,7 @@ export class FortifyDiagnosticsProvider {
 
     const diagnostics: vscode.Diagnostic[] = [];
     const text = document.getText();
-    const schemaStrings = this.extractSchemaStrings(text, document);
+    const schemaStrings = this.extractSchemaStrings(text);
 
     for (const { value, range } of schemaStrings) {
       // Check for @fortify-ignore comment on the same line or line above
@@ -78,21 +77,72 @@ export class FortifyDiagnosticsProvider {
    * @param range The range to check for ignore comments
    * @returns True if validation should be skipped
    */
-  private hasIgnoreComment(document: vscode.TextDocument, range: vscode.Range): boolean {
+  private hasIgnoreComment(
+    document: vscode.TextDocument,
+    range: vscode.Range
+  ): boolean {
     const lineNumber = range.start.line;
 
     // Check current line for inline comment
     const currentLine = document.lineAt(lineNumber).text;
-    if (currentLine.includes('// @fortify-ignore') || currentLine.includes('/* @fortify-ignore')) {
+    if (
+      currentLine.includes("// @fortify-ignore") ||
+      currentLine.includes("/* @fortify-ignore")
+    ) {
       return true;
     }
 
     // Check previous line for comment
     if (lineNumber > 0) {
       const previousLine = document.lineAt(lineNumber - 1).text;
-      if (previousLine.includes('// @fortify-ignore') || previousLine.includes('/* @fortify-ignore')) {
+      if (
+        previousLine.includes("// @fortify-ignore") ||
+        previousLine.includes("/* @fortify-ignore")
+      ) {
         return true;
       }
+    }
+
+    return false;
+  }
+
+  /**
+   * Checks if a line is entirely a comment
+   * @param line The line text to check
+   * @returns True if the line is a comment
+   */
+  private isCommentLine(line: string): boolean {
+    const trimmed = line.trim();
+    return (
+      trimmed.startsWith("//") ||
+      trimmed.startsWith("/*") ||
+      trimmed.startsWith("*")
+    );
+  }
+
+  /**
+   * Checks if a string at a given position is inside a comment
+   * @param line The line text
+   * @param stringIndex The index where the string starts
+   * @returns True if the string is inside a comment
+   */
+  private isStringInComment(line: string, stringIndex: number): boolean {
+    // Check for single-line comment before the string
+    const singleLineComment = line.lastIndexOf("//", stringIndex);
+    if (singleLineComment !== -1) {
+      return true;
+    }
+
+    // Check for multi-line comment start before the string
+    const multiLineStart = line.lastIndexOf("/*", stringIndex);
+    const multiLineEnd = line.lastIndexOf("*/", stringIndex);
+
+    // If there's a /* before the string and no */ between them, it's in a comment
+    if (
+      multiLineStart !== -1 &&
+      (multiLineEnd === -1 || multiLineStart > multiLineEnd)
+    ) {
+      return true;
     }
 
     return false;
@@ -102,12 +152,10 @@ export class FortifyDiagnosticsProvider {
    * Extracts Fortify Schema strings from the document, ensuring only strings within
    * Interface({...}) blocks are considered for validation.
    * @param text The document text
-   * @param document The VS Code text document
    * @returns Array of schema strings with their ranges
    */
   private extractSchemaStrings(
-    text: string,
-    document: vscode.TextDocument
+    text: string
   ): Array<{ value: string; range: vscode.Range }> {
     const results: Array<{ value: string; range: vscode.Range }> = [];
 
@@ -128,10 +176,20 @@ export class FortifyDiagnosticsProvider {
         continue;
       }
 
+      // Skip lines that are comments
+      if (this.isCommentLine(line)) {
+        continue;
+      }
+
       const stringMatches = line.matchAll(/"([^"\\]|\\.)*"/g);
 
       for (const match of stringMatches) {
         if (match.index !== undefined) {
+          // Check if this string is inside a comment
+          if (this.isStringInComment(line, match.index)) {
+            continue;
+          }
+
           const stringValue = match[0].slice(1, -1); // Remove quotes
 
           // Within Interface blocks, validate all strings that could be schemas
@@ -156,7 +214,9 @@ export class FortifyDiagnosticsProvider {
   /**
    * Finds all Interface({...}) blocks in the text and returns their line ranges.
    */
-  private findInterfaceBlocks(text: string): Array<{ start: number; end: number }> {
+  private findInterfaceBlocks(
+    text: string
+  ): Array<{ start: number; end: number }> {
     const blocks: Array<{ start: number; end: number }> = [];
     const lines = text.split("\n");
 
@@ -195,7 +255,7 @@ export class FortifyDiagnosticsProvider {
           continue;
         }
 
-        if (char === '\\') {
+        if (char === "\\") {
           escapeNext = true;
           continue;
         }
@@ -206,9 +266,9 @@ export class FortifyDiagnosticsProvider {
         }
 
         if (!inString) {
-          if (char === '{') {
+          if (char === "{") {
             braceCount++;
-          } else if (char === '}') {
+          } else if (char === "}") {
             braceCount--;
             if (braceCount === 0) {
               return i;
@@ -224,8 +284,13 @@ export class FortifyDiagnosticsProvider {
   /**
    * Checks if a line is within any of the Interface blocks.
    */
-  private isLineInInterfaceBlock(lineIndex: number, blocks: Array<{ start: number; end: number }>): boolean {
-    return blocks.some(block => lineIndex >= block.start && lineIndex <= block.end);
+  private isLineInInterfaceBlock(
+    lineIndex: number,
+    blocks: Array<{ start: number; end: number }>
+  ): boolean {
+    return blocks.some(
+      (block) => lineIndex >= block.start && lineIndex <= block.end
+    );
   }
 
   /**
@@ -239,12 +304,16 @@ export class FortifyDiagnosticsProvider {
     }
 
     // Skip URLs, file paths, and other obvious non-schema patterns
-    if (value.startsWith('http') || value.startsWith('/') || value.includes('\\')) {
+    if (
+      value.startsWith("http") ||
+      value.startsWith("/") ||
+      value.includes("\\")
+    ) {
       return false;
     }
 
     // Skip very long strings that are clearly not schemas
-    if (value.includes(' ') && value.length > 50) {
+    if (value.includes(" ") && value.length > 50) {
       return false;
     }
 

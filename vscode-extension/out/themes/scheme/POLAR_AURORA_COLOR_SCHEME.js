@@ -21,7 +21,8 @@ exports.POLAR_AURORA_COLOR_SCHEME = {
         array: "#607D8B",
         optional: "#9C27B0",
         numericLiteral: "#00BCD4",
-        stringLiteral: "#FF4081", // Pink accent
+        stringLiteral: "#FF4081",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=POLAR_AURORA_COLOR_SCHEME.js.map

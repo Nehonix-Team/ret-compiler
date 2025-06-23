@@ -27,7 +27,8 @@ exports.ARCTIC_ICE_COLOR_SCHEME = {
         optional: "#2F4F4F",
         // Literals
         numericLiteral: "#87CEFA",
-        stringLiteral: "#E0FFFF", // Light cyan
+        stringLiteral: "#E0FFFF",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=ARCTIC_ICE_COLOR_SCHEME.js.map

@@ -27,7 +27,8 @@ exports.MATRIX_GREEN_COLOR_SCHEME = {
         optional: "#006400",
         // Literals
         numericLiteral: "#7FFF00",
-        stringLiteral: "#90EE90", // Light green
+        stringLiteral: "#90EE90",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=MATRIX_GREEN_COLOR_SCHEME.js.map

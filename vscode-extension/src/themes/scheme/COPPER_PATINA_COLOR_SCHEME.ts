@@ -27,5 +27,7 @@ export const COPPER_PATINA_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#20B2AA", // Light sea green
     stringLiteral: "#DC143C", // Crimson
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
+
   },
 };

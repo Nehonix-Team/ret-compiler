@@ -27,7 +27,8 @@ exports.SYNTHWAVE_COLOR_SCHEME = {
         optional: "#FF1493",
         // Literals
         numericLiteral: "#32CD32",
-        stringLiteral: "#FF69B4", // Hot pink - strings like neon signs
+        stringLiteral: "#FF69B4",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=SYNTHWAVE_COLOR_SCHEME.js.map

@@ -27,5 +27,6 @@ export const POLAR_AURORA_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#00BCD4", // Cyan
     stringLiteral: "#FF4081", // Pink accent
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

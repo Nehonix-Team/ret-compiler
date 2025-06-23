@@ -19,9 +19,10 @@ export const DEFAULT_COLOR_SCHEME: FortifyColorScheme = {
     // Methods - Golden yellow family for function-like elements
     method: "#FFD54F", // Soft gold - warm and inviting
     methodCall: "#FFCC02", // Brighter gold for calls - slightly more prominent
-
+ 
     // Values - Green family with better saturation
     constant: "#81C784", // Soft mint green - easy on eyes for constants
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     unionSeparator: "#90A4AE", // Blue-gray for | - subtle but visible
 
     // Structural elements - Refined grays with subtle tints

@@ -21,7 +21,8 @@ exports.VOLCANIC_ASH_COLOR_SCHEME = {
         array: "#636E72",
         optional: "#A29BFE",
         numericLiteral: "#00D2D3",
-        stringLiteral: "#FF9FF3", // Pink quartz
+        stringLiteral: "#FF9FF3",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=VOLCANIC_ASH_COLOR_SCHEME.js.map

@@ -27,5 +27,6 @@ export const CRYSTAL_CAVE_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#00CED1", // Dark turquoise
     stringLiteral: "#FF1493", // Deep pink
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

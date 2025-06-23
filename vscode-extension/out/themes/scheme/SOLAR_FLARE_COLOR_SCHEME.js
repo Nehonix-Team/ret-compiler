@@ -21,7 +21,8 @@ exports.SOLAR_FLARE_COLOR_SCHEME = {
         array: "#8B0000",
         optional: "#FF69B4",
         numericLiteral: "#00FFFF",
-        stringLiteral: "#FFFF00", // Yellow
+        stringLiteral: "#FFFF00",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=SOLAR_FLARE_COLOR_SCHEME.js.map

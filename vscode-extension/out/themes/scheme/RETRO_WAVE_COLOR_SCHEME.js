@@ -27,7 +27,8 @@ exports.RETRO_WAVE_COLOR_SCHEME = {
         optional: "#EE82EE",
         // Literals
         numericLiteral: "#00CED1",
-        stringLiteral: "#FF7F50", // Coral - strings like laser text
+        stringLiteral: "#FF7F50",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=RETRO_WAVE_COLOR_SCHEME.js.map

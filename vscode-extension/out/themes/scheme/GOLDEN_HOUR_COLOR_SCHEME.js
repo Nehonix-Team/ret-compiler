@@ -21,7 +21,8 @@ exports.GOLDEN_HOUR_COLOR_SCHEME = {
         array: "#7F8C8D",
         optional: "#E91E63",
         numericLiteral: "#16A085",
-        stringLiteral: "#FF6B6B", // Coral pink
+        stringLiteral: "#FF6B6B",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=GOLDEN_HOUR_COLOR_SCHEME.js.map

@@ -23,7 +23,7 @@ class FortifyDiagnosticsProvider {
         }
         const diagnostics = [];
         const text = document.getText();
-        const schemaStrings = this.extractSchemaStrings(text, document);
+        const schemaStrings = this.extractSchemaStrings(text);
         for (const { value, range } of schemaStrings) {
             // Check for @fortify-ignore comment on the same line or line above
             if (this.hasIgnoreComment(document, range)) {
@@ -64,15 +64,50 @@ class FortifyDiagnosticsProvider {
         const lineNumber = range.start.line;
         // Check current line for inline comment
         const currentLine = document.lineAt(lineNumber).text;
-        if (currentLine.includes('// @fortify-ignore') || currentLine.includes('/* @fortify-ignore')) {
+        if (currentLine.includes("// @fortify-ignore") ||
+            currentLine.includes("/* @fortify-ignore")) {
             return true;
         }
         // Check previous line for comment
         if (lineNumber > 0) {
             const previousLine = document.lineAt(lineNumber - 1).text;
-            if (previousLine.includes('// @fortify-ignore') || previousLine.includes('/* @fortify-ignore')) {
+            if (previousLine.includes("// @fortify-ignore") ||
+                previousLine.includes("/* @fortify-ignore")) {
                 return true;
             }
+        }
+        return false;
+    }
+    /**
+     * Checks if a line is entirely a comment
+     * @param line The line text to check
+     * @returns True if the line is a comment
+     */
+    isCommentLine(line) {
+        const trimmed = line.trim();
+        return (trimmed.startsWith("//") ||
+            trimmed.startsWith("/*") ||
+            trimmed.startsWith("*"));
+    }
+    /**
+     * Checks if a string at a given position is inside a comment
+     * @param line The line text
+     * @param stringIndex The index where the string starts
+     * @returns True if the string is inside a comment
+     */
+    isStringInComment(line, stringIndex) {
+        // Check for single-line comment before the string
+        const singleLineComment = line.lastIndexOf("//", stringIndex);
+        if (singleLineComment !== -1) {
+            return true;
+        }
+        // Check for multi-line comment start before the string
+        const multiLineStart = line.lastIndexOf("/*", stringIndex);
+        const multiLineEnd = line.lastIndexOf("*/", stringIndex);
+        // If there's a /* before the string and no */ between them, it's in a comment
+        if (multiLineStart !== -1 &&
+            (multiLineEnd === -1 || multiLineStart > multiLineEnd)) {
+            return true;
         }
         return false;
     }
@@ -80,10 +115,9 @@ class FortifyDiagnosticsProvider {
      * Extracts Fortify Schema strings from the document, ensuring only strings within
      * Interface({...}) blocks are considered for validation.
      * @param text The document text
-     * @param document The VS Code text document
      * @returns Array of schema strings with their ranges
      */
-    extractSchemaStrings(text, document) {
+    extractSchemaStrings(text) {
         const results = [];
         // Find all Interface({...}) blocks in the document
         const interfaceBlocks = this.findInterfaceBlocks(text);
@@ -97,9 +131,17 @@ class FortifyDiagnosticsProvider {
             if (!this.isLineInInterfaceBlock(lineIndex, interfaceBlocks)) {
                 continue;
             }
+            // Skip lines that are comments
+            if (this.isCommentLine(line)) {
+                continue;
+            }
             const stringMatches = line.matchAll(/"([^"\\]|\\.)*"/g);
             for (const match of stringMatches) {
                 if (match.index !== undefined) {
+                    // Check if this string is inside a comment
+                    if (this.isStringInComment(line, match.index)) {
+                        continue;
+                    }
                     const stringValue = match[0].slice(1, -1); // Remove quotes
                     // Within Interface blocks, validate all strings that could be schemas
                     if (this.couldBeSchemaString(stringValue)) {
@@ -149,7 +191,7 @@ class FortifyDiagnosticsProvider {
                     escapeNext = false;
                     continue;
                 }
-                if (char === '\\') {
+                if (char === "\\") {
                     escapeNext = true;
                     continue;
                 }
@@ -158,10 +200,10 @@ class FortifyDiagnosticsProvider {
                     continue;
                 }
                 if (!inString) {
-                    if (char === '{') {
+                    if (char === "{") {
                         braceCount++;
                     }
-                    else if (char === '}') {
+                    else if (char === "}") {
                         braceCount--;
                         if (braceCount === 0) {
                             return i;
@@ -176,7 +218,7 @@ class FortifyDiagnosticsProvider {
      * Checks if a line is within any of the Interface blocks.
      */
     isLineInInterfaceBlock(lineIndex, blocks) {
-        return blocks.some(block => lineIndex >= block.start && lineIndex <= block.end);
+        return blocks.some((block) => lineIndex >= block.start && lineIndex <= block.end);
     }
     /**
      * Determines if a string could potentially be a Fortify schema string.
@@ -188,11 +230,13 @@ class FortifyDiagnosticsProvider {
             return false;
         }
         // Skip URLs, file paths, and other obvious non-schema patterns
-        if (value.startsWith('http') || value.startsWith('/') || value.includes('\\')) {
+        if (value.startsWith("http") ||
+            value.startsWith("/") ||
+            value.includes("\\")) {
             return false;
         }
         // Skip very long strings that are clearly not schemas
-        if (value.includes(' ') && value.length > 50) {
+        if (value.includes(" ") && value.length > 50) {
             return false;
         }
         // Within Interface blocks, be more permissive - validate most short strings

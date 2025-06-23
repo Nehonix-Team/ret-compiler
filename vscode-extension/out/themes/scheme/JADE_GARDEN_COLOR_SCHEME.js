@@ -21,7 +21,8 @@ exports.JADE_GARDEN_COLOR_SCHEME = {
         array: "#7F8C8D",
         optional: "#E91E63",
         numericLiteral: "#1ABC9C",
-        stringLiteral: "#FF6B6B", // Coral
+        stringLiteral: "#FF6B6B",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=JADE_GARDEN_COLOR_SCHEME.js.map

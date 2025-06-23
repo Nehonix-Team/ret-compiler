@@ -26,5 +26,6 @@ export const SOLAR_FLARE_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#00FFFF", // Cyan
     stringLiteral: "#FFFF00", // Yellow
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

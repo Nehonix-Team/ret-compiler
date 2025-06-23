@@ -36,5 +36,7 @@ export const COOL_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#689F38", // Darker green - good contrast
     stringLiteral: "#FF7043", // Coral-orange
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
+
   },
 };

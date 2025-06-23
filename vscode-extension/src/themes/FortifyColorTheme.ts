@@ -83,7 +83,8 @@ export class FortifyColorThemeManager {
           "function.fortify.methodCall": scheme.colors.methodCall,
 
           // Variables and constants
-          variable: scheme.colors.constant,
+          variable: scheme.colors.variable,
+          "variable.fortify.variable": scheme.colors.variable,
           "variable.fortify.constant": scheme.colors.constant,
           "variable.readonly": scheme.colors.constant,
 
@@ -144,17 +145,18 @@ export class FortifyColorThemeManager {
       if (currentColors.rules) {
         // Remove ALL Fortify-specific rules (case-insensitive)
         const filteredRules = Object.keys(currentColors.rules)
-          .filter((key) =>
-            !key.toLowerCase().includes("fortify") &&
-            !key.includes("type.fortify") &&
-            !key.includes("keyword.fortify") &&
-            !key.includes("operator.fortify") &&
-            !key.includes("function.fortify") &&
-            !key.includes("variable.fortify") &&
-            !key.includes("enumMember.fortify") &&
-            !key.includes("punctuation.fortify") &&
-            !key.includes("number.fortify") &&
-            !key.includes("string.fortify")
+          .filter(
+            (key) =>
+              !key.toLowerCase().includes("fortify") &&
+              !key.includes("type.fortify") &&
+              !key.includes("keyword.fortify") &&
+              !key.includes("operator.fortify") &&
+              !key.includes("function.fortify") &&
+              !key.includes("variable.fortify") &&
+              !key.includes("enumMember.fortify") &&
+              !key.includes("punctuation.fortify") &&
+              !key.includes("number.fortify") &&
+              !key.includes("string.fortify")
           )
           .reduce((obj: any, key) => {
             obj[key] = currentColors.rules[key];
@@ -168,7 +170,9 @@ export class FortifyColorThemeManager {
             undefined,
             target
           );
-          console.log("✅ Removed entire semantic token customization (was Fortify-only)");
+          console.log(
+            "✅ Removed entire semantic token customization (was Fortify-only)"
+          );
         } else {
           const updatedColors = {
             ...currentColors,

@@ -27,5 +27,6 @@ export const DESERT_MIRAGE_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#00CED1", // Dark turquoise
     stringLiteral: "#FF69B4", // Hot pink
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

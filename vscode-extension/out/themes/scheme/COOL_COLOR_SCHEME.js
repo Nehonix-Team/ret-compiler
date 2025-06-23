@@ -30,7 +30,8 @@ exports.COOL_COLOR_SCHEME = {
         optional: "#9575CD",
         // Literals
         numericLiteral: "#689F38",
-        stringLiteral: "#FF7043", // Coral-orange
+        stringLiteral: "#FF7043",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=COOL_COLOR_SCHEME.js.map

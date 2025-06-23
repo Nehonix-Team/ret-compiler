@@ -21,7 +21,8 @@ exports.MIDNIGHT_GALAXY_COLOR_SCHEME = {
         array: "#66A6FF",
         optional: "#C471ED",
         numericLiteral: "#12C2E9",
-        stringLiteral: "#C471F5", // Magenta cosmos
+        stringLiteral: "#C471F5",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=MIDNIGHT_GALAXY_COLOR_SCHEME.js.map

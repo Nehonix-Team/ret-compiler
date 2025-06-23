@@ -21,7 +21,8 @@ exports.COPPER_PATINA_COLOR_SCHEME = {
         array: "#A0522D",
         optional: "#9370DB",
         numericLiteral: "#20B2AA",
-        stringLiteral: "#DC143C", // Crimson
+        stringLiteral: "#DC143C",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=COPPER_PATINA_COLOR_SCHEME.js.map

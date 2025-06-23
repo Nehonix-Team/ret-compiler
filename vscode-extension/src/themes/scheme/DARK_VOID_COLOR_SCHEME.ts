@@ -9,7 +9,8 @@ export const DARK_VOID_COLOR_SCHEME: FortifyColorScheme = {
     basicType: "#00D4FF", // Bright cyan
     formatType: "#00A8CC", // Dark cyan
     numericType: "#0080A0", // Darker cyan
-    
+     variable: "#FF0000", // Red for variables in conditionals
+
     // Conditional syntax - bright orange family
     conditionalKeyword: "#FF8C00", // Dark orange
     conditionalOperator: "#FFA500", // Orange

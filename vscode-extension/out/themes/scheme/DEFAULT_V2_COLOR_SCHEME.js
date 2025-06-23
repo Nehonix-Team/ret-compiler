@@ -26,7 +26,8 @@ exports.DEFAULT_V2_COLOR_SCHEME = {
         optional: "#C586C0",
         // Literals
         numericLiteral: "#B5CEA8",
-        stringLiteral: "#CE9178", // Orange for strings
+        stringLiteral: "#CE9178",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=DEFAULT_V2_COLOR_SCHEME.js.map

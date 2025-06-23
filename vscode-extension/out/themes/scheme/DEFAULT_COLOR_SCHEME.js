@@ -19,6 +19,7 @@ exports.DEFAULT_COLOR_SCHEME = {
         methodCall: "#FFCC02",
         // Values - Green family with better saturation
         constant: "#81C784",
+        variable: "#E57373",
         unionSeparator: "#90A4AE",
         // Structural elements - Refined grays with subtle tints
         constraint: "#78909C",

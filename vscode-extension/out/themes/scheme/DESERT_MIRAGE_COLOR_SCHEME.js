@@ -21,7 +21,8 @@ exports.DESERT_MIRAGE_COLOR_SCHEME = {
         array: "#696969",
         optional: "#9370DB",
         numericLiteral: "#00CED1",
-        stringLiteral: "#FF69B4", // Hot pink
+        stringLiteral: "#FF69B4",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=DESERT_MIRAGE_COLOR_SCHEME.js.map

@@ -27,5 +27,6 @@ export const JADE_GARDEN_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#1ABC9C", // Turquoise
     stringLiteral: "#FF6B6B", // Coral
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

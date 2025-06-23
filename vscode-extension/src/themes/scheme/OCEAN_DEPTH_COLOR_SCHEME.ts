@@ -32,5 +32,6 @@ export const OCEAN_DEPTH_COLOR_SCHEME: FortifyColorScheme = {
     // Literals
     numericLiteral: "#00897B", // Deep teal - numbers like depths
     stringLiteral: "#F57C00", // Sunset orange - strings like beach fire
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };

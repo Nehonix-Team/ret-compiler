@@ -27,7 +27,8 @@ exports.FOREST_NIGHT_COLOR_SCHEME = {
         optional: "#166534",
         // Literals
         numericLiteral: "#22C55E",
-        stringLiteral: "#4ADE80", // Light green
+        stringLiteral: "#4ADE80",
+        variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
     },
 };
 //# sourceMappingURL=FOREST_NIGHT_COLOR_SCHEME.js.map

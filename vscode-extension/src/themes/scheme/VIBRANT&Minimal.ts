@@ -24,6 +24,7 @@ export const DEFAULT_VIBRANT: FortifyColorScheme = {
 
     // Values - green family
     constant: "#4CAF50", // Green for constants
+    variable: "#F44336", // Red for variables in conditionals
     unionSeparator: "#607D8B", // Blue gray for |
 
     // Structural - varied colors
@@ -61,6 +62,7 @@ export const DEFAULT_MINIMAL: FortifyColorScheme = {
 
     // Values - muted greens
     constant: "#8FA876", // Muted green
+    variable: "#C67C7C", // Muted red for variables in conditionals
     unionSeparator: "#777777", // Dark gray
 
     // Structural - grays

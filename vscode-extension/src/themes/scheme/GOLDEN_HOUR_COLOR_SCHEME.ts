@@ -27,5 +27,6 @@ export const GOLDEN_HOUR_COLOR_SCHEME: FortifyColorScheme = {
 
     numericLiteral: "#16A085", // Teal
     stringLiteral: "#FF6B6B", // Coral pink
+    variable: "#E57373", // Soft red for variables in conditionals - distinctive and readable
   },
 };
