@@ -61,28 +61,43 @@ const Schema = Interface({
 });
 ```
 
-### ❌ Constraint Syntax (Not Supported)
+### ✅ Constraint Syntax (Fully Supported)
 
 ```typescript
-// ❌ These will fail to parse
-const BadSchema = Interface({
+// ✅ Constraint syntax now works perfectly in conditionals!
+const AdvancedSchema = Interface({
+  accountType: "free|premium|enterprise",
   age: "int(13,120)",
 
-  // ❌ Constraint syntax not supported in conditionals
-  discount: "when age>=65 *? number(0.1,0.3) : =0", // FAILS
-  name: "when role=admin *? string(5,50) : string?", // FAILS
-  level: "when active=true *? int(1,100) : =0", // FAILS
+  // ✅ All constraint types work in conditionals
+  maxProjects: "when accountType=free *? int(1,3) : int(1,100)",
+  storageLimit: "when accountType=premium *? int(100,) : int(10,50)",
+  nameLength: "when accountType=enterprise *? string(10,100) : string(3,50)",
+  discount: "when age>=65 *? number(0.1,0.3) : number(0,0.1)",
+  features: "when accountType=premium *? string[](1,5) : string[]?",
 });
 
-// ✅ Use simple types instead
-const GoodSchema = Interface({
-  age: "int(13,120)",
+// Test with valid free account
+const validFree = {
+  accountType: "free",
+  age: 30,
+  maxProjects: 2,        // ✅ Valid (1-3)
+  storageLimit: 25,      // ✅ Valid (10-50)
+  nameLength: "John",    // ✅ Valid (3-50)
+  discount: 0.05,        // ✅ Valid (0-0.1)
+  features: []           // ✅ Valid (optional)
+};
 
-  // ✅ Simple types work
-  discount: "when age>=65 *? number : =0",
-  name: "when role=admin *? string : string?",
-  level: "when active=true *? number : =0",
-});
+// Test with invalid data - will properly fail validation
+const invalidFree = {
+  accountType: "free",
+  age: 30,
+  maxProjects: 5,        // ❌ Invalid (exceeds 3)
+  storageLimit: 60,      // ❌ Invalid (exceeds 50)
+  nameLength: "Jo",      // ❌ Invalid (too short)
+  discount: 0.15,        // ❌ Invalid (exceeds 0.1)
+  features: []
+};
 ```
 
 ## Comparison Operators

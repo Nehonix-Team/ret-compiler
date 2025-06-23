@@ -6,6 +6,9 @@
  * - Logical operators (&&, ||)
  * - Method calls (.in(), .exists, etc.)
  * - Complex expressions
+ * - Improved error handling and recovery
+ * - Performance optimizations
+ * - Better memory management
  */
 
 import {
@@ -16,15 +19,16 @@ import {
 } from "../types/ConditionalTypes";
 
 export class ConditionalLexer {
-  private input: string;
-  private position: number = 0;
-  private line: number = 1;
-  private column: number = 1;
-  private tokens: Token[] = [];
-  private errors: ConditionalError[] = [];
+  private readonly _input: string;
+  private _position: number = 0;
+  private _line: number = 1;
+  private _column: number = 1;
+  private readonly _tokens: Token[] = [];
+  private readonly _errors: ConditionalError[] = [];
+  private _currentTokenStart: number = 0;
 
   // Operator patterns for efficient matching (order matters - longest first!)
-  private static readonly OPERATORS = new Map<string, TokenType>([
+  private static readonly _OPERATORS = new Map<string, TokenType>([
     // Multi-character operators first
     ["!~", TokenType.NOT_MATCHES],
     ["!exists", TokenType.NOT_EXISTS],
@@ -59,7 +63,7 @@ export class ConditionalLexer {
   ]);
 
   // Method patterns
-  private static readonly METHODS = new Map<string, TokenType>([
+  private static readonly _METHODS = new Map<string, TokenType>([
     ["in", TokenType.IN],
     ["notIn", TokenType.NOT_IN],
     ["!in", TokenType.NOT_IN], // Support .!in() syntax
@@ -79,117 +83,159 @@ export class ConditionalLexer {
   ]);
 
   // Keywords
-  private static readonly KEYWORDS = new Map<string, TokenType>([
+  private static readonly _KEYWORDS = new Map<string, TokenType>([
     ["when", TokenType.WHEN],
     ["true", TokenType.BOOLEAN],
     ["false", TokenType.BOOLEAN],
   ]);
 
+  // Special characters that can appear in regex patterns
+  private static readonly _REGEX_SPECIAL_CHARS = new Set(["|", "^", "$", "@"]);
+
+  // Characters that should be treated as special in type syntax
+  private static readonly _TYPE_SYNTAX_CHARS = new Map<string, TokenType>([
+    ["?", TokenType.UNKNOWN], // Will be handled as part of type syntax
+    ["[", TokenType.LBRACKET],
+    ["]", TokenType.RBRACKET],
+  ]);
+
+  // Whitespace characters
+  private static readonly _WHITESPACE_CHARS = new Set([" ", "\t", "\n", "\r"]);
+
+  // String quote characters
+  private static readonly _STRING_QUOTES = new Set(['"', "'"]);
+
+  // Escape sequence mappings
+  private static readonly _ESCAPE_SEQUENCES = new Map<string, string>([
+    ["n", "\n"],
+    ["t", "\t"],
+    ["r", "\r"],
+    ["\\", "\\"],
+    ['"', '"'],
+    ["'", "'"],
+  ]);
+
   constructor(input: string) {
-    this.input = input;
+    if (typeof input !== 'string') {
+      throw new TypeError('Input must be a string');
+    }
+    this._input = input;
   }
 
   /**
    * Tokenize the input string
    */
   tokenize(): { tokens: Token[]; errors: ConditionalError[] } {
-    this.tokens = [];
-    this.errors = [];
-    this.position = 0;
-    this.line = 1;
-    this.column = 1;
+    this._resetState();
 
-    while (!this.isAtEnd()) {
-      this.scanToken();
+    try {
+      while (!this._isAtEnd()) {
+        this._currentTokenStart = this._position;
+        this._scanToken();
+      }
+
+      // Add EOF token
+      this._addToken(TokenType.EOF, "");
+    } catch (error) {
+      this._addError(
+        ErrorType.SYNTAX_ERROR,
+        `Unexpected error during tokenization: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        "Check the input syntax for correctness"
+      );
     }
 
-    // Add EOF token
-    this.addToken(TokenType.EOF, "");
-
     return {
-      tokens: this.tokens,
-      errors: this.errors,
+      tokens: [...this._tokens],
+      errors: [...this._errors],
     };
   }
 
   /**
-   * Scan next token
+   * Reset lexer state for reuse
    */
-  private scanToken(): void {
-    const start = this.position;
-    const char = this.advance();
+  private _resetState(): void {
+    this._position = 0;
+    this._line = 1;
+    this._column = 1;
+    this._currentTokenStart = 0;
+    this._tokens.length = 0;
+    this._errors.length = 0;
+  }
 
-    // Skip whitespace
-    if (this.isWhitespace(char)) {
-      this.skipWhitespace();
+  /**
+   * Scan next token with improved error recovery
+   */
+  private _scanToken(): void {
+    const char = this._advance();
+
+    // Skip whitespace efficiently
+    if (this._isWhitespace(char)) {
+      this._skipWhitespace();
       return;
     }
 
     // Handle operators (multi-character first)
-    if (this.tryOperator(start)) {
+    if (this._tryOperator()) {
       return;
     }
 
     // Handle strings
-    if (char === '"' || char === "'") {
-      this.scanString(char);
+    if (ConditionalLexer._STRING_QUOTES.has(char)) {
+      this._scanString(char);
       return;
     }
 
     // Handle numbers
-    if (this.isDigit(char)) {
-      this.scanNumber();
+    if (this._isDigit(char)) {
+      this._scanNumber();
       return;
     }
 
     // Handle identifiers and keywords
-    if (this.isAlpha(char)) {
-      this.scanIdentifier();
+    if (this._isAlpha(char)) {
+      this._scanIdentifier();
       return;
     }
 
     // Handle method names that start with ! (like !exists, !empty) when after a dot
-    if (
-      char === "!" &&
-      this.tokens.length > 0 &&
-      this.tokens[this.tokens.length - 1].type === TokenType.DOT
-    ) {
-      this.scanMethodName();
+    if (char === "!" && this._isAfterDotToken()) {
+      this._scanMethodName();
       return;
     }
 
     // Handle special characters that are part of type syntax
-    if (char === "?" || char === "[" || char === "]") {
-      this.addToken(this.getSpecialCharToken(char), char);
+    const typeToken = ConditionalLexer._TYPE_SYNTAX_CHARS.get(char);
+    if (typeToken) {
+      this._addToken(typeToken, char);
       return;
     }
 
     // Handle constant values (=value)
-    if (char === "=" && this.peek() !== "=" && this.peek() !== "!") {
-      this.scanConstant();
+    if (char === "=" && this._peek() !== "=" && this._peek() !== "!") {
+      this._scanConstant();
       return;
     }
 
     // Handle forward slash patterns (like /secure/, /admin/)
-    if (char === "/" && this.isRegexSlashContext()) {
-      this.scanSlashPattern();
+    if (char === "/" && this._isRegexSlashContext()) {
+      this._scanSlashPattern();
       return;
     }
 
     // Handle regex patterns after ~ operator
-    if (this.isRegexContext()) {
-      this.scanRegexPattern();
+    if (this._isRegexContext()) {
+      this._scanRegexPattern();
       return;
     }
 
     // Allow special regex characters in certain contexts
-    if (this.isSpecialRegexChar(char)) {
-      this.addToken(this.getRegexCharToken(char), char);
+    if (ConditionalLexer._REGEX_SPECIAL_CHARS.has(char)) {
+      this._addToken(this._getRegexCharToken(char), char);
       return;
     }
 
-    // Unknown character
-    this.addError(
+    // Unknown character - add error but continue parsing
+    this._addError(
       ErrorType.SYNTAX_ERROR,
       `Unexpected character: '${char}'`,
       `Remove or escape the character '${char}'`
@@ -197,29 +243,29 @@ export class ConditionalLexer {
   }
 
   /**
-   * Try to match multi-character operators
+   * Try to match multi-character operators with improved efficiency
    */
-  private tryOperator(start: number): boolean {
-    // Try longest operators first
-    const remaining = this.input.substring(this.position - 1);
+  private _tryOperator(): boolean {
+    // Get remaining input from current position - 1 (since we already advanced)
+    const remaining = this._input.substring(this._position - 1);
+    
+    if (remaining.length === 0) return false;
 
     // Check if we're after a dot - if so, don't treat !exists/!empty as operators
-    const isAfterDot =
-      this.tokens.length > 0 &&
-      this.tokens[this.tokens.length - 1].type === TokenType.DOT;
+    const isAfterDot = this._isAfterDotToken();
 
-    for (const [op, tokenType] of ConditionalLexer.OPERATORS) {
+    for (const [op, tokenType] of ConditionalLexer._OPERATORS) {
       if (remaining.startsWith(op)) {
         // Skip !exists and !empty when after a dot (they should be method names)
-        if (isAfterDot && (op === "!exists" || op === "!empty")) {
+        if (isAfterDot && (op === "!exists" || op === "!empty" || op === "!null" || op === "!in" || op === "!contains")) {
           continue;
         }
 
         // Advance position for multi-character operators
         for (let i = 1; i < op.length; i++) {
-          this.advance();
+          this._advance();
         }
-        this.addToken(tokenType, op);
+        this._addToken(tokenType, op);
         return true;
       }
     }
@@ -228,176 +274,207 @@ export class ConditionalLexer {
   }
 
   /**
-   * Scan string literal
+   * Check if the last token is a DOT token
    */
-  private scanString(quote: string): void {
-    const start = this.position - 1;
-    let value = "";
+  private _isAfterDotToken(): boolean {
+    return this._tokens.length > 0 && 
+           this._tokens[this._tokens.length - 1].type === TokenType.DOT;
+  }
 
-    while (!this.isAtEnd() && this.peek() !== quote) {
-      if (this.peek() === "\n") {
-        this.line++;
-        this.column = 1;
+  /**
+   * Scan string literal with improved escape handling
+   */
+  private _scanString(quote: string): void {
+    let value = "";
+    const startLine = this._line;
+    const startColumn = this._column - 1;
+
+    while (!this._isAtEnd() && this._peek() !== quote) {
+      if (this._peek() === "\n") {
+        this._line++;
+        this._column = 1;
       }
 
       // Handle escape sequences
-      if (this.peek() === "\\") {
-        this.advance(); // Skip backslash
-        const escaped = this.advance();
-        switch (escaped) {
-          case "n":
-            value += "\n";
-            break;
-          case "t":
-            value += "\t";
-            break;
-          case "r":
-            value += "\r";
-            break;
-          case "\\":
-            value += "\\";
-            break;
-          case '"':
-            value += '"';
-            break;
-          case "'":
-            value += "'";
-            break;
-          default:
-            value += escaped;
-            break;
+      if (this._peek() === "\\") {
+        this._advance(); // Skip backslash
+        
+        if (this._isAtEnd()) {
+          this._addError(
+            ErrorType.SYNTAX_ERROR,
+            "Unterminated escape sequence in string",
+            `Add a character after \\ or close the string with ${quote}`
+          );
+          return;
+        }
+
+        const escaped = this._advance();
+        const escapedValue = ConditionalLexer._ESCAPE_SEQUENCES.get(escaped);
+        
+        if (escapedValue !== undefined) {
+          value += escapedValue;
+        } else {
+          // Unknown escape sequence - keep the character
+          value += escaped;
+          this._addError(
+            ErrorType.SYNTAX_ERROR,
+            `Unknown escape sequence: \\${escaped}`,
+            `Use a valid escape sequence or remove the backslash`
+          );
         }
       } else {
-        value += this.advance();
+        value += this._advance();
       }
     }
 
-    if (this.isAtEnd()) {
-      this.addError(
+    if (this._isAtEnd()) {
+      this._addError(
         ErrorType.SYNTAX_ERROR,
-        "Unterminated string",
+        `Unterminated string starting at line ${startLine}, column ${startColumn}`,
         `Add closing ${quote} to complete the string`
       );
       return;
     }
 
     // Consume closing quote
-    this.advance();
-    this.addToken(TokenType.STRING, value);
+    this._advance();
+    this._addToken(TokenType.STRING, value);
   }
 
   /**
-   * Scan numeric literal
+   * Scan numeric literal with improved validation
    */
-  private scanNumber(): void {
-    let value = this.input[this.position - 1];
+  private _scanNumber(): void {
+    let value = this._input[this._position - 1];
+    let hasDecimalPoint = false;
 
     // Scan integer part
-    while (this.isDigit(this.peek())) {
-      value += this.advance();
+    while (this._isDigit(this._peek())) {
+      value += this._advance();
     }
 
     // Handle decimal point
-    if (this.peek() === "." && this.isDigit(this.peekNext())) {
-      value += this.advance(); // Consume '.'
+    if (this._peek() === "." && this._isDigit(this._peekNext())) {
+      hasDecimalPoint = true;
+      value += this._advance(); // Consume '.'
 
-      while (this.isDigit(this.peek())) {
-        value += this.advance();
+      while (this._isDigit(this._peek())) {
+        value += this._advance();
       }
     }
 
-    this.addToken(TokenType.NUMBER, value);
+    // Validate number format
+    if (value === "." || value.endsWith(".")) {
+      this._addError(
+        ErrorType.SYNTAX_ERROR,
+        "Invalid number format",
+        "Ensure the number has digits before and after the decimal point"
+      );
+      return;
+    }
+
+    this._addToken(TokenType.NUMBER, value);
   }
 
   /**
-   * Scan identifier, keyword, or method
+   * Scan identifier, keyword, or method with improved logic
    */
-  private scanIdentifier(): void {
-    let value = this.input[this.position - 1];
+  private _scanIdentifier(): void {
+    let value = this._input[this._position - 1];
 
-    while (this.isAlphaNumeric(this.peek())) {
-      value += this.advance();
+    while (this._isAlphaNumeric(this._peek())) {
+      value += this._advance();
     }
 
-    // Check if it's a keyword
-    const keywordType = ConditionalLexer.KEYWORDS.get(value.toLowerCase());
+    // Check if it's a keyword (case-insensitive)
+    const keywordType = ConditionalLexer._KEYWORDS.get(value.toLowerCase());
     if (keywordType) {
-      this.addToken(keywordType, value);
+      this._addToken(keywordType, value);
       return;
     }
 
     // Check if it's followed by a method call
-    if (this.peek() === ".") {
-      const nextPos = this.position + 1;
-      let methodName = "";
-      let pos = nextPos;
-
-      // Handle methods that start with ! (like !exists, !empty)
-      if (pos < this.input.length && this.input[pos] === "!") {
-        methodName += this.input[pos];
-        pos++;
-      }
-
-      // Scan the rest of the method name
-      while (pos < this.input.length && this.isAlphaNumeric(this.input[pos])) {
-        methodName += this.input[pos];
-        pos++;
-      }
-
-      const methodType = ConditionalLexer.METHODS.get(methodName);
-      if (methodType) {
+    if (this._peek() === ".") {
+      const methodName = this._peekMethodName();
+      if (methodName && ConditionalLexer._METHODS.has(methodName)) {
         // This is a field access followed by a method
-        this.addToken(TokenType.IDENTIFIER, value);
+        this._addToken(TokenType.IDENTIFIER, value);
         return;
       }
     }
 
-    this.addToken(TokenType.IDENTIFIER, value);
+    this._addToken(TokenType.IDENTIFIER, value);
+  }
+
+  /**
+   * Peek ahead to get the method name after a dot
+   */
+  private _peekMethodName(): string | null {
+    const nextPos = this._position + 1;
+    if (nextPos >= this._input.length) return null;
+
+    let methodName = "";
+    let pos = nextPos;
+
+    // Handle methods that start with ! (like !exists, !empty)
+    if (pos < this._input.length && this._input[pos] === "!") {
+      methodName += this._input[pos];
+      pos++;
+    }
+
+    // Scan the rest of the method name
+    while (pos < this._input.length && this._isAlphaNumeric(this._input[pos])) {
+      methodName += this._input[pos];
+      pos++;
+    }
+
+    return methodName || null;
   }
 
   /**
    * Scan method name that starts with ! (like !exists, !empty)
    */
-  private scanMethodName(): void {
-    let value = this.input[this.position - 1]; // Start with the '!' character
+  private _scanMethodName(): void {
+    let value = this._input[this._position - 1]; // Start with the '!' character
 
     // Scan the rest of the method name
-    while (this.isAlphaNumeric(this.peek())) {
-      value += this.advance();
+    while (this._isAlphaNumeric(this._peek())) {
+      value += this._advance();
     }
 
     // Check if it's a valid method name
-    const methodType = ConditionalLexer.METHODS.get(value);
+    const methodType = ConditionalLexer._METHODS.get(value);
     if (methodType) {
-      this.addToken(TokenType.IDENTIFIER, value);
+      this._addToken(TokenType.IDENTIFIER, value);
     } else {
-      this.addError(
+      this._addError(
         ErrorType.SYNTAX_ERROR,
         `Unknown method: ${value}`,
-        `Check if the method name is correct`
+        `Check if the method name is correct. Valid methods include: ${Array.from(ConditionalLexer._METHODS.keys()).join(', ')}`
       );
     }
   }
 
   /**
-   * Scan constant value (=value syntax)
+   * Scan constant value (=value syntax) with improved validation
    */
-  private scanConstant(): void {
+  private _scanConstant(): void {
     let value = "";
 
     // Skip the '=' character (already consumed)
     while (
-      !this.isAtEnd() &&
-      !this.isWhitespace(this.peek()) &&
-      this.peek() !== ":" &&
-      this.peek() !== ")" &&
-      this.peek() !== "]"
+      !this._isAtEnd() &&
+      !this._isWhitespace(this._peek()) &&
+      this._peek() !== ":" &&
+      this._peek() !== ")" &&
+      this._peek() !== "]" &&
+      this._peek() !== ","
     ) {
-      value += this.advance();
+      value += this._advance();
     }
 
     if (value.length === 0) {
-      this.addError(
+      this._addError(
         ErrorType.SYNTAX_ERROR,
         "Empty constant value after =",
         "Provide a value after = (e.g., =admin, =true, =42)"
@@ -405,17 +482,17 @@ export class ConditionalLexer {
       return;
     }
 
-    this.addToken(TokenType.CONSTANT, value);
+    this._addToken(TokenType.CONSTANT, value);
   }
 
   /**
-   * Skip whitespace characters
+   * Skip whitespace characters efficiently
    */
-  private skipWhitespace(): void {
-    while (!this.isAtEnd() && this.isWhitespace(this.peek())) {
-      if (this.advance() === "\n") {
-        this.line++;
-        this.column = 1;
+  private _skipWhitespace(): void {
+    while (!this._isAtEnd() && this._isWhitespace(this._peek())) {
+      if (this._advance() === "\n") {
+        this._line++;
+        this._column = 1;
       }
     }
   }
@@ -423,11 +500,10 @@ export class ConditionalLexer {
   /**
    * Check if we're in a regex context (after ~ or !~ operator)
    */
-  private isRegexContext(): boolean {
-    // Look at the last few tokens to see if we just had a MATCHES or NOT_MATCHES
-    if (this.tokens.length === 0) return false;
+  private _isRegexContext(): boolean {
+    if (this._tokens.length === 0) return false;
 
-    const lastToken = this.tokens[this.tokens.length - 1];
+    const lastToken = this._tokens[this._tokens.length - 1];
     return (
       lastToken.type === TokenType.MATCHES ||
       lastToken.type === TokenType.NOT_MATCHES
@@ -437,41 +513,50 @@ export class ConditionalLexer {
   /**
    * Check if we're in a context where forward slashes should be treated as regex delimiters
    */
-  private isRegexSlashContext(): boolean {
-    // Look for method calls like .contains() or .startsWith()
-    if (this.tokens.length < 2) return false;
+  private _isRegexSlashContext(): boolean {
+    if (this._tokens.length < 2) return false;
 
-    const lastToken = this.tokens[this.tokens.length - 1];
-    const secondLastToken = this.tokens[this.tokens.length - 2];
+    const lastToken = this._tokens[this._tokens.length - 1];
+    const secondLastToken = this._tokens[this._tokens.length - 2];
 
     // Check if we're inside method arguments like .contains(/pattern/)
+    const regexMethodTypes = new Set([
+      TokenType.CONTAINS,
+      TokenType.NOT_CONTAINS,
+      TokenType.STARTS_WITH,
+      TokenType.ENDS_WITH
+    ]);
+
     return (
       lastToken.type === TokenType.LPAREN &&
-      (secondLastToken.type === TokenType.CONTAINS ||
-        secondLastToken.type === TokenType.NOT_CONTAINS ||
-        secondLastToken.type === TokenType.STARTS_WITH ||
-        secondLastToken.type === TokenType.ENDS_WITH)
+      regexMethodTypes.has(secondLastToken.type)
     );
   }
 
   /**
-   * Scan slash-delimited pattern (like /secure/, /admin/)
+   * Scan slash-delimited pattern (like /secure/, /admin/) with improved error handling
    */
-  private scanSlashPattern(): void {
+  private _scanSlashPattern(): void {
     let pattern = "";
+    const startLine = this._line;
+    const startColumn = this._column - 1;
 
     // Skip the opening slash (already consumed)
-    while (!this.isAtEnd() && this.peek() !== "/") {
-      pattern += this.advance();
+    while (!this._isAtEnd() && this._peek() !== "/") {
+      if (this._peek() === "\n") {
+        this._line++;
+        this._column = 1;
+      }
+      pattern += this._advance();
     }
 
-    if (this.peek() === "/") {
-      this.advance(); // Consume closing slash
-      this.addToken(TokenType.STRING, pattern);
+    if (this._peek() === "/") {
+      this._advance(); // Consume closing slash
+      this._addToken(TokenType.STRING, pattern);
     } else {
-      this.addError(
+      this._addError(
         ErrorType.SYNTAX_ERROR,
-        "Unterminated regex pattern",
+        `Unterminated regex pattern starting at line ${startLine}, column ${startColumn}`,
         "Add closing / to complete the pattern"
       );
     }
@@ -480,44 +565,44 @@ export class ConditionalLexer {
   /**
    * Scan regex pattern (handles complex patterns with special characters)
    */
-  private scanRegexPattern(): void {
+  private _scanRegexPattern(): void {
     let pattern = "";
     let depth = 0;
 
-    while (!this.isAtEnd()) {
-      const char = this.peek();
+    while (!this._isAtEnd()) {
+      const char = this._peek();
 
       // Stop at whitespace or conditional operators
-      if (this.isWhitespace(char) || char === "*" || char === ":") {
+      if (this._isWhitespace(char) || char === "*" || char === ":") {
         break;
       }
 
       // Handle parentheses depth
-      if (char === "(") depth++;
-      if (char === ")") {
+      if (char === "(") {
+        depth++;
+      } else if (char === ")") {
         depth--;
         if (depth < 0) break; // Unmatched closing paren
       }
 
-      pattern += this.advance();
+      pattern += this._advance();
     }
 
     if (pattern.length > 0) {
-      this.addToken(TokenType.REGEX_PATTERN, pattern);
+      this._addToken(TokenType.REGEX_PATTERN, pattern);
+    } else {
+      this._addError(
+        ErrorType.SYNTAX_ERROR,
+        "Empty regex pattern",
+        "Provide a valid regex pattern after the ~ operator"
+      );
     }
-  }
-
-  /**
-   * Check if character is a special regex character
-   */
-  private isSpecialRegexChar(char: string): boolean {
-    return char === "|" || char === "^" || char === "$" || char === "@";
   }
 
   /**
    * Get token type for regex special characters
    */
-  private getRegexCharToken(char: string): TokenType {
+  private _getRegexCharToken(char: string): TokenType {
     switch (char) {
       case "|":
         return TokenType.PIPE;
@@ -533,37 +618,37 @@ export class ConditionalLexer {
   }
 
   /**
-   * Utility methods
+   * Utility methods with improved type safety
    */
-  private advance(): string {
-    if (this.isAtEnd()) return "\0";
-    this.column++;
-    return this.input[this.position++];
+  private _advance(): string {
+    if (this._isAtEnd()) return "\0";
+    this._column++;
+    return this._input[this._position++];
   }
 
-  private peek(): string {
-    if (this.isAtEnd()) return "\0";
-    return this.input[this.position];
+  private _peek(): string {
+    if (this._isAtEnd()) return "\0";
+    return this._input[this._position];
   }
 
-  private peekNext(): string {
-    if (this.position + 1 >= this.input.length) return "\0";
-    return this.input[this.position + 1];
+  private _peekNext(): string {
+    if (this._position + 1 >= this._input.length) return "\0";
+    return this._input[this._position + 1];
   }
 
-  private isAtEnd(): boolean {
-    return this.position >= this.input.length;
+  private _isAtEnd(): boolean {
+    return this._position >= this._input.length;
   }
 
-  private isWhitespace(char: string): boolean {
-    return char === " " || char === "\t" || char === "\n" || char === "\r";
+  private _isWhitespace(char: string): boolean {
+    return ConditionalLexer._WHITESPACE_CHARS.has(char);
   }
 
-  private isDigit(char: string): boolean {
+  private _isDigit(char: string): boolean {
     return char >= "0" && char <= "9";
   }
 
-  private isAlpha(char: string): boolean {
+  private _isAlpha(char: string): boolean {
     return (
       (char >= "a" && char <= "z") ||
       (char >= "A" && char <= "Z") ||
@@ -571,56 +656,40 @@ export class ConditionalLexer {
     );
   }
 
-  private isAlphaNumeric(char: string): boolean {
-    return this.isAlpha(char) || this.isDigit(char);
+  private _isAlphaNumeric(char: string): boolean {
+    return this._isAlpha(char) || this._isDigit(char);
   }
 
   /**
-   * Get token type for special characters
+   * Add token to the list with improved position tracking
    */
-  private getSpecialCharToken(char: string): TokenType {
-    switch (char) {
-      case "?":
-        return TokenType.UNKNOWN; // Will be handled as part of type syntax
-      case "[":
-        return TokenType.LBRACKET;
-      case "]":
-        return TokenType.RBRACKET;
-      default:
-        return TokenType.UNKNOWN;
-    }
-  }
-
-  /**
-   * Add token to the list
-   */
-  private addToken(type: TokenType, value: string): void {
-    this.tokens.push({
+  private _addToken(type: TokenType, value: string): void {
+    this._tokens.push({
       type,
       value,
-      position: this.position - value.length,
-      line: this.line,
-      column: this.column - value.length,
+      position: this._currentTokenStart,
+      line: this._line,
+      column: this._column - value.length,
     });
   }
 
   /**
-   * Add error to the list
+   * Add error to the list with improved context
    */
-  private addError(
+  private _addError(
     type: ErrorType,
     message: string,
     suggestion?: string
   ): void {
-    this.errors.push({
+    this._errors.push({
       type,
       message,
-      position: this.position,
-      line: this.line,
-      column: this.column,
+      position: this._currentTokenStart,
+      line: this._line,
+      column: this._column - (this._position - this._currentTokenStart),
       suggestion,
       context: {
-        nearbyTokens: this.tokens.slice(-3), // Last 3 tokens for context
+        nearbyTokens: this._tokens.slice(-3), // Last 3 tokens for context
         expectedTokens: [], // Will be filled by parser
       },
     });

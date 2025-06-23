@@ -604,8 +604,8 @@ export class InterfaceSchema<T = any> {
       return ValidationHelpers.validateUnionType(elementType, value);
     }
 
-    // Handle basic types - pass the elementType for proper validation
-    return this.validateBasicType(elementType, value);
+    // Handle basic types - pass the original fieldType to preserve constraints
+    return this.validateBasicType(fieldType, value);
   }
 
   /**
@@ -623,8 +623,12 @@ export class InterfaceSchema<T = any> {
     // Parse constraints from field type
     const { type, constraints } = ConstraintParser.parseConstraints(fieldType);
 
+
+
     // Apply parsed constraints to options
     const Options = { ...this.options, ...constraints };
+
+
 
     // Check for Record types first
     if (type.startsWith("record<") && type.endsWith(">")) {
@@ -637,12 +641,15 @@ export class InterfaceSchema<T = any> {
     }
 
     // Route to appropriate type validator
-    return ValidationHelpers.routeTypeValidation(
+    const result = ValidationHelpers.routeTypeValidation(
       type,
       value,
       Options,
       constraints
     );
+
+
+    return result;
   }
 
   /**

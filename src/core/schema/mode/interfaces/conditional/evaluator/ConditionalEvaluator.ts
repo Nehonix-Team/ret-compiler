@@ -1,4 +1,4 @@
-/**
+ /**
  * Enhanced Conditional Evaluator
  *
  * Evaluates parsed conditional AST against actual data
@@ -248,10 +248,14 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
   ): boolean {
     switch (method) {
       case TokenType.IN:
-        return args.includes(fieldValue);
+        // Handle comma-separated values that were parsed as a single string
+        const inValues = this.expandCommaSeparatedArgs(args);
+        return inValues.includes(fieldValue);
 
       case TokenType.NOT_IN:
-        return !args.includes(fieldValue);
+        // Handle comma-separated values that were parsed as a single string
+        const notInValues = this.expandCommaSeparatedArgs(args);
+        return !notInValues.includes(fieldValue);
 
       case TokenType.EXISTS:
         return fieldValue !== undefined && fieldValue !== null;
@@ -288,7 +292,9 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
           return fieldValue.includes(String(args[0]));
         }
         if (Array.isArray(fieldValue) && args.length > 0) {
-          return fieldValue.includes(args[0]);
+          // For arrays, check if any of the expanded arguments are contained
+          const containsValues = this.expandCommaSeparatedArgs(args);
+          return containsValues.some(value => fieldValue.includes(value));
         }
         return false;
 
@@ -346,6 +352,26 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
       // Invalid regex, fall back to string contains
       return valueStr.includes(patternStr);
     }
+  }
+
+  /**
+   * Expand comma-separated arguments for .in() and .!in() methods
+   * Handles cases where "admin,manager" is parsed as a single string
+   */
+  private expandCommaSeparatedArgs(args: any[]): any[] {
+    const expandedArgs: any[] = [];
+
+    for (const arg of args) {
+      if (typeof arg === "string" && arg.includes(",")) {
+        // Split comma-separated values and trim whitespace
+        const splitValues = arg.split(",").map(v => v.trim());
+        expandedArgs.push(...splitValues);
+      } else {
+        expandedArgs.push(arg);
+      }
+    }
+
+    return expandedArgs;
   }
 
   /**

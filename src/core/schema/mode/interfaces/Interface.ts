@@ -20,7 +20,7 @@
  *     bio: "string?",
  *     avatar: "url?"
  *   }
- * });
+ * }); 
  *
  * // Validate data
  * const result = UserSchema.safeParse(userData);
