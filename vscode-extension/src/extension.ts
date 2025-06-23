@@ -15,7 +15,7 @@ import {
   FortifyColorSchemes, 
 } from "./themes/FortifyColorTheme";
 
-/** 
+/**   
  * Extension activation - called when the extension is activated
  */
 export function activate(context: vscode.ExtensionContext) {

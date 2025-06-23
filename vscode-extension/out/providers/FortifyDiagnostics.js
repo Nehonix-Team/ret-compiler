@@ -25,6 +25,10 @@ class FortifyDiagnosticsProvider {
         const text = document.getText();
         const schemaStrings = this.extractSchemaStrings(text, document);
         for (const { value, range } of schemaStrings) {
+            // Check for @fortify-ignore comment on the same line or line above
+            if (this.hasIgnoreComment(document, range)) {
+                continue; // Skip validation for ignored lines
+            }
             diagnostics.push(...this.validateSchemaString(value, range));
         }
         this.diagnosticCollection.set(document.uri, diagnostics);
@@ -49,6 +53,28 @@ class FortifyDiagnosticsProvider {
      */
     dispose() {
         this.diagnosticCollection.dispose();
+    }
+    /**
+     * Checks if a line has @fortify-ignore comment to skip validation
+     * @param document The text document
+     * @param range The range to check for ignore comments
+     * @returns True if validation should be skipped
+     */
+    hasIgnoreComment(document, range) {
+        const lineNumber = range.start.line;
+        // Check current line for inline comment
+        const currentLine = document.lineAt(lineNumber).text;
+        if (currentLine.includes('// @fortify-ignore') || currentLine.includes('/* @fortify-ignore')) {
+            return true;
+        }
+        // Check previous line for comment
+        if (lineNumber > 0) {
+            const previousLine = document.lineAt(lineNumber - 1).text;
+            if (previousLine.includes('// @fortify-ignore') || previousLine.includes('/* @fortify-ignore')) {
+                return true;
+            }
+        }
+        return false;
     }
     /**
      * Extracts Fortify Schema strings from the document, ensuring only strings within
@@ -268,12 +294,13 @@ class FortifyDiagnosticsProvider {
         if (type === "string" && constraints.startsWith("/")) {
             return this.validateRegexPatterns(constraints, range);
         }
-        // Handle numeric constraints (e.g., number(1,10), positive(0.01,))
+        // Handle numeric constraints (e.g., number(1,10), positive(0.01,), number(-90,90))
         const params = constraints.split(",").map((p) => p.trim());
         for (const param of params) {
             // Allow empty params (for open ranges like "0.01," or ",100")
-            if (param && !/^\d*\.?\d*$/.test(param)) {
-                diagnostics.push(new vscode.Diagnostic(range, `Invalid constraint: "${param}". Expected a number or decimal.`, vscode.DiagnosticSeverity.Error));
+            // Updated regex to allow negative numbers: -90, -0.5, etc.
+            if (param && !/^-?\d*\.?\d*$/.test(param)) {
+                diagnostics.push(new vscode.Diagnostic(range, `Invalid constraint: "${param}". Expected a number or decimal (including negative numbers).`, vscode.DiagnosticSeverity.Error));
             }
         }
         return diagnostics;
@@ -422,7 +449,7 @@ class FortifyDiagnosticsProvider {
         // But exclude patterns like email~@company.com where .com is part of a domain
         const methodMatch = cleanCondition.match(/(\w+)\.(!?)(\w+)(\([^)]*\))?/);
         if (methodMatch) {
-            const [fullMatch, , isNegated, method, hasParens] = methodMatch;
+            const [fullMatch, , , method, hasParens] = methodMatch;
             // Skip if this is part of a domain pattern (preceded by @ or ~)
             const beforeMatch = cleanCondition.substring(0, cleanCondition.indexOf(fullMatch));
             if (beforeMatch.includes("@") || beforeMatch.endsWith("~")) {
