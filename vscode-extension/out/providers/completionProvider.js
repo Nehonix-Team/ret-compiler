@@ -14,7 +14,7 @@ const OPERATORS_1 = require("../syntax/mods/definitions/OPERATORS");
 const FORTIFY_METHODS_1 = require("../syntax/mods/definitions/FORTIFY_METHODS");
 class FortifyCompletionProvider {
     /**
-     * Provide completion items for Fortify Schema
+     * Provide completion items for Fortify Schema string
      */
     provideCompletionItems(document, position, _token, _context) {
         const line = document.lineAt(position);
