@@ -27,8 +27,8 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
     const line = document.lineAt(position);
     const lineText = line.text;
 
-    // Check if we're in a string that contains schema syntax
-    if (!this.isInSchemaContext(lineText, position.character)) {
+    // Check if we're in a string that contains schema syntax AND within an Interface block
+    if (!this.isInSchemaContext(lineText, position.character) || !this.isInInterfaceBlock(document, position)) {
       return null;
     }
 
@@ -56,6 +56,86 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
 
     // Check if the string contains schema-like patterns
     return FortifyPatterns.containsSchemaPattern(lineText);
+  }
+
+  /**
+   * Check if the current position is within an Interface({...}) block
+   */
+  private isInInterfaceBlock(document: vscode.TextDocument, position: vscode.Position): boolean {
+    const text = document.getText();
+    const interfaceBlocks = this.findInterfaceBlocks(text);
+
+    return interfaceBlocks.some(block =>
+      position.line >= block.start && position.line <= block.end
+    );
+  }
+
+  /**
+   * Finds all Interface({...}) blocks in the text and returns their line ranges
+   */
+  private findInterfaceBlocks(text: string): Array<{ start: number; end: number }> {
+    const blocks: Array<{ start: number; end: number }> = [];
+    const lines = text.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Look for Interface( pattern
+      const interfaceMatch = line.match(/\bInterface\s*\(/);
+      if (interfaceMatch) {
+        const blockEnd = this.findBlockEnd(lines, i);
+        if (blockEnd !== -1) {
+          blocks.push({ start: i, end: blockEnd });
+        }
+      }
+    }
+
+    return blocks;
+  }
+
+  /**
+   * Finds the end of a block starting from the given line by matching braces
+   */
+  private findBlockEnd(lines: string[], startLine: number): number {
+    let braceCount = 0;
+    let inString = false;
+    let escapeNext = false;
+
+    for (let i = startLine; i < lines.length; i++) {
+      const line = lines[i];
+
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              return i;
+            }
+          }
+        }
+      }
+    }
+
+    return -1; // Block not properly closed
   }
 
   /**

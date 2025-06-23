@@ -12,10 +12,10 @@ import { FortifyHoverProvider } from "./providers/HoverProvider";
 import { FortifySemanticTokensProvider } from "./providers/SemanticTokensProvider";
 import {
   FortifyColorThemeManager,
-  FortifyColorSchemes,
+  FortifyColorSchemes, 
 } from "./themes/FortifyColorTheme";
 
-/**
+/** 
  * Extension activation - called when the extension is activated
  */
 export function activate(context: vscode.ExtensionContext) {

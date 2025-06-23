@@ -20,8 +20,8 @@ class FortifyCompletionProvider {
         const line = document.lineAt(position);
         const lineText = line.text;
         const beforeCursor = lineText.substring(0, position.character);
-        // Check if we're inside a string that looks like a schema definition
-        if (!this.isInSchemaString(beforeCursor)) {
+        // Check if we're inside a string AND within an Interface({...}) block
+        if (!this.isInSchemaString(beforeCursor) || !this.isInInterfaceBlock(document, position)) {
             return [];
         }
         const completions = [];
@@ -43,6 +43,71 @@ class FortifyCompletionProvider {
     isInSchemaString(text) {
         const quoteCount = (text.match(/"/g) || []).length;
         return quoteCount % 2 === 1; // Odd number means we're inside quotes
+    }
+    /**
+     * Check if the current position is within an Interface({...}) block
+     */
+    isInInterfaceBlock(document, position) {
+        const text = document.getText();
+        const interfaceBlocks = this.findInterfaceBlocks(text);
+        return interfaceBlocks.some(block => position.line >= block.start && position.line <= block.end);
+    }
+    /**
+     * Finds all Interface({...}) blocks in the text and returns their line ranges
+     */
+    findInterfaceBlocks(text) {
+        const blocks = [];
+        const lines = text.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            // Look for Interface( pattern
+            const interfaceMatch = line.match(/\bInterface\s*\(/);
+            if (interfaceMatch) {
+                const blockEnd = this.findBlockEnd(lines, i);
+                if (blockEnd !== -1) {
+                    blocks.push({ start: i, end: blockEnd });
+                }
+            }
+        }
+        return blocks;
+    }
+    /**
+     * Finds the end of a block starting from the given line by matching braces
+     */
+    findBlockEnd(lines, startLine) {
+        let braceCount = 0;
+        let inString = false;
+        let escapeNext = false;
+        for (let i = startLine; i < lines.length; i++) {
+            const line = lines[i];
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (escapeNext) {
+                    escapeNext = false;
+                    continue;
+                }
+                if (char === '\\') {
+                    escapeNext = true;
+                    continue;
+                }
+                if (char === '"' && !escapeNext) {
+                    inString = !inString;
+                    continue;
+                }
+                if (!inString) {
+                    if (char === '{') {
+                        braceCount++;
+                    }
+                    else if (char === '}') {
+                        braceCount--;
+                        if (braceCount === 0) {
+                            return i;
+                        }
+                    }
+                }
+            }
+        }
+        return -1; // Block not properly closed
     }
     /**
      * Check if we should show conditional completions

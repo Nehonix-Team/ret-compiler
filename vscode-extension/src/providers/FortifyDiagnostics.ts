@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { FortifyPatterns } from "../syntax/FortifyPatterns";
 import { FortifySyntaxUtils } from "../syntax/FortifySyntaxDefinitions";
 
-/**
+/** 
  * Provides diagnostics for Fortify Schema strings in TypeScript/JavaScript files.
  * Validates schema syntax with a focus on simplicity and accuracy, ensuring a
  * TypeScript-like experience that's easier than alternatives like Zod.

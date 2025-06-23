@@ -8,7 +8,6 @@
  */
 
 import * as vscode from "vscode";
-import { extractSchemaStrings, isFortifySchema } from "../extension";
 import { FortifyPatterns } from "../syntax/FortifyPatterns";
 
 /**
@@ -68,8 +67,8 @@ export class FortifySemanticTokensProvider
     );
     const text = document.getText();
 
-    // Extract Fortify schema strings from the document
-    const schemaStrings = extractSchemaStrings(text);
+    // Extract Fortify schema strings ONLY from Interface({...}) blocks
+    const schemaStrings = this.extractSchemaStrings(text, document);
 
     for (const schemaString of schemaStrings) {
       if (token.isCancellationRequested) {
@@ -79,7 +78,7 @@ export class FortifySemanticTokensProvider
       this.tokenizeSchemaString(
         document,
         schemaString.value,
-        schemaString.start + 1, // Skip opening quote
+        schemaString.range.start, // Use range start position
         tokensBuilder
       );
     }
@@ -88,14 +87,167 @@ export class FortifySemanticTokensProvider
   }
 
   /**
+   * Extracts Fortify Schema strings ONLY from Interface({...}) blocks
+   * This ensures syntax highlighting is only applied where it's relevant
+   */
+  private extractSchemaStrings(
+    text: string,
+    document: vscode.TextDocument
+  ): Array<{ value: string; range: vscode.Range }> {
+    const results: Array<{ value: string; range: vscode.Range }> = [];
+
+    // Find all Interface({...}) blocks in the document
+    const interfaceBlocks = this.findInterfaceBlocks(text);
+
+    if (interfaceBlocks.length === 0) {
+      return results; // No Interface blocks found, no highlighting needed
+    }
+
+    const lines = text.split("\n");
+
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
+
+      // Check if this line is within any Interface block
+      if (!this.isLineInInterfaceBlock(lineIndex, interfaceBlocks)) {
+        continue;
+      }
+
+      const stringMatches = line.matchAll(/"([^"\\]|\\.)*"/g);
+
+      for (const match of stringMatches) {
+        if (match.index !== undefined) {
+          const stringValue = match[0].slice(1, -1); // Remove quotes
+
+          // Within Interface blocks, highlight all strings that could be schemas
+          if (this.couldBeSchemaString(stringValue)) {
+            const startPos = new vscode.Position(lineIndex, match.index + 1); // Skip opening quote
+            const endPos = new vscode.Position(
+              lineIndex,
+              match.index + match[0].length - 1 // Skip closing quote
+            );
+            results.push({
+              value: stringValue,
+              range: new vscode.Range(startPos, endPos),
+            });
+          }
+        }
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Finds all Interface({...}) blocks in the text and returns their line ranges
+   */
+  private findInterfaceBlocks(text: string): Array<{ start: number; end: number }> {
+    const blocks: Array<{ start: number; end: number }> = [];
+    const lines = text.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Look for Interface( pattern
+      const interfaceMatch = line.match(/\bInterface\s*\(/);
+      if (interfaceMatch) {
+        const blockEnd = this.findBlockEnd(lines, i);
+        if (blockEnd !== -1) {
+          blocks.push({ start: i, end: blockEnd });
+        }
+      }
+    }
+
+    return blocks;
+  }
+
+  /**
+   * Finds the end of a block starting from the given line by matching braces
+   */
+  private findBlockEnd(lines: string[], startLine: number): number {
+    let braceCount = 0;
+    let inString = false;
+    let escapeNext = false;
+
+    for (let i = startLine; i < lines.length; i++) {
+      const line = lines[i];
+
+      for (let j = 0; j < line.length; j++) {
+        const char = line[j];
+
+        if (escapeNext) {
+          escapeNext = false;
+          continue;
+        }
+
+        if (char === '\\') {
+          escapeNext = true;
+          continue;
+        }
+
+        if (char === '"' && !escapeNext) {
+          inString = !inString;
+          continue;
+        }
+
+        if (!inString) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              return i;
+            }
+          }
+        }
+      }
+    }
+
+    return -1; // Block not properly closed
+  }
+
+  /**
+   * Checks if a line is within any of the Interface blocks
+   */
+  private isLineInInterfaceBlock(lineIndex: number, blocks: Array<{ start: number; end: number }>): boolean {
+    return blocks.some(block => lineIndex >= block.start && lineIndex <= block.end);
+  }
+
+  /**
+   * Determines if a string could potentially be a Fortify schema string
+   */
+  private couldBeSchemaString(value: string): boolean {
+    // Skip obvious non-schema strings
+    if (value.length === 0 || value.length > 200) {
+      return false;
+    }
+
+    // Skip URLs, file paths, and other obvious non-schema patterns
+    if (value.startsWith('http') || value.startsWith('/') || value.includes('\\')) {
+      return false;
+    }
+
+    // Skip very long strings that are clearly not schemas
+    if (value.includes(' ') && value.length > 50) {
+      return false;
+    }
+
+    // Within Interface blocks, be more permissive - highlight most short strings
+    return true;
+  }
+
+  /**
    * Tokenize a single Fortify schema string
    */
   private tokenizeSchemaString(
     document: vscode.TextDocument,
     schemaText: string,
-    startOffset: number,
+    startPosition: vscode.Position,
     tokensBuilder: vscode.SemanticTokensBuilder
   ): void {
+    // Calculate the absolute offset from the position
+    const startOffset = document.offsetAt(startPosition);
+
     // First, handle union types specially for better accuracy
     this.tokenizeUnions(document, schemaText, startOffset, tokensBuilder);
 
