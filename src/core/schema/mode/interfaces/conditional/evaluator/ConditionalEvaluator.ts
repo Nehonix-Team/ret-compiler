@@ -330,11 +330,17 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
   ): boolean {
     switch (method) {
       case TokenType.IN:
+        if (args.length === 0) {
+          return false; // No values to check against
+        }
         // Handle comma-separated values that were parsed as a single string
         const inValues = this.expandCommaSeparatedArgs(args);
         return inValues.includes(fieldValue);
 
       case TokenType.NOT_IN:
+        if (args.length === 0) {
+          return true; // If no values provided, field is not in empty set
+        }
         // Handle comma-separated values that were parsed as a single string
         const notInValues = this.expandCommaSeparatedArgs(args);
         return !notInValues.includes(fieldValue);
@@ -352,6 +358,9 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
         if (Array.isArray(fieldValue)) {
           return fieldValue.length === 0;
         }
+        if (typeof fieldValue === "object" && fieldValue !== null) {
+          return Object.keys(fieldValue).length === 0;
+        }
         return fieldValue === null || fieldValue === undefined;
 
       case TokenType.NOT_EMPTY:
@@ -360,6 +369,9 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
         }
         if (Array.isArray(fieldValue)) {
           return fieldValue.length > 0;
+        }
+        if (typeof fieldValue === "object" && fieldValue !== null) {
+          return Object.keys(fieldValue).length > 0;
         }
         return fieldValue !== null && fieldValue !== undefined;
 
@@ -370,10 +382,13 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
         return fieldValue !== null;
 
       case TokenType.CONTAINS:
-        if (typeof fieldValue === "string" && args.length > 0) {
+        if (args.length === 0) {
+          return false; // No argument provided
+        }
+        if (typeof fieldValue === "string") {
           return fieldValue.includes(String(args[0]));
         }
-        if (Array.isArray(fieldValue) && args.length > 0) {
+        if (Array.isArray(fieldValue)) {
           // For arrays, check if any of the expanded arguments are contained
           const containsValues = this.expandCommaSeparatedArgs(args);
           return containsValues.some((value) => fieldValue.includes(value));
@@ -384,13 +399,19 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
         return !this.performMethodCall(fieldValue, TokenType.CONTAINS, args);
 
       case TokenType.STARTS_WITH:
-        if (typeof fieldValue === "string" && args.length > 0) {
+        if (args.length === 0) {
+          return false; // No argument provided
+        }
+        if (typeof fieldValue === "string") {
           return fieldValue.startsWith(String(args[0]));
         }
         return false;
 
       case TokenType.ENDS_WITH:
-        if (typeof fieldValue === "string" && args.length > 0) {
+        if (args.length === 0) {
+          return false; // No argument provided
+        }
+        if (typeof fieldValue === "string") {
           return fieldValue.endsWith(String(args[0]));
         }
         return false;
@@ -400,6 +421,12 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
           const num = Number(fieldValue);
           const min = Number(args[0]);
           const max = Number(args[1]);
+
+          // Validate that all values are valid numbers
+          if (isNaN(num) || isNaN(min) || isNaN(max)) {
+            return false;
+          }
+
           return num >= min && num <= max;
         }
         return false;

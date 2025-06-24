@@ -193,8 +193,14 @@ export class ConditionalLexer {
       return;
     }
 
-    // Handle numbers
+    // Handle numbers (including negative numbers)
     if (this._isDigit(char)) {
+      this._scanNumber();
+      return;
+    }
+
+    // Handle negative numbers (- followed by digit)
+    if (char === "-" && this._isDigit(this._peek())) {
       this._scanNumber();
       return;
     }
@@ -359,6 +365,9 @@ export class ConditionalLexer {
     let value = this._input[this._position - 1];
     let hasDecimalPoint = false;
 
+    // If the first character is '-', we're scanning a negative number
+    const isNegative = value === "-";
+
     // Scan integer part
     while (this._isDigit(this._peek())) {
       value += this._advance();
@@ -375,7 +384,7 @@ export class ConditionalLexer {
     }
 
     // Validate number format
-    if (value === "." || value.endsWith(".")) {
+    if (value === "." || value.endsWith(".") || value === "-") {
       this._addError(
         ErrorType.SYNTAX_ERROR,
         "Invalid number format",
