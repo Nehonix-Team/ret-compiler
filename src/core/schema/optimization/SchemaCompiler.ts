@@ -305,10 +305,15 @@ export class SchemaCompiler {
 
       // Return optimized validator based on type
       if (type.includes("|")) {
-        // Union type - use cached validation
+        // Union type - use ultra-optimized cached validation
         const {
           OptimizedUnionValidator,
         } = require("../mode/interfaces/validators/UnionCache");
+
+        // Pre-compile the union for maximum performance
+        const preCompiledUnion =
+          OptimizedUnionValidator.preCompileUnion?.(type);
+
         return (value: any): SchemaValidationResult => {
           if (value === undefined && optional) {
             return {
@@ -318,7 +323,12 @@ export class SchemaCompiler {
               data: options.default,
             };
           }
-          const result = OptimizedUnionValidator.validateUnion(type, value);
+
+          // Use pre-compiled union if available, otherwise fallback to standard
+          const result = preCompiledUnion
+            ? preCompiledUnion(value)
+            : OptimizedUnionValidator.validateUnion(type, value);
+
           return {
             success: result.isValid,
             errors: result.isValid ? [] : [result.error!],

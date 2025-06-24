@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "timestamp": "2025-06-24T19:13:56.948Z",
+    "nodeVersion": "v22.6.0",
+    "platform": "win32",
+    "arch": "x64",
+    "fortifyVersion": "1.0.0",
+    "zodVersion": "3.25.67"
+  },
+  "summary": {
+    "totalTests": 4,
+    "fortifyWins": 1,
+    "zodWins": 3,
+    "averageSpeedup": 1.0259038933577045,
+    "overallWinner": "Fortify Schema",
+    "memoryUsage": {
+      "totalMB": 2.408964157104492,
+      "perSchemaKB": 2.466779296875
+    }
+  },
+  "detailedResults": [
+    {
+      "testName": "Simple Schema",
+      "winner": "Zod",
+      "speedup": 0.865041045129115,
+      "fortify": {
+        "totalTime": 56.02369999999999,
+        "averageTime": 0.005602369999999999,
+        "operationsPerSecond": 178495.8865622942
+      },
+      "zod": {
+        "totalTime": 48.46279999999999,
+        "averageTime": 0.004846279999999999,
+        "operationsPerSecond": 206343.83485890215
+      }
+    },
+    {
+      "testName": "Complex Schema",
+      "winner": "Zod",
+      "speedup": 0.888298237606084,
+      "fortify": {
+        "totalTime": 49.51220000000001,
+        "averageTime": 0.009902440000000002,
+        "operationsPerSecond": 100985.2117255949
+      },
+      "zod": {
+        "totalTime": 43.98159999999996,
+        "averageTime": 0.008796319999999991,
+        "operationsPerSecond": 113683.90417811094
+      }
+    },
+    {
+      "testName": "Array Schema",
+      "winner": "Fortify",
+      "speedup": 1.599961810814661,
+      "fortify": {
+        "totalTime": 30.898799999999994,
+        "averageTime": 0.003862349999999999,
+        "operationsPerSecond": 258909.7311222443
+      },
+      "zod": {
+        "totalTime": 49.43690000000004,
+        "averageTime": 0.006179612500000004,
+        "operationsPerSecond": 161822.44436847768
+      }
+    },
+    {
+      "testName": "Union Types",
+      "winner": "Zod",
+      "speedup": 0.7503144798809585,
+      "fortify": {
+        "totalTime": 26.074799999999982,
+        "averageTime": 0.0021728999999999984,
+        "operationsPerSecond": 460214.45993833157
+      },
+      "zod": {
+        "totalTime": 19.564300000000003,
+        "averageTime": 0.0016303583333333335,
+        "operationsPerSecond": 613362.09320037
+      }
+    }
+  ]
+}

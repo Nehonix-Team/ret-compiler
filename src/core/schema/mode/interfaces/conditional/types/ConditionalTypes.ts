@@ -181,6 +181,7 @@ export interface EvaluationContext {
     strict?: boolean;
     debug?: boolean;
     validatePaths?: boolean; // New option to enable path validation
+    enableCaching?: boolean; // Performance optimization option
   };
 }
 

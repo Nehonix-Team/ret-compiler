@@ -292,7 +292,7 @@ function generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zod
   const testNames = ['Simple Schema', 'Complex Schema', 'Array Schema', 'Union Types'];
 
   // Ensure docs directory exists
-  const docsDir = path.join(__dirname, '..', 'docs');
+  const docsDir = path.join(__dirname, "..", "src", "bench");
   if (!fs.existsSync(docsDir)) {
     fs.mkdirSync(docsDir, { recursive: true });
   }
@@ -371,7 +371,7 @@ function generateMarkdownReport(jsonReport) {
 | **Fortify Schema Wins** | ${summary.fortifyWins}/${summary.totalTests} tests |
 | **Zod Wins** | ${summary.zodWins}/${summary.totalTests} tests |
 | **Overall Winner** | **${summary.overallWinner}** |
-| **Average Performance** | ${summary.overallWinner} is ${Math.abs(summary.averageSpeedup).toFixed(2)}x ${summary.averageSpeedup > 1 ? 'faster' : 'slower'} |
+| **Average Performance** | ${summary.overallWinner} is ${Math.abs(summary.averageSpeedup).toFixed(2)}x ${summary.averageSpeedup > 1 ? "faster" : "slower"} |
 
 ### 💾 Memory Usage
 
@@ -380,24 +380,47 @@ function generateMarkdownReport(jsonReport) {
 
 ## 📋 Detailed Test Results
 
-${detailedResults.map((result, i) => `
+${detailedResults
+  .map(
+    (result, i) => `
 ### ${i + 1}. ${result.testName}
 
-**Winner:** 🏆 **${result.winner}** (${result.speedup.toFixed(2)}x ${result.speedup > 1 ? 'faster' : 'slower'})
+**Winner:** 🏆 **${result.winner}** (${result.speedup.toFixed(2)}x ${result.speedup > 1 ? "faster" : "slower"})
 
 | Library | Total Time | Avg Time | Ops/Second |
 |---------|------------|----------|------------|
 | **Fortify Schema** | ${result.fortify.totalTime.toFixed(2)}ms | ${result.fortify.averageTime.toFixed(4)}ms | ${result.fortify.operationsPerSecond.toFixed(0)} |
 | **Zod** | ${result.zod.totalTime.toFixed(2)}ms | ${result.zod.averageTime.toFixed(4)}ms | ${result.zod.operationsPerSecond.toFixed(0)} |
-`).join('\n')}
+`
+  )
+  .join("\n")}
 
 ## 🎯 Performance Analysis
 
 ### Strengths of Fortify Schema
-${summary.fortifyWins > 0 ? detailedResults.filter(r => r.winner === 'Fortify').map(r => `- **${r.testName}**: ${r.speedup.toFixed(2)}x faster than Zod`).join('\n') : '- No significant advantages in current tests'}
+${
+  summary.fortifyWins > 0
+    ? detailedResults
+        .filter((r) => r.winner === "Fortify")
+        .map(
+          (r) => `- **${r.testName}**: ${r.speedup.toFixed(2)}x faster than Zod`
+        )
+        .join("\n")
+    : "- No significant advantages in current tests"
+}
 
 ### Strengths of Zod
-${summary.zodWins > 0 ? detailedResults.filter(r => r.winner === 'Zod').map(r => `- **${r.testName}**: ${(1/r.speedup).toFixed(2)}x faster than Fortify Schema`).join('\n') : '- No significant advantages in current tests'}
+${
+  summary.zodWins > 0
+    ? detailedResults
+        .filter((r) => r.winner === "Zod")
+        .map(
+          (r) =>
+            `- **${r.testName}**: ${(1 / r.speedup).toFixed(2)}x faster than Fortify Schema`
+        )
+        .join("\n")
+    : "- No significant advantages in current tests"
+}
 
 ## 📈 Performance Trends
 
@@ -405,14 +428,22 @@ ${summary.zodWins > 0 ? detailedResults.filter(r => r.winner === 'Zod').map(r =>
 ${detailedResults
   .sort((a, b) => b.fortify.operationsPerSecond - a.fortify.operationsPerSecond)
   .slice(0, 2)
-  .map(r => `1. **${r.testName}**: ${r.fortify.operationsPerSecond.toFixed(0)} ops/sec`)
-  .join('\n')}
+  .map(
+    (r) =>
+      `1. **${r.testName}**: ${r.fortify.operationsPerSecond.toFixed(0)} ops/sec`
+  )
+  .join("\n")}
 
 ### Areas for Improvement
-${detailedResults
-  .filter(r => r.winner === 'Zod')
-  .map(r => `- **${r.testName}**: Currently ${(1/r.speedup).toFixed(2)}x slower than Zod`)
-  .join('\n') || '- All test cases are competitive or better than Zod'}
+${
+  detailedResults
+    .filter((r) => r.winner === "Zod")
+    .map(
+      (r) =>
+        `- **${r.testName}**: Currently ${(1 / r.speedup).toFixed(2)}x slower than Zod`
+    )
+    .join("\n") || "- All test cases are competitive or better than Zod"
+}
 
 ## 🔧 Technical Details
 
@@ -439,7 +470,8 @@ ${detailedResults
 ---
 
 *Last updated: ${new Date(metadata.timestamp).toLocaleString()}*
-*Generated automatically by benchmark-vs-zod.js*
+*Generated automatically by scripts/benchmark-vs-zod.js !*
+*Try it yourself: bun run scripts/benchmark-vs-zod.js or npx tsx scripts/benchmark-vs-zod.js*
 `;
 }
 

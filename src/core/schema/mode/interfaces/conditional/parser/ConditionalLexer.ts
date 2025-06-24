@@ -26,6 +26,7 @@ export class ConditionalLexer {
   private readonly _tokens: Token[] = [];
   private readonly _errors: ConditionalError[] = [];
   private _currentTokenStart: number = 0;
+  private _parenDepth: number = 0; // Track parentheses depth for method arguments
 
   // Operator patterns for efficient matching (order matters - longest first!)
   private static readonly _OPERATORS = new Map<string, TokenType>([
@@ -162,6 +163,7 @@ export class ConditionalLexer {
     this._currentTokenStart = 0;
     this._tokens.length = 0;
     this._errors.length = 0;
+    this._parenDepth = 0;
   }
 
   /**
@@ -179,6 +181,12 @@ export class ConditionalLexer {
     // Handle constant values (=value) BEFORE operators to catch =-1 syntax
     if (char === "=" && this._peek() !== "=" && this._peek() !== "!") {
       this._scanConstant();
+      return;
+    }
+
+    // Handle unquoted literals in method arguments BEFORE operators
+    if (this._parenDepth > 0 && this._isLiteralStartChar(char)) {
+      this._scanUnquotedLiteral();
       return;
     }
 
@@ -220,6 +228,13 @@ export class ConditionalLexer {
     // Handle special characters that are part of type syntax
     const typeToken = ConditionalLexer._TYPE_SYNTAX_CHARS.get(char);
     if (typeToken) {
+      // Track parentheses depth for method argument parsing
+      if (char === "(") {
+        this._parenDepth++;
+      } else if (char === ")") {
+        this._parenDepth--;
+      }
+
       this._addToken(typeToken, char);
       return;
     }
@@ -856,5 +871,64 @@ export class ConditionalLexer {
         expectedTokens: [], // Will be filled by parser
       },
     });
+  }
+
+  /**
+   * Check if character can start an unquoted literal in method arguments
+   */
+  private _isLiteralStartChar(char: string): boolean {
+    // Allow letters, digits, and common special characters as literal starts
+    return (
+      this._isAlphaNumeric(char) ||
+      char === "!" ||
+      char === "@" ||
+      char === "#" ||
+      char === "$" ||
+      char === "%" ||
+      char === "^" ||
+      char === "&" ||
+      char === "*" ||
+      char === "+" ||
+      char === "=" ||
+      char === "|" ||
+      char === "\\" ||
+      char === ":" ||
+      char === ";" ||
+      char === "<" ||
+      char === ">" ||
+      char === "?" ||
+      char === "/" ||
+      char === "~" ||
+      char === "`" ||
+      char === "[" ||
+      char === "]" ||
+      char === "{" ||
+      char === "}" ||
+      char === "_" ||
+      char === "-" ||
+      char === "."
+    );
+  }
+
+  /**
+   * Scan unquoted literal in method arguments
+   */
+  private _scanUnquotedLiteral(): void {
+    let value = this._input[this._position - 1];
+
+    // Continue scanning until we hit a delimiter
+    while (
+      !this._isAtEnd() &&
+      !this._isWhitespace(this._peek()) &&
+      this._peek() !== "," &&
+      this._peek() !== ")" &&
+      this._peek() !== "("
+    ) {
+      value += this._advance();
+    }
+
+    if (value.length > 0) {
+      this._addToken(TokenType.STRING, value);
+    }
   }
 }

@@ -23,8 +23,20 @@ import {
 } from "../types/ConditionalTypes";
 
 export class ConditionalEvaluator {
+  // Performance optimization: Cache for field value lookups
+  public static readonly fieldValueCache = new Map<string, any>();
+  public static readonly methodResultCache = new Map<string, boolean>();
+
   /**
-   * Evaluate a conditional AST against data
+   * Clear performance caches (call between different data sets)
+   */
+  static clearCaches(): void {
+    this.fieldValueCache.clear();
+    this.methodResultCache.clear();
+  }
+
+  /**
+   * Evaluate a conditional AST against data with performance optimizations
    */
   static evaluate(
     ast: ConditionalNode,
@@ -34,6 +46,7 @@ export class ConditionalEvaluator {
       debug?: boolean;
       schema?: Record<string, any>;
       validatePaths?: boolean;
+      enableCaching?: boolean;
     } = {}
   ): EvaluationResult {
     const context: EvaluationContext = {
@@ -44,11 +57,17 @@ export class ConditionalEvaluator {
         strict: false,
         debug: false,
         validatePaths: false,
+        enableCaching: true,
         ...options,
       },
     };
 
     const evaluator = new ConditionalEvaluationVisitor(context);
+
+    // Clear caches if caching is disabled or this is a new evaluation
+    if (!options.enableCaching) {
+      ConditionalEvaluator.clearCaches();
+    }
 
     try {
       const result = ASTWalker.walk(ast, evaluator);
@@ -197,16 +216,36 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
 
   /**
    * Get field value from runtime data without schema validation
-   * Used for runtime methods (starting with $)
+   * Used for runtime methods (starting with $) - with performance caching
    */
   private getRuntimeFieldValue(path: string[]): any {
+    const pathKey = path.join(".");
+
+    // Check cache first if caching is enabled
+    if (
+      this.context.options?.enableCaching &&
+      ConditionalEvaluator.fieldValueCache.has(pathKey)
+    ) {
+      return ConditionalEvaluator.fieldValueCache.get(pathKey);
+    }
+
     let current = this.context.data;
 
     for (const segment of path) {
       if (current === null || current === undefined) {
-        return undefined;
+        const result = undefined;
+        // Cache the result if caching is enabled
+        if (this.context.options?.enableCaching) {
+          ConditionalEvaluator.fieldValueCache.set(pathKey, result);
+        }
+        return result;
       }
       current = current[segment];
+    }
+
+    // Cache the result if caching is enabled
+    if (this.context.options?.enableCaching) {
+      ConditionalEvaluator.fieldValueCache.set(pathKey, current);
     }
 
     return current;
