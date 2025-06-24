@@ -306,5 +306,5 @@ const Schema = Interface({
 
 For complete documentation, see:
 - [Main README](../README.md)
-- [Field Types Reference](./FIELD-TYPES.md)
-- [Quick Reference](./QUICK-REFERENCE.md)
+- [Field Types Reference](./../FIELD-TYPES.md)
+- [Quick Reference](./../QUICK-REFERENCE.md)

@@ -218,7 +218,7 @@
       "patterns": [
         {
           "name": "support.function.fortify.method",
-          "match": "\\.(in|contains|startsWith|endsWith|between|exists|empty|null|!in|!contains|!startsWith|!endsWith|!between|!exists|!empty|!null)\\b"
+          "match": "\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b"
         },
         {
           "name": "punctuation.definition.fortify.method-call",

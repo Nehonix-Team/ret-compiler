@@ -31,7 +31,8 @@ export function activate(context: vscode.ExtensionContext) {
     "|", // Trigger on pipe for union types
     "=", // Trigger on equals for constants
     "(", // Trigger on parentheses for constraints
-    "." // Trigger on dot for method calls
+    ".", // Trigger on dot for property access
+    "$" // Trigger on dollar for V2 method calls
   );
 
   // Register hover provider for type information
@@ -57,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Register diagnostics provider for validation
   const diagnosticsProvider = new FortifyDiagnosticsProvider();
 
-  // Watch for document changes to provide real-time validation  
+  // Watch for document changes to provide real-time validation
   const documentChangeListener = vscode.workspace.onDidChangeTextDocument(
     (event) => {
       if (

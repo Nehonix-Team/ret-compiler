@@ -25,7 +25,8 @@ function activate(context) {
     "|", // Trigger on pipe for union types
     "=", // Trigger on equals for constants
     "(", // Trigger on parentheses for constraints
-    "." // Trigger on dot for method calls
+    ".", // Trigger on dot for property access
+    "$" // Trigger on dollar for V2 method calls
     );
     // Register hover provider for type information
     const hoverProvider = vscode.languages.registerHoverProvider(["typescript", "javascript"], new HoverProvider_1.FortifyHoverProvider());
@@ -35,7 +36,7 @@ function activate(context) {
     const definitionProvider = vscode.languages.registerDefinitionProvider(["typescript", "javascript", "markdown"], new DefinitionProvider_1.FortifyDefinitionProvider());
     // Register diagnostics provider for validation
     const diagnosticsProvider = new FortifyDiagnostics_1.FortifyDiagnosticsProvider();
-    // Watch for document changes to provide real-time validation  
+    // Watch for document changes to provide real-time validation
     const documentChangeListener = vscode.workspace.onDidChangeTextDocument((event) => {
         if (event.document.languageId === "typescript" ||
             event.document.languageId === "javascript" ||

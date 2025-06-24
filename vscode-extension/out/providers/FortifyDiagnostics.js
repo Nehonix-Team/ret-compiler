@@ -500,11 +500,11 @@ class FortifyDiagnosticsProvider {
         const diagnostics = [];
         // Remove "when " prefix if present
         const cleanCondition = condition.replace(/^when\s+/, "");
-        // Check for method calls like field.method() or field.!method()
-        // But exclude patterns like email~@company.com where .com is part of a domain
-        const methodMatch = cleanCondition.match(/(\w+)\.(!?)(\w+)(\([^)]*\))?/);
+        // Check for V2 method calls: property.$method() or property.nested.$method()
+        // Only support the new V2 syntax with $ prefix
+        const methodMatch = cleanCondition.match(/([\w.]+)\.\$(\w+)(\([^)]*\))?/);
         if (methodMatch) {
-            const [fullMatch, , , method, hasParens] = methodMatch;
+            const [fullMatch, , method, hasParens] = methodMatch;
             // Skip if this is part of a domain pattern (preceded by @ or ~)
             const beforeMatch = cleanCondition.substring(0, cleanCondition.indexOf(fullMatch));
             if (beforeMatch.includes("@") || beforeMatch.endsWith("~")) {

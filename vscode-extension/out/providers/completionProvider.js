@@ -25,7 +25,8 @@ class FortifyCompletionProvider {
             return this.getFortifyIgnoreCompletions(beforeCursor);
         }
         // Check if we're inside a string AND within an Interface({...}) block
-        if (!this.isInSchemaString(beforeCursor) || !this.isInInterfaceBlock(document, position)) {
+        if (!this.isInSchemaString(beforeCursor) ||
+            !this.isInInterfaceBlock(document, position)) {
             return [];
         }
         const completions = [];
@@ -35,9 +36,13 @@ class FortifyCompletionProvider {
         if (this.shouldShowConditionalCompletions(beforeCursor)) {
             completions.push(...this.getConditionalCompletions());
         }
-        // Add method completions if we're after a dot
-        if (beforeCursor.endsWith(".")) {
+        // Add method completions if we're after .$ (V2 syntax)
+        if (beforeCursor.endsWith(".$")) {
             completions.push(...this.getMethodCompletions());
+        }
+        // Add property suggestions when typing property names
+        if (this.shouldShowPropertySuggestions(beforeCursor)) {
+            completions.push(...this.getPropertySuggestions(document, position, beforeCursor));
         }
         return completions;
     }
@@ -46,19 +51,21 @@ class FortifyCompletionProvider {
      */
     isInComment(text) {
         // Check for single-line comment
-        const singleLineComment = text.lastIndexOf('//');
+        const singleLineComment = text.lastIndexOf("//");
         if (singleLineComment !== -1) {
             // Make sure we're not inside a string when the comment starts
             const beforeComment = text.substring(0, singleLineComment);
             const quoteCount = (beforeComment.match(/"/g) || []).length;
-            if (quoteCount % 2 === 0) { // Even number means we're not inside quotes
+            if (quoteCount % 2 === 0) {
+                // Even number means we're not inside quotes
                 return true;
             }
         }
         // Check for multi-line comment
-        const multiLineStart = text.lastIndexOf('/*');
-        const multiLineEnd = text.lastIndexOf('*/');
-        if (multiLineStart !== -1 && (multiLineEnd === -1 || multiLineStart > multiLineEnd)) {
+        const multiLineStart = text.lastIndexOf("/*");
+        const multiLineEnd = text.lastIndexOf("*/");
+        if (multiLineStart !== -1 &&
+            (multiLineEnd === -1 || multiLineStart > multiLineEnd)) {
             return true;
         }
         return false;
@@ -69,9 +76,11 @@ class FortifyCompletionProvider {
     getFortifyIgnoreCompletions(beforeCursor) {
         const completions = [];
         // Check if user is typing @fortify or similar
-        if (beforeCursor.includes('@fortify') || beforeCursor.includes('@fort') || beforeCursor.endsWith('@')) {
-            const ignoreItem = new vscode.CompletionItem('@fortify-ignore', vscode.CompletionItemKind.Snippet);
-            ignoreItem.detail = 'Disable Fortify Schema validation for this line';
+        if (beforeCursor.includes("@fortify") ||
+            beforeCursor.includes("@fort") ||
+            beforeCursor.endsWith("@")) {
+            const ignoreItem = new vscode.CompletionItem("@fortify-ignore", vscode.CompletionItemKind.Snippet);
+            ignoreItem.detail = "Disable Fortify Schema validation for this line";
             ignoreItem.documentation = new vscode.MarkdownString(`**@fortify-ignore** - Disables Fortify Schema validation\n\n` +
                 `Use this comment to suppress validation warnings for specific lines.\n\n` +
                 `**Usage:**\n` +
@@ -85,24 +94,24 @@ class FortifyCompletionProvider {
                 `\`\`\`typescript\n` +
                 `coordinates: "number(-90,90)" // @fortify-ignore\n` +
                 `\`\`\``);
-            ignoreItem.insertText = new vscode.SnippetString('@fortify-ignore');
-            ignoreItem.sortText = '0'; // Show at top of completion list
+            ignoreItem.insertText = new vscode.SnippetString("@fortify-ignore");
+            ignoreItem.sortText = "0"; // Show at top of completion list
             completions.push(ignoreItem);
             // Also add the full comment version
-            const commentItem = new vscode.CompletionItem('// @fortify-ignore', vscode.CompletionItemKind.Snippet);
-            commentItem.detail = 'Add @fortify-ignore comment';
+            const commentItem = new vscode.CompletionItem("// @fortify-ignore", vscode.CompletionItemKind.Snippet);
+            commentItem.detail = "Add @fortify-ignore comment";
             commentItem.documentation = new vscode.MarkdownString(`**// @fortify-ignore** - Complete comment to disable validation\n\n` +
                 `Adds a complete comment line to disable Fortify Schema validation for the next line.`);
-            commentItem.insertText = new vscode.SnippetString('// @fortify-ignore');
-            commentItem.sortText = '1';
+            commentItem.insertText = new vscode.SnippetString("// @fortify-ignore");
+            commentItem.sortText = "1";
             completions.push(commentItem);
             // Add multi-line comment version
-            const multiLineItem = new vscode.CompletionItem('/* @fortify-ignore */', vscode.CompletionItemKind.Snippet);
-            multiLineItem.detail = 'Add @fortify-ignore block comment';
+            const multiLineItem = new vscode.CompletionItem("/* @fortify-ignore */", vscode.CompletionItemKind.Snippet);
+            multiLineItem.detail = "Add @fortify-ignore block comment";
             multiLineItem.documentation = new vscode.MarkdownString(`**/* @fortify-ignore */** - Block comment to disable validation\n\n` +
                 `Adds a block comment to disable Fortify Schema validation.`);
-            multiLineItem.insertText = new vscode.SnippetString('/* @fortify-ignore */');
-            multiLineItem.sortText = '2';
+            multiLineItem.insertText = new vscode.SnippetString("/* @fortify-ignore */");
+            multiLineItem.sortText = "2";
             completions.push(multiLineItem);
         }
         return completions;
@@ -120,7 +129,7 @@ class FortifyCompletionProvider {
     isInInterfaceBlock(document, position) {
         const text = document.getText();
         const interfaceBlocks = this.findInterfaceBlocks(text);
-        return interfaceBlocks.some(block => position.line >= block.start && position.line <= block.end);
+        return interfaceBlocks.some((block) => position.line >= block.start && position.line <= block.end);
     }
     /**
      * Finds all Interface({...}) blocks in the text and returns their line ranges
@@ -156,7 +165,7 @@ class FortifyCompletionProvider {
                     escapeNext = false;
                     continue;
                 }
-                if (char === '\\') {
+                if (char === "\\") {
                     escapeNext = true;
                     continue;
                 }
@@ -165,10 +174,10 @@ class FortifyCompletionProvider {
                     continue;
                 }
                 if (!inString) {
-                    if (char === '{') {
+                    if (char === "{") {
                         braceCount++;
                     }
-                    else if (char === '}') {
+                    else if (char === "}") {
                         braceCount--;
                         if (braceCount === 0) {
                             return i;
@@ -197,7 +206,9 @@ class FortifyCompletionProvider {
             requiredItem.documentation = new vscode.MarkdownString(`**${type.name}** - ${type.description}\n\n**Examples:**\n${type.examples.map((ex) => `\`${ex}\``).join(", ")}`);
             completions.push(requiredItem);
             // Add constraint examples for numeric types
-            if (type.name === 'number' || type.name === 'int' || type.name === 'float') {
+            if (type.name === "number" ||
+                type.name === "int" ||
+                type.name === "float") {
                 // Add positive range example
                 const positiveRangeItem = new vscode.CompletionItem(`${type.name}(0,100)`, vscode.CompletionItemKind.Snippet);
                 positiveRangeItem.detail = `${type.category} with positive range constraint`;
@@ -224,22 +235,22 @@ class FortifyCompletionProvider {
                 completions.push(maxOnlyItem);
             }
             // Add constraint examples for string types
-            if (type.name === 'string') {
+            if (type.name === "string") {
                 // Add length constraint example
-                const lengthConstraintItem = new vscode.CompletionItem('string(2,50)', vscode.CompletionItemKind.Snippet);
-                lengthConstraintItem.detail = 'String with length constraint';
+                const lengthConstraintItem = new vscode.CompletionItem("string(2,50)", vscode.CompletionItemKind.Snippet);
+                lengthConstraintItem.detail = "String with length constraint";
                 lengthConstraintItem.documentation = new vscode.MarkdownString(`**string(min,max)** - String with length constraint\n\n**Example:** \`"string(2,50)"\` - accepts strings with 2-50 characters`);
                 lengthConstraintItem.insertText = new vscode.SnippetString(`string(\${1:2},\${2:50})`);
                 completions.push(lengthConstraintItem);
                 // Add minimum length only
-                const minLengthItem = new vscode.CompletionItem('string(1,)', vscode.CompletionItemKind.Snippet);
-                minLengthItem.detail = 'String with minimum length';
+                const minLengthItem = new vscode.CompletionItem("string(1,)", vscode.CompletionItemKind.Snippet);
+                minLengthItem.detail = "String with minimum length";
                 minLengthItem.documentation = new vscode.MarkdownString(`**string(min,)** - String with minimum length only\n\n**Example:** \`"string(1,)"\` - accepts strings with at least 1 character`);
                 minLengthItem.insertText = new vscode.SnippetString(`string(\${1:1},)`);
                 completions.push(minLengthItem);
                 // Add maximum length only
-                const maxLengthItem = new vscode.CompletionItem('string(,100)', vscode.CompletionItemKind.Snippet);
-                maxLengthItem.detail = 'String with maximum length';
+                const maxLengthItem = new vscode.CompletionItem("string(,100)", vscode.CompletionItemKind.Snippet);
+                maxLengthItem.detail = "String with maximum length";
                 maxLengthItem.documentation = new vscode.MarkdownString(`**string(,max)** - String with maximum length only\n\n**Example:** \`"string(,100)"\` - accepts strings with up to 100 characters`);
                 maxLengthItem.insertText = new vscode.SnippetString(`string(,\${1:100})`);
                 completions.push(maxLengthItem);
@@ -294,12 +305,12 @@ class FortifyCompletionProvider {
         return completions;
     }
     /**
-     * Get method completions from centralized definitions
+     * Get V2 method completions with $ prefix
      */
     getMethodCompletions() {
         const completions = [];
         for (const method of FORTIFY_METHODS_1.FORTIFY_METHODS) {
-            // Add regular method
+            // Add V2 method with $ prefix
             const item = new vscode.CompletionItem(method.name, vscode.CompletionItemKind.Method);
             item.detail = method.description;
             item.documentation = new vscode.MarkdownString(`**${method.name}** - ${method.description}\n\n**Syntax:**\n\`${method.syntax}\`\n\n**Examples:**\n${method.examples.map((ex) => `\`${ex}\``).join("\n")}`);
@@ -310,22 +321,104 @@ class FortifyCompletionProvider {
                     .join(",");
                 item.insertText = new vscode.SnippetString(`${method.name}(${paramSnippets})`);
             }
-            completions.push(item);
-            // Add negated version if supported
-            if (method.supportsNegation) {
-                const negatedItem = new vscode.CompletionItem(`!${method.name}`, vscode.CompletionItemKind.Method);
-                negatedItem.detail = `Negated ${method.description}`;
-                negatedItem.documentation = new vscode.MarkdownString(`**!${method.name}** - Negated ${method.description}\n\n**Syntax:**\n\`field.!${method.name}\`\n\n**Examples:**\n\`when field.!${method.name} *? type : type\``);
-                if (method.parameters.length > 0) {
-                    const paramSnippets = method.parameters
-                        .map((_, index) => `$${index + 1}`)
-                        .join(",");
-                    negatedItem.insertText = new vscode.SnippetString(`!${method.name}(${paramSnippets})`);
-                }
-                completions.push(negatedItem);
+            else {
+                // For methods without parameters, still add parentheses
+                item.insertText = new vscode.SnippetString(`${method.name}()`);
             }
+            completions.push(item);
         }
         return completions;
+    }
+    /**
+     * Check if we should show property suggestions
+     */
+    shouldShowPropertySuggestions(text) {
+        // Show property suggestions when we're in a conditional context
+        // and typing after "when " or after a dot in property chains
+        return (text.includes("when ") &&
+            !text.endsWith(".$") &&
+            !text.includes("*?") &&
+            !text.includes(":"));
+    }
+    /**
+     * Get property suggestions based on context
+     */
+    getPropertySuggestions(document, position, beforeCursor) {
+        const completions = [];
+        // Extract the schema object to find available properties
+        const schemaProperties = this.extractSchemaProperties(document, position);
+        // Get the current typing context (what the user is typing)
+        const typingContext = this.getTypingContext(beforeCursor);
+        // Filter properties based on what user is typing
+        const filteredProperties = schemaProperties.filter((prop) => prop.toLowerCase().startsWith(typingContext.toLowerCase()));
+        // Add property completions
+        filteredProperties.forEach((property) => {
+            const item = new vscode.CompletionItem(property, vscode.CompletionItemKind.Property);
+            item.detail = `Schema property: ${property}`;
+            item.documentation = new vscode.MarkdownString(`**${property}** - Property from the current schema object\n\n` +
+                `Use with V2 methods: \`${property}.$exists()\`, \`${property}.$empty()\`, etc.`);
+            // Add snippet for common usage
+            item.insertText = new vscode.SnippetString(`${property}.$\${1|exists,empty,null,contains,startsWith,endsWith,between,in|}($2)`);
+            completions.push(item);
+        });
+        return completions;
+    }
+    /**
+     * Extract property names from the current schema object
+     */
+    extractSchemaProperties(document, position) {
+        const properties = [];
+        try {
+            // Find the Interface({ ... }) block containing the current position
+            const text = document.getText();
+            const lines = text.split("\n");
+            // Look for Interface({ pattern and extract properties
+            let inInterfaceBlock = false;
+            let braceCount = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                // Check if we're entering an Interface block
+                // @fortify-ignore
+                if (line.includes("Interface({")) {
+                    inInterfaceBlock = true;
+                    braceCount =
+                        (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
+                    continue;
+                }
+                if (inInterfaceBlock) {
+                    // Update brace count
+                    braceCount +=
+                        (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
+                    // Extract property names from lines like: propertyName: "type",
+                    const propertyMatch = line.match(/^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/);
+                    if (propertyMatch) {
+                        properties.push(propertyMatch[1]);
+                    }
+                    // Exit when we close the Interface block
+                    if (braceCount <= 0) {
+                        break;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.warn("Failed to extract schema properties:", error);
+        }
+        return properties;
+    }
+    /**
+     * Get what the user is currently typing for property suggestions
+     */
+    getTypingContext(beforeCursor) {
+        // Extract the word being typed after "when "
+        const whenMatch = beforeCursor.match(/when\s+([a-zA-Z_$][a-zA-Z0-9_$.]*)$/);
+        if (whenMatch) {
+            const fullPath = whenMatch[1];
+            // Return the last part after the last dot
+            const parts = fullPath.split(".");
+            return parts[parts.length - 1];
+        }
+        return "";
     }
 }
 exports.FortifyCompletionProvider = FortifyCompletionProvider;

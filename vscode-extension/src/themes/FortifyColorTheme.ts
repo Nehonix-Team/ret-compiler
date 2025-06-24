@@ -50,7 +50,15 @@ export class FortifyColorThemeManager {
       // const schemeName = "SYNTHWAVE_COLOR_SCHEME";
       const scheme = FortifyColorSchemes.getScheme(schemeName);
       if (!scheme) {
-        throw new Error(`Color scheme '${schemeName}' not found`);
+        throw new Error(
+          `Color scheme '${schemeName}' not found. Available schemes: ${
+            FortifyColorSchemes.getAllSchemes().length >= 16
+              ? FortifyColorSchemes.getAllSchemes()
+                  .map((scheme) => scheme.name)
+                  .join(", ")
+              : "Up to 15 schemes available."
+          }`
+        );
       }
 
       const config = vscode.workspace.getConfiguration();

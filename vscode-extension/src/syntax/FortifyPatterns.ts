@@ -7,7 +7,7 @@
 
 import { FortifySyntaxUtils } from "./FortifySyntaxDefinitions";
 import { FORTIFY_CONDITIONAL_KEYWORDS } from "./mods/definitions/CONDITIONAL_KEYWORDS";
- 
+
 // Re-export FortifySyntaxUtils for convenience
 export { FortifySyntaxUtils };
 
@@ -89,19 +89,13 @@ export class FortifyPatterns {
   }
 
   /**
-   * Generate regex pattern for method calls
+   * Generate regex pattern for V2 method calls with $ prefix
    */
   static getMethodPattern(): RegExp {
     const methods = FortifySyntaxUtils.getAllMethodNames();
-    const negatableMethods = FortifySyntaxUtils.getNegatableMethodNames();
 
-    // Include both regular and negated versions
-    const allMethods = [
-      ...methods,
-      ...negatableMethods.map((method) => `!${method}`),
-    ];
-
-    const pattern = `\\.(${allMethods.join("|")})\\b`;
+    // V2 syntax uses $method() format
+    const pattern = `\\.\\$(${methods.join("|")})\\b`;
     return new RegExp(pattern);
   }
 

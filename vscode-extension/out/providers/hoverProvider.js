@@ -15,15 +15,27 @@ class FortifyHoverProvider {
      * Provide hover information for Fortify Schema elements
      */
     provideHover(document, position, _token) {
-        const range = document.getWordRangeAtPosition(position);
-        if (!range) {
-            return null;
-        }
-        const word = document.getText(range);
         const line = document.lineAt(position);
         const lineText = line.text;
         // Check if we're in a string that contains schema syntax AND within an Interface block
-        if (!this.isInSchemaContext(lineText, position.character) || !this.isInInterfaceBlock(document, position)) {
+        if (!this.isInSchemaContext(lineText, position.character) ||
+            !this.isInInterfaceBlock(document, position)) {
+            return null;
+        }
+        // Get word range, including $ prefix for V2 methods
+        let range = document.getWordRangeAtPosition(position);
+        let word = range ? document.getText(range) : "";
+        // Check if there's a $ before the word (V2 method syntax)
+        if (range && position.character > 0) {
+            const charBefore = lineText.charAt(range.start.character - 1);
+            if (charBefore === "$") {
+                // Extend range to include the $ prefix
+                const extendedRange = new vscode.Range(new vscode.Position(range.start.line, range.start.character - 1), range.end);
+                word = document.getText(extendedRange);
+                range = extendedRange;
+            }
+        }
+        if (!range || !word) {
             return null;
         }
         // Get hover information based on the word
@@ -52,7 +64,7 @@ class FortifyHoverProvider {
     isInInterfaceBlock(document, position) {
         const text = document.getText();
         const interfaceBlocks = this.findInterfaceBlocks(text);
-        return interfaceBlocks.some(block => position.line >= block.start && position.line <= block.end);
+        return interfaceBlocks.some((block) => position.line >= block.start && position.line <= block.end);
     }
     /**
      * Finds all Interface({...}) blocks in the text and returns their line ranges
@@ -88,7 +100,7 @@ class FortifyHoverProvider {
                     escapeNext = false;
                     continue;
                 }
-                if (char === '\\') {
+                if (char === "\\") {
                     escapeNext = true;
                     continue;
                 }
@@ -97,10 +109,10 @@ class FortifyHoverProvider {
                     continue;
                 }
                 if (!inString) {
-                    if (char === '{') {
+                    if (char === "{") {
                         braceCount++;
                     }
-                    else if (char === '}') {
+                    else if (char === "}") {
                         braceCount--;
                         if (braceCount === 0) {
                             return i;
@@ -180,16 +192,20 @@ class FortifyHoverProvider {
      * Get hover info for methods using centralized definitions
      */
     getMethodInfo(word) {
-        // Handle negated methods
-        const methodName = word.startsWith("!") ? word.substring(1) : word;
-        const isNegated = word.startsWith("!");
+        // Handle V2 method syntax with $ prefix
+        let methodName = word;
+        let isV2Method = false;
+        if (word.startsWith("$")) {
+            methodName = word.substring(1);
+            isV2Method = true;
+        }
         const methodDefinition = FortifyPatterns_1.FortifySyntaxUtils.getMethodDefinition(methodName);
         if (methodDefinition) {
             const content = new vscode.MarkdownString();
-            content.appendMarkdown(`**${word}** - Fortify Schema Method\n\n`);
+            content.appendMarkdown(`**${word}** - Fortify Schema V2 Method\n\n`);
             content.appendMarkdown(`${methodDefinition.description}\n\n`);
-            if (isNegated) {
-                content.appendMarkdown("*This is the negated version of the method*\n\n");
+            if (isV2Method) {
+                content.appendMarkdown("*This is the V2 runtime method syntax*\n\n");
             }
             content.appendMarkdown("**Syntax:**\n");
             content.appendCodeblock(methodDefinition.syntax, "typescript");

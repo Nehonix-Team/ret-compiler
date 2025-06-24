@@ -79,17 +79,12 @@ class FortifyPatterns {
         return new RegExp(pattern);
     }
     /**
-     * Generate regex pattern for method calls
+     * Generate regex pattern for V2 method calls with $ prefix
      */
     static getMethodPattern() {
         const methods = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllMethodNames();
-        const negatableMethods = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getNegatableMethodNames();
-        // Include both regular and negated versions
-        const allMethods = [
-            ...methods,
-            ...negatableMethods.map((method) => `!${method}`),
-        ];
-        const pattern = `\\.(${allMethods.join("|")})\\b`;
+        // V2 syntax uses $method() format
+        const pattern = `\\.\\$(${methods.join("|")})\\b`;
         return new RegExp(pattern);
     }
     /**

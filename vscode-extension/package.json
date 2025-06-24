@@ -20,7 +20,12 @@
     "schema",
     "fortify",
     "conditional-validation",
-    "interface-syntax"
+    "interface-syntax",
+    "v2",
+    "runtime-methods",
+    "property-exists",
+    "unicode-support",
+    "complex-defaults"
   ],
   "activationEvents": [
     "onLanguage:typescript",
