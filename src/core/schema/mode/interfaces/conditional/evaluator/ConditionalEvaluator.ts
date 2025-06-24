@@ -156,13 +156,17 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
   }
 
   visitMethodCall(node: MethodCallNode): boolean {
-    const fieldValue = ASTWalker.walk(node.field, this);
+    // Use runtime field access for runtime methods, schema validation for legacy methods
+    const fieldValue = node.isRuntimeMethod
+      ? this.getRuntimeFieldValue(node.field.path)
+      : ASTWalker.walk(node.field, this);
+
     const args = node.arguments
       ? node.arguments.map((arg) => ASTWalker.walk(arg, this))
       : [];
 
     this.debugPath.push(
-      `Calling method ${TokenType[node.method]} on ${fieldValue} with args [${args.join(", ")}]`
+      `Calling ${node.isRuntimeMethod ? "runtime" : "legacy"} method ${TokenType[node.method]} on ${fieldValue} with args [${args.join(", ")}]`
     );
 
     const result = this.performMethodCall(fieldValue, node.method, args);
@@ -189,6 +193,23 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
 
   visitArray(node: ArrayNode): any[] {
     return node.elements.map((element) => ASTWalker.walk(element, this));
+  }
+
+  /**
+   * Get field value from runtime data without schema validation
+   * Used for runtime methods (starting with $)
+   */
+  private getRuntimeFieldValue(path: string[]): any {
+    let current = this.context.data;
+
+    for (const segment of path) {
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+      current = current[segment];
+    }
+
+    return current;
   }
 
   /**

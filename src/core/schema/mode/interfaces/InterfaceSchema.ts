@@ -147,6 +147,7 @@ export class InterfaceSchema<T = any> {
 
           // Parse with parser
           const { ast, errors } = this.ConditionalParser.parse(fieldType);
+
           if (ast && errors.length === 0) {
             compiled.ConditionalAST = ast;
           } else {
@@ -746,12 +747,12 @@ export class InterfaceSchema<T = any> {
     fullData: any
   ): SchemaValidationResult {
     try {
-      // Evaluate the conditional expression against the full data
+      // Evaluate the full conditional to get the expected schema
       const evaluationResult = ConditionalEvaluator.evaluate(ast, fullData, {
         strict: this.options.strict || false,
-        debug: false,
-        schema: this.definition, // Pass schema for path validation
-        validatePaths: true, // Enable path validation
+        debug: true, // Enable debug to get condition result
+        schema: this.definition,
+        validatePaths: true,
       });
 
       if (!evaluationResult.success) {
@@ -763,8 +764,9 @@ export class InterfaceSchema<T = any> {
         };
       }
 
-      // Get the expected schema from the evaluation result
+      // Get the expected schema and condition result
       const expectedSchema = evaluationResult.value;
+      const conditionIsTrue = evaluationResult.debugInfo?.finalCondition;
 
       if (expectedSchema === undefined) {
         // No schema constraint, accept the value
@@ -776,36 +778,41 @@ export class InterfaceSchema<T = any> {
         };
       }
 
-      // If the expected schema is a constant value (starts with =), validate against it
-      if (typeof expectedSchema === "string") {
-        // Handle constant values that start with =
-        if (expectedSchema.startsWith("=")) {
-          const expectedValue = expectedSchema.slice(1); // Remove the = prefix
+      // CRITICAL FIX: Handle constant values (defaults) properly
+      if (
+        typeof expectedSchema === "string" &&
+        expectedSchema.startsWith("=")
+      ) {
+        const expectedValue = expectedSchema.slice(1); // Remove the = prefix
 
-          // Handle special constant values
-          let actualExpectedValue: any = expectedValue;
-          if (expectedValue === "null") {
-            actualExpectedValue = null;
-          } else if (expectedValue === "true") {
-            actualExpectedValue = true;
-          } else if (expectedValue === "false") {
-            actualExpectedValue = false;
-          } else if (/^\d+(\.\d+)?$/.test(expectedValue)) {
-            actualExpectedValue = parseFloat(expectedValue);
-          }
-
-          // For conditional fields, set the value to the constant instead of validating input
-          return {
-            success: true,
-            errors: [],
-            warnings: [],
-            data: actualExpectedValue, // Set the field to the constant value
-          };
+        // Handle special constant values
+        let actualExpectedValue: any = expectedValue;
+        if (expectedValue === "null") {
+          actualExpectedValue = null;
+        } else if (expectedValue === "true") {
+          actualExpectedValue = true;
+        } else if (expectedValue === "false") {
+          actualExpectedValue = false;
+        } else if (/^\d+(\.\d+)?$/.test(expectedValue)) {
+          actualExpectedValue = parseFloat(expectedValue);
         }
 
-        // Handle non-constant string schemas (like "boolean", "string", etc.)
-        // These should be validated as types, not as literal string values
+        // KEY INSIGHT: If we got a constant value, it means the condition was FALSE
+        // (runtime property doesn't exist), so we should ALWAYS use the default
+        // and IGNORE the user's input entirely
+        return {
+          success: true,
+          errors: [],
+          warnings: [],
+          data: actualExpectedValue, // Always use default when condition is false
+        };
+      }
+
+      // Handle non-constant string schemas (like "boolean", "string", etc.)
+      // For conditionals, validate user input against the expected type
+      if (typeof expectedSchema === "string") {
         if (expectedSchema === "boolean") {
+          // Validate that user provided a boolean
           if (typeof value !== "boolean") {
             return {
               success: false,
@@ -814,6 +821,7 @@ export class InterfaceSchema<T = any> {
               data: value,
             };
           }
+          // Keep user's boolean value
           return {
             success: true,
             errors: [],
@@ -823,6 +831,7 @@ export class InterfaceSchema<T = any> {
         }
 
         if (expectedSchema === "string") {
+          // Validate that user provided a string
           if (typeof value !== "string") {
             return {
               success: false,
@@ -831,6 +840,7 @@ export class InterfaceSchema<T = any> {
               data: value,
             };
           }
+          // Keep user's string value
           return {
             success: true,
             errors: [],
@@ -839,11 +849,19 @@ export class InterfaceSchema<T = any> {
           };
         }
 
-        if (expectedSchema === "number") {
+        if (expectedSchema === "number" || expectedSchema === "int") {
           if (typeof value !== "number") {
             return {
               success: false,
               errors: [`Expected number, got ${typeof value}`],
+              warnings: [],
+              data: value,
+            };
+          }
+          if (expectedSchema === "int" && !Number.isInteger(value)) {
+            return {
+              success: false,
+              errors: [`Expected integer, got ${value}`],
               warnings: [],
               data: value,
             };
@@ -855,10 +873,7 @@ export class InterfaceSchema<T = any> {
             data: value,
           };
         }
-      }
 
-      // For other schema types, validate the value against the schema
-      if (typeof expectedSchema === "string") {
         // Handle array types specially
         if (expectedSchema.endsWith("[]") || expectedSchema.endsWith("[]?")) {
           const isOptional = expectedSchema.endsWith("[]?");

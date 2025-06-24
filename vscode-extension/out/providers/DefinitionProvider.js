@@ -202,29 +202,6 @@ class FortifyDefinitionProvider {
         }
         return undefined;
     }
-    /**
-     * Extract the base property name from a conditional expression
-     * Examples:
-     * - "when fields.exists" -> "fields"
-     * - "when user.profile.name.startsWith('A')" -> "user"
-     * - "when accountType=premium" -> "accountType"
-     */
-    extractBasePropertyFromConditional(lineText, cursorPosition) {
-        // Find the "when" keyword before the cursor
-        const whenMatch = lineText.match(/\bwhen\s+([a-zA-Z_][a-zA-Z0-9_.]*)/);
-        if (!whenMatch) {
-            return undefined;
-        }
-        const fullExpression = whenMatch[1]; // e.g., "fields.exists" or "user.profile.name"
-        // Check if cursor is within this expression
-        const expressionStart = whenMatch.index + whenMatch[0].indexOf(fullExpression);
-        const expressionEnd = expressionStart + fullExpression.length;
-        if (cursorPosition >= expressionStart && cursorPosition <= expressionEnd) {
-            // Return the base property (first part before any dots)
-            return fullExpression.split(".")[0];
-        }
-        return undefined;
-    }
 }
 exports.FortifyDefinitionProvider = FortifyDefinitionProvider;
 //# sourceMappingURL=DefinitionProvider.js.map

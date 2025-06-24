@@ -129,12 +129,13 @@ export interface ComparisonNode extends ASTNode {
   right: LiteralNode;
 }
 
-// Method call: field.in(values), field.exists, etc.
+// Method call: field.in(values), field.exists, field.$exists(), etc.
 export interface MethodCallNode extends ASTNode {
   type: ASTNodeType.METHOD_CALL;
   method: TokenType;
   field: FieldAccessNode;
   arguments?: LiteralNode[];
+  isRuntimeMethod?: boolean; // Flag to indicate runtime methods (starting with $)
 }
 
 // Field access: simple field or nested field.subfield

@@ -8,13 +8,13 @@
 import { SchemaValidationResult } from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
-import { OptimizedUnionValidator  as OUV} from "./UnionCache";
+import { OptimizedUnionValidator as OUV } from "./UnionCache";
 
 // Cache for parsed constant values to avoid repeated parsing
 const constantCache = new Map<string, any>();
 
 // Pre-compiled regex patterns for better performance
-const NUMERIC_PATTERN = /^\d+(\.\d+)?$/; 
+const NUMERIC_PATTERN = /^\d+(\.\d+)?$/;
 const BOOLEAN_PATTERN = /^(true|false)$/;
 
 /**
@@ -276,6 +276,18 @@ export class ValidationHelpers {
     options: SchemaOptions,
     constraints: any
   ): SchemaValidationResult {
+    // Handle array types first (e.g., "string[]", "number[]", etc.)
+    if (type.endsWith("[]")) {
+      const elementType = type.slice(0, -2); // Remove "[]" suffix
+      return this.validateArrayWithConstraints(
+        value,
+        elementType,
+        constraints,
+        (elementType: string, elementValue: any) =>
+          this.routeTypeValidation(elementType, elementValue, options, {})
+      );
+    }
+
     // Use switch with grouped cases for better optimization
     switch (type) {
       case "string":

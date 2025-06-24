@@ -260,6 +260,38 @@ export class SchemaCompiler {
     options: any
   ): (value: any) => SchemaValidationResult {
     if (typeof fieldType === "string") {
+      // Check for conditional syntax first
+      if (fieldType.includes("when ") && fieldType.includes(" *? ")) {
+        // This is a conditional field - delegate to InterfaceSchema
+        const {
+          InterfaceSchema,
+        } = require("../mode/interfaces/InterfaceSchema");
+        const tempSchema = new InterfaceSchema(
+          { temp: fieldType },
+          {
+            ...options,
+            skipOptimization: true,
+          }
+        );
+        return (value: any, fullData?: any) => {
+          // For conditional fields, we need the full data context for runtime methods
+          const dataToValidate = fullData
+            ? { temp: value, ...fullData }
+            : { temp: value };
+          const result = tempSchema.safeParse(dataToValidate);
+          return {
+            success: result.success,
+            errors: result.errors.map((err: string) =>
+              err.replace("temp: ", "")
+            ),
+            warnings: result.warnings.map((warn: string) =>
+              warn.replace("temp: ", "")
+            ),
+            data: result.success ? result.data?.temp : undefined,
+          };
+        };
+      }
+
       // Pre-parse the field type for optimization
       const {
         ValidationHelpers,
@@ -298,7 +330,7 @@ export class SchemaCompiler {
 
       if (type === "string") {
         // Optimized string validator
-        return (value: any): SchemaValidationResult => {
+        return (value: any, fullData?: any): SchemaValidationResult => {
           if (value === undefined && optional) {
             return {
               success: true,
@@ -337,7 +369,7 @@ export class SchemaCompiler {
 
       if (type === "number" || type === "int") {
         // Optimized number validator
-        return (value: any): SchemaValidationResult => {
+        return (value: any, fullData?: any): SchemaValidationResult => {
           if (value === undefined && optional) {
             return {
               success: true,
@@ -383,7 +415,7 @@ export class SchemaCompiler {
       }
 
       // Fallback to ValidationHelpers for complex types
-      return (value: any): SchemaValidationResult => {
+      return (value: any, fullData?: any): SchemaValidationResult => {
         return ValidationHelpers.routeTypeValidation(
           type,
           value,
@@ -394,7 +426,7 @@ export class SchemaCompiler {
     }
 
     // Fallback for non-string field types
-    return (value: any): SchemaValidationResult => {
+    return (value: any, fullData?: any): SchemaValidationResult => {
       return { success: true, errors: [], warnings: [], data: value };
     };
   }
@@ -478,7 +510,7 @@ export class SchemaCompiler {
       for (const [pathKey, validator] of structure.validators) {
         const fieldKey = pathKey.split(".").pop();
         const fieldValue = value[fieldKey!];
-        const result = validator(fieldValue);
+        const result = validator(fieldValue, value); // Pass full data context
 
         if (!result.success) {
           errors.push(`${fieldKey}: ${result.errors.join(", ")}`);
@@ -494,7 +526,7 @@ export class SchemaCompiler {
         const field = structure.fields.get(path);
 
         if (field.type === "primitive") {
-          const result = field.validator(fieldValue);
+          const result = field.validator(fieldValue, value); // Pass full data context
           if (!result.success) {
             errors.push(`${path}: ${result.errors.join(", ")}`);
           } else {

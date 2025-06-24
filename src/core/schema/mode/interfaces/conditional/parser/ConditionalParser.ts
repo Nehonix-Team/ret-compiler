@@ -206,7 +206,7 @@ export class ConditionalParser {
   }
 
   /**
-   * Parse method call: field.method(args) or field.!method
+   * Parse method call: field.$method(args) or field.!method
    */
   private parseMethodCall(
     field: FieldAccessNode,
@@ -214,57 +214,35 @@ export class ConditionalParser {
   ): MethodCallNode {
     let methodName = "";
     let methodType: TokenType | undefined;
+    let isRuntimeMethod = false;
 
-    // Handle methods that start with ! (like !exists, !empty)
-    if (this.check(TokenType.NOT)) {
-      methodName += this.advance().value; // consume '!'
+    // Only handle runtime methods that start with $ (like $exists, $empty)
+    if (this.check(TokenType.DOLLAR)) {
+      this.advance(); // consume '$'
 
       if (!this.check(TokenType.IDENTIFIER)) {
-        throw new Error('Expected method name after "!"');
+        throw new Error('Expected method name after "$"');
       }
 
-      methodName += this.advance().value; // consume method name
-      methodType = this.getMethodTokenType(methodName);
-    }
-    // Handle negated method tokens that are already parsed as operators
-    else if (this.check(TokenType.NOT_NULL)) {
-      methodName = this.advance().value; // consume '!null'
-      methodType = TokenType.NOT_NULL;
-    } else if (this.check(TokenType.NOT_IN)) {
-      methodName = this.advance().value; // consume '!in'
-      methodType = TokenType.NOT_IN;
-    } else if (this.check(TokenType.NOT_CONTAINS)) {
-      methodName = this.advance().value; // consume '!contains'
-      methodType = TokenType.NOT_CONTAINS;
-    } else if (this.check(TokenType.IDENTIFIER)) {
-      methodName = this.advance().value;
-      methodType = this.getMethodTokenType(methodName);
+      const baseMethodName = this.advance().value; // consume method name
+      methodName = `$${baseMethodName}`;
+      methodType = this.getMethodTokenType(baseMethodName); // Map to base method type
+      isRuntimeMethod = true;
     } else {
-      throw new Error('Expected method name after "."');
+      throw new Error(
+        "Only $method() syntax is supported. Use property.$method() instead of property.method"
+      );
     }
 
     if (!methodType) {
       throw new Error(`Unknown method: ${methodName}`);
     }
 
-    // Handle methods without parentheses (like .exists, .empty, .null)
+    // All runtime methods require parentheses
     if (!this.check(TokenType.LPAREN)) {
-      if (
-        methodType === TokenType.EXISTS ||
-        methodType === TokenType.NOT_EXISTS ||
-        methodType === TokenType.EMPTY ||
-        methodType === TokenType.NOT_EMPTY ||
-        methodType === TokenType.NULL ||
-        methodType === TokenType.NOT_NULL
-      ) {
-        return ASTBuilder.createMethodCall(
-          methodType,
-          field,
-          undefined,
-          position
-        );
-      }
-      throw new Error(`Method "${methodName}" requires parentheses`);
+      throw new Error(
+        `Runtime method "${methodName}" requires parentheses: ${methodName}()`
+      );
     }
 
     // Parse method arguments
@@ -281,7 +259,13 @@ export class ConditionalParser {
       throw new Error('Expected ")" after method arguments');
     }
 
-    return ASTBuilder.createMethodCall(methodType, field, args, position);
+    return ASTBuilder.createMethodCall(
+      methodType,
+      field,
+      args,
+      position,
+      isRuntimeMethod
+    );
   }
 
   /**
@@ -302,10 +286,9 @@ export class ConditionalParser {
       this.check(TokenType.DOT) &&
       this.peekNext()?.type === TokenType.IDENTIFIER
     ) {
-      // Check if the next identifier is a method name
-      const nextToken = this.peekNext();
-      if (nextToken && this.isMethodName(nextToken.value)) {
-        break; // Stop here, let parseComparison handle the method call
+      // Check if the next token is a runtime method ($method)
+      if (this.peekNext()?.type === TokenType.DOLLAR) {
+        break; // Stop here, let parseComparison handle the runtime method call
       }
 
       this.advance(); // consume '.'
@@ -633,10 +616,6 @@ export class ConditionalParser {
     };
 
     return methodMap[methodName];
-  }
-
-  private isMethodName(name: string): boolean {
-    return this.getMethodTokenType(name) !== undefined;
   }
 
   private addError(

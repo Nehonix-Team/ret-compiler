@@ -6,7 +6,7 @@ import { MethodDefinition } from "../../../types";
  */
 export const FORTIFY_METHODS: MethodDefinition[] = [
   {
-    name: "in",
+    name: "in", 
     description:
       "Checks if a field value is one of the specified literals. Supports strings, numbers, or constants.",
     syntax: "field.in(value1, value2, ...)",
