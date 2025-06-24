@@ -176,6 +176,12 @@ export class ConditionalLexer {
       return;
     }
 
+    // Handle constant values (=value) BEFORE operators to catch =-1 syntax
+    if (char === "=" && this._peek() !== "=" && this._peek() !== "!") {
+      this._scanConstant();
+      return;
+    }
+
     // Handle operators (multi-character first)
     if (this._tryOperator()) {
       return;
@@ -209,12 +215,6 @@ export class ConditionalLexer {
     const typeToken = ConditionalLexer._TYPE_SYNTAX_CHARS.get(char);
     if (typeToken) {
       this._addToken(typeToken, char);
-      return;
-    }
-
-    // Handle constant values (=value)
-    if (char === "=" && this._peek() !== "=" && this._peek() !== "!") {
-      this._scanConstant();
       return;
     }
 
@@ -393,7 +393,8 @@ export class ConditionalLexer {
   private _scanIdentifier(): void {
     let value = this._input[this._position - 1];
 
-    while (this._isAlphaNumeric(this._peek())) {
+    // Handle multi-byte Unicode characters (like emojis)
+    while (this._isAlphaNumeric(this._peek()) || this._isEmojiContinuation()) {
       value += this._advance();
     }
 
@@ -415,6 +416,17 @@ export class ConditionalLexer {
     }
 
     this._addToken(TokenType.IDENTIFIER, value);
+  }
+
+  /**
+   * Check if the current character is part of an emoji continuation
+   */
+  private _isEmojiContinuation(): boolean {
+    const char = this._peek();
+    const code = char.charCodeAt(0);
+
+    // Low surrogate range (second part of emoji)
+    return code >= 0xdc00 && code <= 0xdfff;
   }
 
   /**
@@ -474,31 +486,81 @@ export class ConditionalLexer {
 
     // Skip the '=' character (already consumed)
     // Handle negative numbers by allowing minus sign at the start
-    if (this._peek() === "-" && this._isDigit(this._peekNext())) {
-      value += this._advance(); // consume '-'
+    if (this._peek() === "-") {
+      // Check if it's a negative number (- followed by digit or .)
+      const nextChar = this._peekNext();
+      if (this._isDigit(nextChar) || nextChar === ".") {
+        value += this._advance(); // consume '-'
+      }
     }
 
-    while (
-      !this._isAtEnd() &&
-      !this._isWhitespace(this._peek()) &&
-      this._peek() !== ":" &&
-      this._peek() !== ")" &&
-      this._peek() !== "]" &&
-      this._peek() !== ","
-    ) {
-      value += this._advance();
+    // Check if this is an array or object literal
+    const isArrayLiteral = this._peek() === "[";
+    const isObjectLiteral = this._peek() === "{";
+
+    if (isArrayLiteral || isObjectLiteral) {
+      // Handle complex literals with bracket/brace matching
+      value += this._scanComplexLiteral();
+    } else {
+      // Handle simple constants (strings, numbers, booleans)
+      while (
+        !this._isAtEnd() &&
+        !this._isWhitespace(this._peek()) &&
+        this._peek() !== ":" &&
+        this._peek() !== ")" &&
+        this._peek() !== "]" &&
+        this._peek() !== ","
+      ) {
+        value += this._advance();
+      }
     }
 
     if (value.length === 0) {
       this._addError(
         ErrorType.SYNTAX_ERROR,
         "Empty constant value after =",
-        "Provide a value after = (e.g., =admin, =true, =42, =-1)"
+        "Provide a value after = (e.g., =admin, =true, =42, =-1, =[1,2,3])"
       );
       return;
     }
 
     this._addToken(TokenType.CONSTANT, value);
+  }
+
+  /**
+   * Scan complex literal (array or object) with proper bracket/brace matching
+   */
+  private _scanComplexLiteral(): string {
+    let value = "";
+    let depth = 0;
+    const startChar = this._peek();
+    const endChar = startChar === "[" ? "]" : "}";
+
+    // Consume the opening bracket/brace
+    value += this._advance();
+    depth++;
+
+    while (!this._isAtEnd() && depth > 0) {
+      const char = this._peek();
+
+      if (char === startChar) {
+        depth++;
+      } else if (char === endChar) {
+        depth--;
+      }
+
+      value += this._advance();
+
+      // Stop at whitespace or conditional operators only if we're at depth 0
+      if (
+        depth === 0 &&
+        (this._isWhitespace(char) || char === ":" || char === "*")
+      ) {
+        break;
+      }
+    }
+
+    return value;
   }
 
   /**
@@ -668,12 +730,88 @@ export class ConditionalLexer {
     return (
       (char >= "a" && char <= "z") ||
       (char >= "A" && char <= "Z") ||
-      char === "_"
+      char === "_" ||
+      this._isUnicodeAlpha(char)
     );
   }
 
   private _isAlphaNumeric(char: string): boolean {
     return this._isAlpha(char) || this._isDigit(char);
+  }
+
+  /**
+   * Check if character is Unicode alphabetic (for international identifiers)
+   */
+  private _isUnicodeAlpha(char: string): boolean {
+    try {
+      // Enhanced Unicode support including emojis and symbols
+      return (
+        /\p{L}/u.test(char) || // Letters
+        /\p{Emoji}/u.test(char) || // Emojis
+        /\p{Symbol}/u.test(char) || // Symbols
+        /\p{Mark}/u.test(char) || // Combining marks
+        this._isEmojiCharacter(char) // Additional emoji detection
+      );
+    } catch (error) {
+      // Fallback for older environments
+      return this._isUnicodeAlphaFallback(char);
+    }
+  }
+
+  /**
+   * Enhanced emoji character detection
+   */
+  private _isEmojiCharacter(char: string): boolean {
+    const code = char.charCodeAt(0);
+
+    // Common emoji ranges
+    return (
+      // Emoticons
+      (code >= 0x1f600 && code <= 0x1f64f) ||
+      // Miscellaneous Symbols and Pictographs
+      (code >= 0x1f300 && code <= 0x1f5ff) ||
+      // Transport and Map Symbols
+      (code >= 0x1f680 && code <= 0x1f6ff) ||
+      // Additional Symbols
+      (code >= 0x1f700 && code <= 0x1f77f) ||
+      // Geometric Shapes Extended
+      (code >= 0x1f780 && code <= 0x1f7ff) ||
+      // Supplemental Arrows-C
+      (code >= 0x1f800 && code <= 0x1f8ff) ||
+      // Supplemental Symbols and Pictographs
+      (code >= 0x1f900 && code <= 0x1f9ff) ||
+      // Chess Symbols
+      (code >= 0x1fa00 && code <= 0x1fa6f) ||
+      // Symbols and Pictographs Extended-A
+      (code >= 0x1fa70 && code <= 0x1faff) ||
+      // High surrogate range (for multi-byte emojis)
+      (code >= 0xd800 && code <= 0xdbff)
+    );
+  }
+
+  /**
+   * Fallback Unicode detection for older environments
+   */
+  private _isUnicodeAlphaFallback(char: string): boolean {
+    const code = char.charCodeAt(0);
+    return (
+      // Latin Extended
+      (code >= 0x00c0 && code <= 0x024f) ||
+      // Greek and Coptic
+      (code >= 0x0370 && code <= 0x03ff) ||
+      // Cyrillic
+      (code >= 0x0400 && code <= 0x04ff) ||
+      // CJK (Chinese, Japanese, Korean)
+      (code >= 0x4e00 && code <= 0x9fff) ||
+      // Arabic
+      (code >= 0x0600 && code <= 0x06ff) ||
+      // Hebrew
+      (code >= 0x0590 && code <= 0x05ff) ||
+      // Basic emoji ranges
+      (code >= 0x1f300 && code <= 0x1f9ff) ||
+      // High surrogate range
+      (code >= 0xd800 && code <= 0xdbff)
+    );
   }
 
   /**

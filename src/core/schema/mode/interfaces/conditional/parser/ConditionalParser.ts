@@ -269,7 +269,7 @@ export class ConditionalParser {
   }
 
   /**
-   * Parse field access: field or field.subfield
+   * Parse field access: field or field.subfield or field["key"]
    */
   private parseFieldAccess(): FieldAccessNode {
     const position = this.peek().position;
@@ -281,18 +281,38 @@ export class ConditionalParser {
 
     path.push(this.advance().value);
 
-    // Handle nested field access (but not method calls)
-    while (
-      this.check(TokenType.DOT) &&
-      this.peekNext()?.type === TokenType.IDENTIFIER
-    ) {
-      // Check if the next token is a runtime method ($method)
-      if (this.peekNext()?.type === TokenType.DOLLAR) {
-        break; // Stop here, let parseComparison handle the runtime method call
-      }
+    // Handle nested field access (dot notation and bracket notation)
+    while (true) {
+      // Handle dot notation: field.subfield
+      if (
+        this.check(TokenType.DOT) &&
+        this.peekNext()?.type === TokenType.IDENTIFIER
+      ) {
+        // Check if the next token is a runtime method ($method)
+        if (this.peekNext()?.type === TokenType.DOLLAR) {
+          break; // Stop here, let parseComparison handle the runtime method call
+        }
 
-      this.advance(); // consume '.'
-      path.push(this.advance().value);
+        this.advance(); // consume '.'
+        path.push(this.advance().value);
+      }
+      // Handle bracket notation: field["key"]
+      else if (this.check(TokenType.LBRACKET)) {
+        this.advance(); // consume '['
+
+        if (!this.check(TokenType.STRING)) {
+          throw new Error("Expected string key in bracket notation");
+        }
+
+        const key = this.advance().value;
+        path.push(key);
+
+        if (!this.match(TokenType.RBRACKET)) {
+          throw new Error("Expected ']' after bracket notation key");
+        }
+      } else {
+        break; // No more field access patterns
+      }
     }
 
     return ASTBuilder.createFieldAccess(path, position);
