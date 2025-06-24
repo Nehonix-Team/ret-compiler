@@ -304,6 +304,13 @@ export class ConditionalParser {
   private parseValue(): ValueNode {
     const position = this.peek().position;
 
+    // DEBUG: Log current token
+    if (this.config.enableDebug) {
+      console.log(
+        `parseValue: current token = ${this.peek().type} "${this.peek().value}" at position ${this.peek().position}`
+      );
+    }
+
     // Handle nested conditional
     if (this.check(TokenType.WHEN) && this.config.allowNestedConditionals) {
       return this.parseConditional();
@@ -317,7 +324,28 @@ export class ConditionalParser {
 
     // Handle constant value with equals prefix
     if (this.check(TokenType.EQUALS)) {
+      if (this.config.enableDebug) {
+        console.log(`parseValue: Found EQUALS token, advancing...`);
+      }
       this.advance(); // consume '='
+
+      // Check if it's an array literal
+      if (this.check(TokenType.LBRACKET)) {
+        if (this.config.enableDebug) {
+          console.log(
+            `parseValue: Found LBRACKET after EQUALS, parsing array...`
+          );
+        }
+        this.advance(); // consume the '[' token
+        const arrayNode = this.parseArray(position);
+        // Convert array to string representation for constant
+        const arrayValue = JSON.stringify(
+          arrayNode.elements.map((el) => el.value)
+        );
+        return ASTBuilder.createConstant(arrayValue, position);
+      }
+
+      // Handle regular literal
       const literal = this.parseLiteral();
       return ASTBuilder.createConstant(literal.value.toString(), position);
     }

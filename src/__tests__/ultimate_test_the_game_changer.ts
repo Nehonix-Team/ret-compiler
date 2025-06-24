@@ -1,3 +1,14 @@
+/**
+ * Ultimate Test: The Game Changer
+ *
+ * This test is designed to push the limits of the Fortify Schema system
+ * It includes complex, real-world scenarios that challenge the system's capabilities
+ * The goal is to identify and fix any remaining bugs or performance issues
+ *
+ * This test is the final step before a major release and a celebration!
+ * If this passes, we're ready to unleash Fortify Schema on the world!
+ */
+
 import { Interface } from "../core/schema/mode/interfaces/Interface";
 
 console.log("🔥 ADVANCED CONDITIONAL LOGIC STRESS TEST");
@@ -48,8 +59,9 @@ const EcommercePlatformSchema = Interface({
   freeShippingMinimum: "when shipping.thresholds.$exists() *? number : =50.00",
 
   // Multi-currency (potential float precision issues)
-  supportedCurrencies: "when internationalization.$exists() *? array : =["USD"]",
-  defaultCurrency: "when currencies.primary.$exists() *? string : =USD",
+  supportedCurrencies:
+    'when internationalization.$exists() *? string[] : =["USD"]',
+  defaultCurrency: 'when currencies.primary.$exists() *? string : ="USD"',
 }).allowUnknown();
 
 // SCENARIO 3: Healthcare Platform Schema (Compliance Critical)
@@ -198,12 +210,15 @@ const stressTestCases = [
         crypto_enabled: false,
       },
 
-      // Potential floating point precision issues
-      paymentFeesRate: 0.029, // Should validate
-      freeShippingMinimum: 75.0, // Should validate
-
-      // Complex defaults
-      supportedCurrencies: ["USD", "EUR", "GBP", "JPY", "AUD"],
+      // All conditional fields (since runtime properties exist, these should be provided)
+      canProcessPayments: true, // paymentGateway exists → validate
+      paymentFeesRate: 0.029, // merchantAccount.fees exists → validate
+      inventoryTracking: true, // warehouse exists → validate
+      lowStockThreshold: 5, // inventory.alerts exists → validate
+      freeShippingEnabled: true, // shipping.policies exists → validate
+      freeShippingMinimum: 75.0, // shipping.thresholds exists → validate
+      supportedCurrencies: ["USD", "EUR", "GBP", "JPY", "AUD"], // internationalization exists → validate
+      defaultCurrency: "USD", // currencies.primary exists → validate
     },
     expectedComplexity:
       "Floating point numbers, arrays, complex nested runtime checks",
