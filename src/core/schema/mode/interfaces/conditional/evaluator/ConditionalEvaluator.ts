@@ -1,4 +1,4 @@
- /**
+/**
  * Enhanced Conditional Evaluator
  *
  * Evaluates parsed conditional AST against actual data
@@ -29,14 +29,21 @@ export class ConditionalEvaluator {
   static evaluate(
     ast: ConditionalNode,
     data: Record<string, any>,
-    options: { strict?: boolean; debug?: boolean } = {}
+    options: {
+      strict?: boolean;
+      debug?: boolean;
+      schema?: Record<string, any>;
+      validatePaths?: boolean;
+    } = {}
   ): EvaluationResult {
     const context: EvaluationContext = {
       data,
+      schema: options.schema,
       fieldPath: [],
       options: {
         strict: false,
         debug: false,
+        validatePaths: false,
         ...options,
       },
     };
@@ -186,18 +193,72 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
 
   /**
    * Get field value from data using path
+   * Enhanced with schema path validation
    */
   private getFieldValue(path: string[]): any {
+    // Validate path against schema if validation is enabled
+    if (this.context.options?.validatePaths && this.context.schema) {
+      const pathValidation = this.validateSchemaPath(path);
+      if (!pathValidation.isValid) {
+        throw new Error(
+          `Invalid property path: ${path.join(".")}. ${pathValidation.error}`
+        );
+      }
+    }
+
     let current = this.context.data;
 
     for (const segment of path) {
       if (current === null || current === undefined) {
+        // If path validation is enabled, this should have been caught above
+        if (this.context.options?.validatePaths) {
+          throw new Error(
+            `Property path ${path.join(".")} references undefined value at segment: ${segment}`
+          );
+        }
         return undefined;
       }
       current = current[segment];
     }
 
     return current;
+  }
+
+  /**
+   * Validate that a property path exists in the schema definition
+   */
+  private validateSchemaPath(path: string[]): {
+    isValid: boolean;
+    error?: string;
+  } {
+    if (!this.context.schema) {
+      return { isValid: true }; // No schema to validate against
+    }
+
+    let currentSchema = this.context.schema;
+    const pathSoFar: string[] = [];
+
+    for (const segment of path) {
+      pathSoFar.push(segment);
+
+      if (typeof currentSchema !== "object" || currentSchema === null) {
+        return {
+          isValid: false,
+          error: `Cannot access property "${segment}" on non-object at path: ${pathSoFar.slice(0, -1).join(".")}`,
+        };
+      }
+
+      if (!(segment in currentSchema)) {
+        return {
+          isValid: false,
+          error: `Property "${segment}" does not exist in schema at path: ${pathSoFar.slice(0, -1).join(".") || "root"}`,
+        };
+      }
+
+      currentSchema = currentSchema[segment];
+    }
+
+    return { isValid: true };
   }
 
   /**
@@ -294,7 +355,7 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
         if (Array.isArray(fieldValue) && args.length > 0) {
           // For arrays, check if any of the expanded arguments are contained
           const containsValues = this.expandCommaSeparatedArgs(args);
-          return containsValues.some(value => fieldValue.includes(value));
+          return containsValues.some((value) => fieldValue.includes(value));
         }
         return false;
 
@@ -364,7 +425,7 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
     for (const arg of args) {
       if (typeof arg === "string" && arg.includes(",")) {
         // Split comma-separated values and trim whitespace
-        const splitValues = arg.split(",").map(v => v.trim());
+        const splitValues = arg.split(",").map((v) => v.trim());
         expandedArgs.push(...splitValues);
       } else {
         expandedArgs.push(arg);

@@ -6,7 +6,7 @@
 import { Interface } from '../core/schema/mode/interfaces/Interface';
 
 console.log('=== COMPLEX REAL-WORLD CONDITIONAL SCENARIOS ===\n');
-
+ 
 // Test 1: E-commerce Order Processing System
 console.log('1. E-COMMERCE ORDER PROCESSING SYSTEM');
 console.log('─'.repeat(50));
@@ -220,7 +220,7 @@ const LicensingSchema = Interface({
     duration: "int(1,36)",
     modules: "string[]"
   },
-  // Licensing business rules
+  // Licensing business rules 
   volumeDiscount: "when organization.employees>100 *? number(0,50) : number(0,10)",
   enterpriseFeatures: "when license.type.in(professional,enterprise) *? string[] : string[]?",
   governmentDiscount: "when organization.industry=government *? number(0,25) : number(0,0)",

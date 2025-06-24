@@ -347,6 +347,23 @@ export class FortifySemanticTokensProvider
         captureGroup: 1, // Capture only the variable name
       },
 
+      // Variables in method-based conditionals (e.g., "fields" in "when fields.exists")
+      {
+        regex: /\bwhen\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\./g,
+        tokenType: "variable",
+        tokenModifiers: [FortifyTokenModifier.Declaration],
+        captureGroup: 1, // Capture only the variable name before the dot
+      },
+
+      // Property paths in method conditionals (e.g., "user.profile" in "when user.profile.name.exists")
+      {
+        regex:
+          /\bwhen\s+([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+)\s*\./g,
+        tokenType: "variable",
+        tokenModifiers: [FortifyTokenModifier.Declaration],
+        captureGroup: 1, // Capture the full property path
+      },
+
       // Note: Union patterns are handled separately in tokenizeUnions method
 
       // Numeric literals in constraints - use centralized pattern

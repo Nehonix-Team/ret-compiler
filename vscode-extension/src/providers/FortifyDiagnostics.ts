@@ -336,6 +336,9 @@ export class FortifyDiagnosticsProvider {
 
     if (trimmedSchema.includes("when")) {
       return this.validateConditionalSchema(trimmedSchema, range);
+    } else if (trimmedSchema.match(/^\(.*\)\[\]$/)) {
+      // Handle union array types like (f1|f2|f3)[] before regular unions
+      return this.validateRegularSchema(trimmedSchema, range);
     } else if (trimmedSchema.includes("|")) {
       return this.validateUnionSchema(trimmedSchema, range);
     } else if (trimmedSchema.startsWith("=")) {
@@ -384,6 +387,14 @@ export class FortifyDiagnosticsProvider {
         ...this.validateConstraintSyntax(constraints, type, range)
       );
       return diagnostics;
+    }
+
+    // Handle union array types with parentheses ((f1|f2|f3)[])
+    const unionArrayMatch = schema.match(/^\(([^)]+)\)\[\]$/);
+    if (unionArrayMatch) {
+      const unionContent = unionArrayMatch[1];
+      // Validate the union content inside parentheses
+      return this.validateUnionSchema(unionContent, range);
     }
 
     // Handle simple array types (string[], number[])

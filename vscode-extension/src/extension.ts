@@ -43,26 +43,27 @@ export function activate(context: vscode.ExtensionContext) {
   // Register semantic tokens provider for enhanced syntax highlighting
   const semanticTokensProvider =
     vscode.languages.registerDocumentSemanticTokensProvider(
-      ["typescript", "javascript"],
+      ["typescript", "javascript", "markdown"],
       new FortifySemanticTokensProvider(),
       FortifySemanticTokensProvider.legend
     );
 
   // Register definition provider for go-to-definition functionality
   const definitionProvider = vscode.languages.registerDefinitionProvider(
-    ["typescript", "javascript"],
+    ["typescript", "javascript", "markdown"],
     new FortifyDefinitionProvider()
   );
 
   // Register diagnostics provider for validation
   const diagnosticsProvider = new FortifyDiagnosticsProvider();
 
-  // Watch for document changes to provide real-time validation
+  // Watch for document changes to provide real-time validation  
   const documentChangeListener = vscode.workspace.onDidChangeTextDocument(
     (event) => {
       if (
         event.document.languageId === "typescript" ||
-        event.document.languageId === "javascript"
+        event.document.languageId === "javascript" ||
+        event.document.languageId === "markdown"
       ) {
         diagnosticsProvider.updateDiagnostics(event.document);
       }
@@ -74,6 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
     (document) => {
       if (
         document.languageId === "typescript" ||
+        document.languageId === "markdown" ||
         document.languageId === "javascript"
       ) {
         diagnosticsProvider.updateDiagnostics(document);

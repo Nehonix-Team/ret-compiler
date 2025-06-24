@@ -6,7 +6,7 @@
  */
 
 import {
-  ConditionalNode,
+  ConditionalNode, 
   FieldAccessNode,
   ComparisonNode,
   MethodCallNode,
@@ -114,13 +114,15 @@ export type MapFieldType<T extends string> =
         T extends `${string}|${string}`
         ? ParseUnionType<T>
         : // Handle constant types (starts with =)
-          T extends `=${infer Value}`
-          ? Value
-          : // Handle core types
-            ExtractBaseType<T> extends keyof CoreTypeMap
-            ? CoreTypeMap[ExtractBaseType<T>]
-            : // Fallback to any for unknown types
-              any;
+          T extends `=${infer Value}?`
+          ? Value | undefined
+          : T extends `=${infer Value}`
+            ? Value
+            : // Handle core types
+              ExtractBaseType<T> extends keyof CoreTypeMap
+              ? CoreTypeMap[ExtractBaseType<T>]
+              : // Fallback to any for unknown types
+                any;
 
 /**
  * Parse union type string into union of literal types

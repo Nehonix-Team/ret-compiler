@@ -750,6 +750,8 @@ export class InterfaceSchema<T = any> {
       const evaluationResult = ConditionalEvaluator.evaluate(ast, fullData, {
         strict: this.options.strict || false,
         debug: false,
+        schema: this.definition, // Pass schema for path validation
+        validatePaths: true, // Enable path validation
       });
 
       if (!evaluationResult.success) {

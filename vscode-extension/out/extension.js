@@ -30,21 +30,23 @@ function activate(context) {
     // Register hover provider for type information
     const hoverProvider = vscode.languages.registerHoverProvider(["typescript", "javascript"], new HoverProvider_1.FortifyHoverProvider());
     // Register semantic tokens provider for enhanced syntax highlighting
-    const semanticTokensProvider = vscode.languages.registerDocumentSemanticTokensProvider(["typescript", "javascript"], new SemanticTokensProvider_1.FortifySemanticTokensProvider(), SemanticTokensProvider_1.FortifySemanticTokensProvider.legend);
+    const semanticTokensProvider = vscode.languages.registerDocumentSemanticTokensProvider(["typescript", "javascript", "markdown"], new SemanticTokensProvider_1.FortifySemanticTokensProvider(), SemanticTokensProvider_1.FortifySemanticTokensProvider.legend);
     // Register definition provider for go-to-definition functionality
-    const definitionProvider = vscode.languages.registerDefinitionProvider(["typescript", "javascript"], new DefinitionProvider_1.FortifyDefinitionProvider());
+    const definitionProvider = vscode.languages.registerDefinitionProvider(["typescript", "javascript", "markdown"], new DefinitionProvider_1.FortifyDefinitionProvider());
     // Register diagnostics provider for validation
     const diagnosticsProvider = new FortifyDiagnostics_1.FortifyDiagnosticsProvider();
-    // Watch for document changes to provide real-time validation
+    // Watch for document changes to provide real-time validation  
     const documentChangeListener = vscode.workspace.onDidChangeTextDocument((event) => {
         if (event.document.languageId === "typescript" ||
-            event.document.languageId === "javascript") {
+            event.document.languageId === "javascript" ||
+            event.document.languageId === "markdown") {
             diagnosticsProvider.updateDiagnostics(event.document);
         }
     });
     // Watch for document open to provide initial validation
     const documentOpenListener = vscode.workspace.onDidOpenTextDocument((document) => {
         if (document.languageId === "typescript" ||
+            document.languageId === "markdown" ||
             document.languageId === "javascript") {
             diagnosticsProvider.updateDiagnostics(document);
         }

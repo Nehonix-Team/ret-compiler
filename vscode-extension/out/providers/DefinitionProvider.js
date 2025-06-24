@@ -44,10 +44,10 @@ class FortifyDefinitionProvider {
      */
     isInInterfaceBlock(document, position) {
         const text = document.getText();
-        const lines = text.split('\n');
+        const lines = text.split("\n");
         // Find Interface blocks
         const interfaceBlocks = this.findInterfaceBlocks(lines);
-        return interfaceBlocks.some(block => position.line >= block.start && position.line <= block.end);
+        return interfaceBlocks.some((block) => position.line >= block.start && position.line <= block.end);
     }
     /**
      * Find all Interface({...}) blocks in the document
@@ -82,7 +82,7 @@ class FortifyDefinitionProvider {
                     escapeNext = false;
                     continue;
                 }
-                if (char === '\\') {
+                if (char === "\\") {
                     escapeNext = true;
                     continue;
                 }
@@ -91,10 +91,10 @@ class FortifyDefinitionProvider {
                     continue;
                 }
                 if (!inString) {
-                    if (char === '{') {
+                    if (char === "{") {
                         braceCount++;
                     }
-                    else if (char === '}') {
+                    else if (char === "}") {
                         braceCount--;
                         if (braceCount === 0) {
                             return i;
@@ -109,19 +109,34 @@ class FortifyDefinitionProvider {
      * Check if the word at the given position is a variable in a conditional expression
      */
     isVariableInConditional(lineText, word, charPosition) {
-        // Look for patterns like "when accountType=premium" or "when accountType == 'value'"
+        // Look for patterns like:
+        // 1. "when accountType=premium" (equality conditionals)
+        // 2. "when fields.exists" (method conditionals)
+        // 3. "when user.profile.name.startsWith('A')" (nested property method conditionals)
         const conditionalPatterns = [
-            new RegExp(`\\bwhen\\s+(${word})\\s*[=!<>]`, 'g'),
-            new RegExp(`\\b(${word})\\s*[=!<>].*\\*\\?`, 'g'), // Variable before operator in conditional
+            // Equality conditionals: when accountType=premium
+            new RegExp(`\\bwhen\\s+(${word})\\s*[=!<>]`, "g"),
+            new RegExp(`\\b(${word})\\s*[=!<>].*\\*\\?`, "g"),
+            // Method conditionals: when fields.exists, when fields.method()
+            new RegExp(`\\bwhen\\s+(${word})\\s*\\.`, "g"),
+            // Property path conditionals: when user.profile (where word is "user")
+            new RegExp(`\\bwhen\\s+(${word})\\.[a-zA-Z_][a-zA-Z0-9_.]*`, "g"),
+            // Nested property conditionals: when user.profile.name (where word could be any part)
+            new RegExp(`\\bwhen\\s+[a-zA-Z_][a-zA-Z0-9_.]*\\b(${word})\\b[a-zA-Z0-9_.]*`, "g"),
         ];
         for (const pattern of conditionalPatterns) {
             let match;
             while ((match = pattern.exec(lineText)) !== null) {
-                const variableStart = match.index + match[0].indexOf(word);
-                const variableEnd = variableStart + word.length;
-                // Check if cursor is within the variable
-                if (charPosition >= variableStart && charPosition <= variableEnd) {
-                    return true;
+                // Find the position of the word in the match
+                const matchText = match[0];
+                const wordIndex = matchText.indexOf(word);
+                if (wordIndex !== -1) {
+                    const variableStart = match.index + wordIndex;
+                    const variableEnd = variableStart + word.length;
+                    // Check if cursor is within the variable
+                    if (charPosition >= variableStart && charPosition <= variableEnd) {
+                        return true;
+                    }
                 }
             }
         }
@@ -132,22 +147,28 @@ class FortifyDefinitionProvider {
      */
     findPropertyDefinition(document, currentPosition, propertyName) {
         const text = document.getText();
-        const lines = text.split('\n');
+        const lines = text.split("\n");
         // Find the Interface block containing the current position
         const interfaceBlocks = this.findInterfaceBlocks(lines);
-        const currentBlock = interfaceBlocks.find(block => currentPosition.line >= block.start && currentPosition.line <= block.end);
+        const currentBlock = interfaceBlocks.find((block) => currentPosition.line >= block.start && currentPosition.line <= block.end);
         if (!currentBlock) {
             return undefined;
         }
-        // Search for property definition within the block
+        // Check if this is a property path (e.g., "user.profile.name")
+        if (propertyName.includes(".")) {
+            return this.findNestedPropertyDefinition(document, currentPosition, propertyName);
+        }
+        // Search for simple property definition within the block
         for (let i = currentBlock.start; i <= currentBlock.end; i++) {
             const line = lines[i];
             // Look for property definition patterns:
             // 1. "propertyName:" (object property)
             // 2. propertyName: "type" (direct property)
+            // 3. propertyName: { (nested object)
             const propertyPatterns = [
-                new RegExp(`^\\s*(${propertyName})\\s*:`, 'g'),
-                new RegExp(`[{,]\\s*(${propertyName})\\s*:`, 'g'),
+                new RegExp(`^\\s*(${propertyName})\\s*:`, "g"),
+                new RegExp(`[{,]\\s*(${propertyName})\\s*:`, "g"),
+                new RegExp(`\\s+(${propertyName})\\s*:`, "g"), // More flexible whitespace
             ];
             for (const pattern of propertyPatterns) {
                 let match;
@@ -162,15 +183,47 @@ class FortifyDefinitionProvider {
     }
     /**
      * Find nested property definitions (e.g., "user.profile.name")
+     * Enhanced to handle property paths and method calls
      */
     findNestedPropertyDefinition(document, currentPosition, propertyPath) {
-        const parts = propertyPath.split('.');
+        const parts = propertyPath.split(".");
         if (parts.length === 1) {
             return this.findPropertyDefinition(document, currentPosition, parts[0]);
         }
-        // For nested properties, we'd need more complex logic
-        // This is a simplified version - could be enhanced for deep nesting
-        return this.findPropertyDefinition(document, currentPosition, parts[0]);
+        // For nested properties, start with the root property
+        // Example: "user.profile.name" -> find "user" first
+        const rootProperty = parts[0];
+        // Try to find the root property definition
+        const rootDefinition = this.findPropertyDefinition(document, currentPosition, rootProperty);
+        if (rootDefinition) {
+            // For now, return the root property definition
+            // In the future, we could enhance this to navigate to nested properties
+            return rootDefinition;
+        }
+        return undefined;
+    }
+    /**
+     * Extract the base property name from a conditional expression
+     * Examples:
+     * - "when fields.exists" -> "fields"
+     * - "when user.profile.name.startsWith('A')" -> "user"
+     * - "when accountType=premium" -> "accountType"
+     */
+    extractBasePropertyFromConditional(lineText, cursorPosition) {
+        // Find the "when" keyword before the cursor
+        const whenMatch = lineText.match(/\bwhen\s+([a-zA-Z_][a-zA-Z0-9_.]*)/);
+        if (!whenMatch) {
+            return undefined;
+        }
+        const fullExpression = whenMatch[1]; // e.g., "fields.exists" or "user.profile.name"
+        // Check if cursor is within this expression
+        const expressionStart = whenMatch.index + whenMatch[0].indexOf(fullExpression);
+        const expressionEnd = expressionStart + fullExpression.length;
+        if (cursorPosition >= expressionStart && cursorPosition <= expressionEnd) {
+            // Return the base property (first part before any dots)
+            return fullExpression.split(".")[0];
+        }
+        return undefined;
     }
 }
 exports.FortifyDefinitionProvider = FortifyDefinitionProvider;

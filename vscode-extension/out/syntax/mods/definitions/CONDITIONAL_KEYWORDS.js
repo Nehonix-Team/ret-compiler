@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FORTIFY_CONDITIONAL_KEYWORDS = void 0;
 /**
  * Fortify Schema conditional keywords for defining dynamic validation rules.
- * Provides a straightforward, TypeScript-like syntax for conditionals, simpler
- * than Zod's complex conditional logic.
+ * Provides a straightforward, TypeScript-like syntax for conditionals
  */
 exports.FORTIFY_CONDITIONAL_KEYWORDS = [
     {

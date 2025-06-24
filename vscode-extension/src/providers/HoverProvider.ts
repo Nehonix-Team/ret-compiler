@@ -3,7 +3,7 @@
  *
  * Provides hover information for Fortify Schema syntax elements
  * Uses centralized syntax definitions for maintainability
- */
+ */ 
 
 import * as vscode from "vscode";
 import { FortifyPatterns, FortifySyntaxUtils } from "../syntax/FortifyPatterns";

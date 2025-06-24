@@ -172,10 +172,12 @@ export type ValueNode =
 // Evaluation context
 export interface EvaluationContext {
   data: Record<string, any>;
+  schema?: Record<string, any>; // Add schema for path validation
   fieldPath: string[];
   options?: {
     strict?: boolean;
     debug?: boolean;
+    validatePaths?: boolean; // New option to enable path validation
   };
 }
 

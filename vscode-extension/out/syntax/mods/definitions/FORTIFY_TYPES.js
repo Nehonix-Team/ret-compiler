@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FORTIFY_TYPES = void 0;
 /**
  * Fortify Schema type definitions, providing a TypeScript-like validation system
- * that's simpler and more intuitive than Zod. Types support constraints, optional
+ * that's simpler and more intuitive. Types support constraints, optional
  * markers, and arrays for flexible schema definitions.
  * Note: Custom types may be supported via runtime extensions (see documentation).
  */
@@ -11,7 +11,7 @@ exports.FORTIFY_TYPES = [
     // Basic Types
     {
         name: "string",
-        description: "Validates any text value, with optional length or regex constraints. Simpler than Zod's verbose string validation.",
+        description: "Validates any text value, with optional length or regex constraints.",
         category: "basic",
         examples: [
             '"string"',
@@ -26,7 +26,7 @@ exports.FORTIFY_TYPES = [
     },
     {
         name: "number",
-        description: "Validates numeric values (integers or floats) with optional range constraints. Lightweight compared to Zod's number schemas.",
+        description: "Validates numeric values (integers or floats) with optional range constraints. ",
         category: "basic",
         examples: ['"number"', '"number(0,100)"', '"number?"', '"number[]"'],
         supportsConstraints: true,

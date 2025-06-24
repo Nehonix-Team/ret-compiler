@@ -121,13 +121,13 @@ const UserSchema = z.object({
 import { Interface } from "fortify-schema";
 
 const UserSchema = Interface({
-  id: "positive",
+  id: "positive",  
   email: "email",
   name: "string(2,50)",
   age: "int(18,120)?",
   tags: "string[](1,10)?",
   status: "active|inactive|pending",
-  role: "admin",
+  role: "=admin",
 });
 ```
 
@@ -213,7 +213,7 @@ const UserSchema = Interface({
   isActive: "boolean",
   tags: "string[]?", // Optional array
   status: "active|inactive|pending", // Union types
-  role: "user", // Literal value
+  role: "=user", // Literal value
 });
 ```
 
