@@ -89,18 +89,24 @@ export class InterfaceSchema<T = any> {
     // Calculate schema complexity
     this.schemaComplexity = this.calculateComplexity();
 
-    // Apply optimizations based on complexity
-    if (this.schemaComplexity > 15) {
-      // High complexity - use advanced optimizations
+    // Check if schema has conditional fields
+    const hasConditionalFields = this.compiledFields.some(
+      (field) => field.isConditional
+    );
+
+    // Apply optimizations based on complexity, but avoid advanced optimizations for conditional fields
+    if (this.schemaComplexity > 15 && !hasConditionalFields) {
+      // High complexity - use advanced optimizations (only for non-conditional schemas)
       this.compiledValidator = SchemaCompiler.compileSchema(
         this.definition,
         this.options
       );
       this.isOptimized = true;
-    } else if (this.schemaComplexity > 5) {
-      // Medium complexity - use caching
+    } else if (this.schemaComplexity > 5 && !hasConditionalFields) {
+      // Medium complexity - use caching (only for non-conditional schemas)
       this.isOptimized = true;
     }
+    // Note: Conditional fields use the standard validation path for reliability
 
     // Start performance monitoring if enabled
     if (this.options.enablePerformanceMonitoring) {
@@ -795,6 +801,28 @@ export class InterfaceSchema<T = any> {
           actualExpectedValue = false;
         } else if (/^\d+(\.\d+)?$/.test(expectedValue)) {
           actualExpectedValue = parseFloat(expectedValue);
+        } else if (
+          expectedValue.startsWith("[") &&
+          expectedValue.endsWith("]")
+        ) {
+          // Handle array constants like ["USD"] or [1,2,3]
+          try {
+            actualExpectedValue = JSON.parse(expectedValue);
+          } catch (error) {
+            // If JSON parsing fails, treat as string
+            actualExpectedValue = expectedValue;
+          }
+        } else if (
+          expectedValue.startsWith("{") &&
+          expectedValue.endsWith("}")
+        ) {
+          // Handle object constants like {"key": "value"}
+          try {
+            actualExpectedValue = JSON.parse(expectedValue);
+          } catch (error) {
+            // If JSON parsing fails, treat as string
+            actualExpectedValue = expectedValue;
+          }
         }
 
         // KEY INSIGHT: If we got a constant value, it means the condition was FALSE

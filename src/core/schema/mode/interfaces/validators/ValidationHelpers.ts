@@ -62,6 +62,31 @@ export class ValidationHelpers {
       return constantValue === "true";
     }
 
+    // Array check (JSON arrays like ["USD"] or [1,2,3])
+    if (constantValue.startsWith("[") && constantValue.endsWith("]")) {
+      try {
+        return JSON.parse(constantValue);
+      } catch (error) {
+        // If JSON parsing fails, treat as string
+        return constantValue;
+      }
+    }
+
+    // Object check (JSON objects like {"key": "value"})
+    if (constantValue.startsWith("{") && constantValue.endsWith("}")) {
+      try {
+        return JSON.parse(constantValue);
+      } catch (error) {
+        // If JSON parsing fails, treat as string
+        return constantValue;
+      }
+    }
+
+    // Null check
+    if (constantValue === "null") {
+      return null;
+    }
+
     return constantValue;
   }
 

@@ -48,6 +48,8 @@ export enum TokenType {
   RPAREN = "RPAREN", // )
   LBRACKET = "LBRACKET", // [
   RBRACKET = "RBRACKET", // ]
+  LBRACE = "LBRACE", // {
+  RBRACE = "RBRACE", // }
 
   // Values
   IDENTIFIER = "IDENTIFIER", // field names, values

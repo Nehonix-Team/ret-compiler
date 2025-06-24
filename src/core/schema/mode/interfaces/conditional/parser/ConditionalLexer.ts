@@ -97,6 +97,8 @@ export class ConditionalLexer {
     ["?", TokenType.UNKNOWN], // Will be handled as part of type syntax
     ["[", TokenType.LBRACKET],
     ["]", TokenType.RBRACKET],
+    ["{", TokenType.LBRACE],
+    ["}", TokenType.RBRACE],
   ]);
 
   // Whitespace characters
@@ -116,8 +118,8 @@ export class ConditionalLexer {
   ]);
 
   constructor(input: string) {
-    if (typeof input !== 'string') {
-      throw new TypeError('Input must be a string');
+    if (typeof input !== "string") {
+      throw new TypeError("Input must be a string");
     }
     this._input = input;
   }
@@ -139,7 +141,7 @@ export class ConditionalLexer {
     } catch (error) {
       this._addError(
         ErrorType.SYNTAX_ERROR,
-        `Unexpected error during tokenization: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Unexpected error during tokenization: ${error instanceof Error ? error.message : "Unknown error"}`,
         "Check the input syntax for correctness"
       );
     }
@@ -248,7 +250,7 @@ export class ConditionalLexer {
   private _tryOperator(): boolean {
     // Get remaining input from current position - 1 (since we already advanced)
     const remaining = this._input.substring(this._position - 1);
-    
+
     if (remaining.length === 0) return false;
 
     // Check if we're after a dot - if so, don't treat !exists/!empty as operators
@@ -257,7 +259,14 @@ export class ConditionalLexer {
     for (const [op, tokenType] of ConditionalLexer._OPERATORS) {
       if (remaining.startsWith(op)) {
         // Skip !exists and !empty when after a dot (they should be method names)
-        if (isAfterDot && (op === "!exists" || op === "!empty" || op === "!null" || op === "!in" || op === "!contains")) {
+        if (
+          isAfterDot &&
+          (op === "!exists" ||
+            op === "!empty" ||
+            op === "!null" ||
+            op === "!in" ||
+            op === "!contains")
+        ) {
           continue;
         }
 
@@ -277,8 +286,10 @@ export class ConditionalLexer {
    * Check if the last token is a DOT token
    */
   private _isAfterDotToken(): boolean {
-    return this._tokens.length > 0 && 
-           this._tokens[this._tokens.length - 1].type === TokenType.DOT;
+    return (
+      this._tokens.length > 0 &&
+      this._tokens[this._tokens.length - 1].type === TokenType.DOT
+    );
   }
 
   /**
@@ -298,7 +309,7 @@ export class ConditionalLexer {
       // Handle escape sequences
       if (this._peek() === "\\") {
         this._advance(); // Skip backslash
-        
+
         if (this._isAtEnd()) {
           this._addError(
             ErrorType.SYNTAX_ERROR,
@@ -310,7 +321,7 @@ export class ConditionalLexer {
 
         const escaped = this._advance();
         const escapedValue = ConditionalLexer._ESCAPE_SEQUENCES.get(escaped);
-        
+
         if (escapedValue !== undefined) {
           value += escapedValue;
         } else {
@@ -450,7 +461,7 @@ export class ConditionalLexer {
       this._addError(
         ErrorType.SYNTAX_ERROR,
         `Unknown method: ${value}`,
-        `Check if the method name is correct. Valid methods include: ${Array.from(ConditionalLexer._METHODS.keys()).join(', ')}`
+        `Check if the method name is correct. Valid methods include: ${Array.from(ConditionalLexer._METHODS.keys()).join(", ")}`
       );
     }
   }
@@ -462,6 +473,11 @@ export class ConditionalLexer {
     let value = "";
 
     // Skip the '=' character (already consumed)
+    // Handle negative numbers by allowing minus sign at the start
+    if (this._peek() === "-" && this._isDigit(this._peekNext())) {
+      value += this._advance(); // consume '-'
+    }
+
     while (
       !this._isAtEnd() &&
       !this._isWhitespace(this._peek()) &&
@@ -477,7 +493,7 @@ export class ConditionalLexer {
       this._addError(
         ErrorType.SYNTAX_ERROR,
         "Empty constant value after =",
-        "Provide a value after = (e.g., =admin, =true, =42)"
+        "Provide a value after = (e.g., =admin, =true, =42, =-1)"
       );
       return;
     }
@@ -524,7 +540,7 @@ export class ConditionalLexer {
       TokenType.CONTAINS,
       TokenType.NOT_CONTAINS,
       TokenType.STARTS_WITH,
-      TokenType.ENDS_WITH
+      TokenType.ENDS_WITH,
     ]);
 
     return (

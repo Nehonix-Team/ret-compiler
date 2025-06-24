@@ -28,7 +28,7 @@
     "build:tsc": "npm run clean && tsc -p tsconfig.build.json",
     "build:types": "tsc --emitDeclarationOnly --outDir dist",
     "dev": "rollup -c -w",
-    "test": "bun src/__tests__/conditional-operators-test.ts",
+    "test": "bun src/__tests__/ultimate_test_the_game_changer.ts",
     "tests": "jest",
     "test:watch": "jest --watch",
     "demo": "bun examples/superiority-demo.ts",
