@@ -13,7 +13,7 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     description:
       "Validates any text value, with optional length or regex constraints.",
     category: "basic",
-    examples: [ 
+    examples: [
       '"string"',
       '"string(2,50)"',
       '"string(/^[a-z]+$/)"',
@@ -32,7 +32,7 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     examples: ['"number"', '"number(0,100)"', '"number?"', '"number[]"'],
     supportsConstraints: true,
     supportsOptional: true,
-    supportsArrays: true,   
+    supportsArrays: true,
   },
   {
     name: "boolean",
@@ -119,6 +119,64 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
       "Validates usernames (alphanumeric, underscores, hyphens) for user handles.",
     category: "format",
     examples: ['"username"', '"username?"', '"username[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "ip",
+    description:
+      "Validates IP address format (IPv4 and IPv6) for network addresses.",
+    category: "format",
+    examples: ['"ip"', '"ip?"', '"ip[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "json",
+    description: "Validates JSON string format with proper syntax checking.",
+    category: "format",
+    examples: ['"json"', '"json?"', '"json[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "hexcolor",
+    description:
+      "Validates hex color codes in #RGB, #RRGGBB, or #RRGGBBAA format.",
+    category: "format",
+    examples: ['"hexcolor"', '"hexcolor?"', '"hexcolor[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "base64",
+    description:
+      "Validates Base64 encoded strings with proper format checking.",
+    category: "format",
+    examples: ['"base64"', '"base64?"', '"base64[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "jwt",
+    description:
+      "Validates JSON Web Token format with header/payload verification.",
+    category: "format",
+    examples: ['"jwt"', '"jwt?"', '"jwt[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "semver",
+    description: "Validates Semantic Versioning format (MAJOR.MINOR.PATCH).",
+    category: "format",
+    examples: ['"semver"', '"semver?"', '"semver[]"'],
     supportsConstraints: false,
     supportsOptional: true,
     supportsArrays: true,

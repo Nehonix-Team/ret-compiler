@@ -12,7 +12,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify",
-          "begin": "\"(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)).*\")",
+          "begin": "\"(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)).*\")",
           "end": "\"",
           "beginCaptures": {
             "0": {
@@ -62,7 +62,7 @@
         },
         {
           "name": "string.template.fortify",
-          "begin": "`(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)|\\$\\{[^}]*\\}).*`)",
+          "begin": "`(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)|\\$\\{[^}]*\\}).*`)",
           "end": "`",
           "beginCaptures": {
             "0": {
@@ -151,7 +151,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify.format-type",
-          "match": "\\b(email|url|uuid|phone|slug|username)\\b"
+          "match": "\\b(email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver)\\b"
         }
       ]
     },

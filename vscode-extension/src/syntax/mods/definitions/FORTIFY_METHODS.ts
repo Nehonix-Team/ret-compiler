@@ -80,4 +80,5 @@ export const FORTIFY_METHODS: MethodDefinition[] = [
     examples: ['"when metadata.$null() *? string? : =null"'],
     supportsNegation: false,
   },
+  
 ];

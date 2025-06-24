@@ -1,342 +1,666 @@
-# Fortify Schema - Field Types Reference
+# Field Types Reference
 
-This guide provides a comprehensive overview of all field types and constraints available in Fortify Schema’s Interface syntax.
+Complete guide to all field types available in Fortify Schema, with examples and constraints.
 
-## Table of Contents
+## 📚 Table of Contents
 
 - [Basic Types](#basic-types)
-- [Number Types](#number-types)
-- [String Types](#string-types)
+- [Constrained Types](#constrained-types)
+- [Format Validation](#format-validation)
 - [Array Types](#array-types)
-- [Special Values](#special-values)
-- [Constraint Syntax](#constraint-syntax)
-- [Pattern Validation](#pattern-validation)
-- [Comparison with Other Libraries](#comparison-with-other-libraries)
-- [Real-World Examples](#real-world-examples)
-- [Quick Reference](#quick-reference)
+- [Union Types](#union-types)
+- [Optional Types](#optional-types)
+- [Literal Values](#literal-values)
+- [Custom Patterns](#custom-patterns)
+- [Special Types](#special-types)
 
 ## Basic Types
 
+### String Type
+
 ```typescript
-const schema = Interface({
-  name: "string",           // Any string
-  age: "number",            // Any number
-  active: "boolean",        // True or false
-  created: "date",          // Date object
-  data: "any",              // Any type
-  bio: "string?",           // Optional string
-  score: "number?",         // Optional number
-  verified: "boolean?",     // Optional boolean
-  updated: "date?",         // Optional date
-  metadata: "any?"          // Optional any type
+const StringSchema = Interface({
+  // Basic string
+  name: "string",
+
+  // String with length constraints
+  username: "string(3,20)", // 3-20 characters
+  password: "string(8,)", // Minimum 8 characters
+  code: "string(6,6)", // Exactly 6 characters
+  description: "string(,500)", // Maximum 500 characters
+
+  // Optional string
+  nickname: "string?",
+  bio: "string(,200)?",
 });
 ```
 
-## Number Types
+**Constraint Syntax:**
 
-### Integer and Decimal Types
+- `string(min,max)` - Length between min and max
+- `string(min,)` - Minimum length
+- `string(,max)` - Maximum length
+- `string(exact,exact)` - Exact length
+
+### Number Type
 
 ```typescript
-const schema = Interface({
-  count: "int",             // Any integer
-  id: "positive",           // Positive number (> 0)
-  offset: "int?",           // Optional integer
-  rating: "int(1,5)",       // Integer between 1 and 5
-  quantity: "int(1,)",      // Integer >= 1
-  limit: "int(,100)",       // Integer <= 100
-  price: "float",           // Floating-point number
-  percentage: "float(0,100)", // Float between 0 and 100
-  weight: "number(0.1,)"    // Number >= 0.1
+const NumberSchema = Interface({
+  // Basic number
+  age: "number",
+
+  // Number with range constraints
+  score: "number(0,100)", // Range 0-100
+  price: "number(0.01,)", // Minimum 0.01
+  discount: "number(,1.0)", // Maximum 1.0
+  temperature: "number(-273.15,)", // Absolute zero minimum
+
+  // Integer constraints
+  count: "int", // Integer only
+  positiveInt: "int(1,)", // Positive integer
+  limitedInt: "int(0,1000)", // Integer range
+
+  // Positive/negative shortcuts
+  id: "positive", // Positive number
+  debt: "negative", // Negative number
+
+  // Optional number
+  rating: "number(1,5)?",
 });
 ```
 
-### Example: Product Schema
+**Constraint Syntax:**
+
+- `number(min,max)` - Range between min and max
+- `int` - Integer validation
+- `positive` - Positive number (> 0)
+- `negative` - Negative number (< 0)
+
+### Boolean Type
 
 ```typescript
-const ProductSchema = Interface({
-  id: "positive",           // Product ID
-  price: "number(0.01,)",   // Price, minimum $0.01
-  discount: "float(0,100)", // Discount percentage
-  stock: "int(0,)",         // Non-negative stock count
-  rating: "int(1,5)",       // Rating, 1-5 stars
-  weight: "number(0,)"      // Non-negative weight
+const BooleanSchema = Interface({
+  // Basic boolean
+  isActive: "boolean",
+
+  // Optional boolean
+  isVerified: "boolean?",
+
+  // Boolean with smart conversion (strings "true"/"false")
+  enableFeature: "boolean",
 });
 ```
 
-## String Types
-
-### Basic and Formatted Strings
+### Date Type
 
 ```typescript
-const schema = Interface({
-  name: "string",           // Any string
-  title: "string?",         // Optional string
-  email: "email",           // Email format
-  website: "URL",           // URL format
-  id: "string",              // string ID format
-  phone: "string",           // Phone number format
-  handle: "string",          // string format
-  password: "string"        // password string format
+const DateSchema = Interface({
+  // Basic date
+  createdAt: "date",
+
+  // Optional date
+  updatedAt: "date?",
+  lastLogin: "date?",
+
+  // Date validation accepts:
+  // - Date objects
+  // - ISO date strings
+  // - Unix timestamps (numbers)
+  birthday: "date",
+  expiresAt: "date",
 });
 ```
+
+## Constrained Types
 
 ### String Constraints
 
 ```typescript
-const UserSchema = {
-  username: "string", // Basic string
-  password: "string(8,)",  // Minimum 8 characters
-  bio: "string(,500)",      // Maximum 500 characters
-  title: "string(1,100)",   // 1-100 chars
-  email: "string",   // string with max length
-};
+const StringConstraintsSchema = Interface({
+  // Length constraints
+  shortCode: "string(2,5)", // 2-5 characters
+  longText: "string(100,)", // Minimum 100 characters
+  tweet: "string(,280)", // Maximum 280 characters
+
+  // Exact length
+  countryCode: "string(2,2)", // Exactly 2 characters
+  zipCode: "string(5,5)", // Exactly 5 characters
+
+  // Combined with optional
+  optionalCode: "string(3,10)?", // Optional, 3-10 chars if present
+});
+```
+
+### Number Constraints
+
+```typescript
+const NumberConstraintsSchema = Interface({
+  // Range constraints
+  percentage: "number(0,100)", // 0-100
+  probability: "number(0,1)", // 0-1
+  temperature: "number(-50,50)", // -50 to 50
+
+  // Open ranges
+  minimumAge: "number(18,)", // 18 or higher
+  maxDiscount: "number(,0.5)", // 0.5 or lower
+
+  // Integer constraints
+  pageNumber: "int(1,)", // Positive integer
+  itemCount: "int(0,1000)", // 0-1000 integer
+
+  // Special number types
+  userId: "positive", // Any positive number
+  balance: "number", // Any number (can be negative)
+});
+```
+
+### Array Constraints
+
+```typescript
+const ArrayConstraintsSchema = Interface({
+  // Basic arrays
+  tags: "string[]", // Array of strings
+  scores: "number[]", // Array of numbers
+  flags: "boolean[]", // Array of booleans
+
+  // Array size constraints
+  limitedTags: "string[](1,5)", // 1-5 items
+  minItems: "string[](2,)", // Minimum 2 items
+  maxItems: "string[](,10)", // Maximum 10 items
+  exactItems: "string[](3,3)", // Exactly 3 items
+
+  // Optional arrays
+  optionalTags: "string[]?", // Optional array
+  limitedOptional: "string[](1,5)?", // Optional, 1-5 items if present
+
+  // Nested constraints
+  usernames: "string(3,20)[](1,100)", // Array of 3-20 char strings, 1-100 items
+  ages: "int(0,120)[](,50)", // Array of 0-120 integers, max 50 items
+});
+```
+
+## Format Validation
+
+### Built-in Formats
+
+```typescript
+const FormatSchema = Interface({
+  // Email validation
+  email: "email",
+  workEmail: "email?",
+
+  // URL validation
+  website: "url",
+  avatar: "url?",
+
+  // UUID validation
+  id: "uuid",
+  sessionId: "uuid?",
+
+  // Phone validation (international format)
+  phone: "phone",
+  mobile: "phone?",
+
+  // IP address validation
+  serverIp: "ip",
+  clientIp: "ip?",
+
+  // JSON validation
+  config: "json",
+  metadata: "json?",
+
+  // Hex color validation
+  primaryColor: "hexcolor",
+  accentColor: "hexcolor?",
+
+  // Base64 validation
+  encodedData: "base64",
+  attachment: "base64?",
+
+  // JWT validation
+  authToken: "jwt",
+  refreshToken: "jwt?",
+
+  // Semantic version validation
+  appVersion: "semver",
+  minVersion: "semver?",
+});
+```
+
+### Advanced Format Types
+
+#### Hex Color Validation
+
+```typescript
+const ColorSchema = Interface({
+  // Basic hex colors
+  primaryColor: "hexcolor", // #RGB, #RRGGBB, #RRGGBBAA
+  secondaryColor: "hexcolor?", // Optional color
+
+  // Color arrays
+  palette: "hexcolor[]", // Array of colors
+  gradientColors: "hexcolor[](2,10)", // 2-10 colors
+
+  // Examples of valid values:
+  // "#F00", "#FF0000", "#FF0000FF"
+  // "#abc", "#ABCDEF", "#12345678"
+});
+```
+
+#### Base64 Validation
+
+```typescript
+const DataSchema = Interface({
+  // Basic Base64
+  encodedData: "base64",
+  attachment: "base64?",
+
+  // Base64 arrays
+  files: "base64[]",
+  images: "base64[](1,5)",
+
+  // Examples of valid values:
+  // "SGVsbG8gV29ybGQ="
+  // "VGhpcyBpcyBhIHRlc3Q="
+});
+```
+
+#### JWT (JSON Web Token) Validation
+
+```typescript
+const AuthSchema = Interface({
+  // JWT tokens
+  accessToken: "jwt",
+  refreshToken: "jwt?",
+
+  // JWT arrays
+  tokens: "jwt[]",
+  sessionTokens: "jwt[](1,3)",
+
+  // Examples of valid values:
+  // "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+});
+```
+
+#### Semantic Version (SemVer) Validation
+
+```typescript
+const VersionSchema = Interface({
+  // Semantic versions
+  appVersion: "semver",
+  minVersion: "semver?",
+
+  // Version arrays
+  supportedVersions: "semver[]",
+  compatibleVersions: "semver[](1,10)",
+
+  // Examples of valid values:
+  // "1.0.0", "2.1.3", "1.0.0-alpha.1"
+  // "1.2.3-beta.4+build.5"
+});
+```
+
+### Custom Regex Patterns
+
+```typescript
+const RegexSchema = Interface({
+  // US ZIP code
+  zipCode: "string(/^\\d{5}(-\\d{4})?$/)",
+
+  // Product code (2 letters + 4 digits)
+  productCode: "string(/^[A-Z]{2}\\d{4}$/)",
+
+  // Username (alphanumeric + underscore, 3-20 chars)
+  username: "string(/^[a-zA-Z0-9_]{3,20}$/)",
+
+  // Hex color code
+  color: "string(/^#[0-9A-Fa-f]{6}$/)",
+
+  // Credit card number (basic format)
+  creditCard: "string(/^\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}$/)",
+
+  // ISO country code
+  country: "string(/^[A-Z]{2}$/)",
+
+  // Semantic version
+  version: "string(/^\\d+\\.\\d+\\.\\d+$/)",
+
+  // Optional regex patterns
+  optionalCode: "string(/^[A-Z]{3}\\d{3}$/)?",
+});
 ```
 
 ## Array Types
 
+### Basic Arrays
+
 ```typescript
-{
-  // Basic arrays
-  tags: "string[]",          // Array of strings
-  scores: "number[]",     // Array of numbers
-  flags: "boolean[]",     // Array of booleans
+const ArraySchema = Interface({
+  // Simple arrays
+  tags: "string[]",
+  scores: "number[]",
+  active: "boolean[]",
+  dates: "date[]",
+
   // Optional arrays
-  hobbies: "string[]?",   // Optional array of strings
-  ratings: "number[]?", // Optional array of numbers
-}
-```
+  categories: "string[]?",
+  ratings: "number[]?",
 
-### Example: Post Schema
-
-```typescript
-const PostSchema = Interface({
-  tags: "string[](1,10)",      // 1-10 string items
-  images: "array[](0)",           // Maximum 100 items
-  scores: "array[](0)",       // Array of numbers
-  categories: "array[](0)", // Array of 0 items
-  attachments: "array[]?",   // Optional, max 10 URLs
-  mentions: "array[]?"       // Optional, max 20 usernames
+  // Empty arrays allowed by default
+  emptyAllowed: "string[]", // Can be []
 });
 ```
 
-## Special Values
+### Constrained Arrays
 
 ```typescript
-import { Interface, Make } from 'fortify-schema';
+const ConstrainedArraySchema = Interface({
+  // Size constraints
+  requiredTags: "string[](1,)", // At least 1 item
+  limitedTags: "string[](1,10)", // 1-10 items
+  maxTags: "string[](,5)", // Maximum 5 items
+  exactTags: "string[](3,3)", // Exactly 3 items
 
-const schema = Interface({
-  // Constants
-  version: Make.const("1.0"), // Exactly version "1.0"
-  status: Make.const(200),    // Exactly status 200
-  enabled: Make.const(true), // Exactly true enabled
-  // Unions
-  priority: Make.union("low", "medium", "high"), // low, medium, high priorities
-  theme: Make.union("light", "dark", "auto"), // light, dark, auto themes
-  role: Make.union("user", "admin", "moderator"), // user, admin, moderator roles
+  // Element constraints with array constraints
+  usernames: "string(3,20)[](1,100)", // 1-100 usernames, each 3-20 chars
+  ages: "int(0,120)[](,50)", // Max 50 ages, each 0-120
+  emails: "email[](1,10)", // 1-10 email addresses
+  urls: "url[](,5)", // Max 5 URLs
+
+  // Complex nested constraints
+  productCodes: "string(/^[A-Z]{2}\\d{4}$/)[](1,)", // At least 1 valid product code
+});
+```
+
+### Nested Arrays
+
+```typescript
+const NestedArraySchema = Interface({
+  // Array of objects
+  users: {
+    id: "uuid",
+    name: "string",
+    email: "email"
+  }[],
+
+  // Array of arrays
+  matrix: "number[][]",
+  coordinates: "number[](2,2)[]",  // Array of coordinate pairs
+
+  // Optional nested arrays
+  optionalMatrix: "number[][]?",
+  groups: "string[][]?"
+});
+```
+
+## Union Types
+
+### Basic Unions
+
+```typescript
+const UnionSchema = Interface({
+  // String unions
+  status: "active|inactive|pending",
+  role: "admin|user|guest|moderator",
+  theme: "light|dark|auto",
+
+  // Number unions
+  priority: "1|2|3|4|5",
+  version: "1.0|2.0|3.0",
+
+  // Mixed type unions
+  id: "string|number",
+  value: "string|number|boolean",
+
   // Optional unions
-  notification: Make.unionOptional("email", "sms", "push") // Optional email, sms, push notifications
+  optionalStatus: "active|inactive?",
+  optionalValue: "string|number?",
 });
 ```
 
-## Constraint Patterns
-
-### Number Constraints
-
-| Pattern            | Description                     | Example                     |
-|--------------------|---------------------------------|---------------------|
-| `"number(min,max)"` | Number between min and max      | `"number(0,100)"`   |
-| `"number(min,)"`   | Number >= min                   | `"number(1,)"`      |
-| `"number(,max)"`   | Number <= max                   | `"number(,100)"`    |
-| `"int(1,10)"`      | Integer between 1 and 10        | `"int(1,10)"`       |
-| `"positive"`       | Positive number (> 0)           | `"positive"`        |
-| `"float(0,1)"`     | Float between 0 and 1           | `"float(0,1)"`      |
-
-### String Constraints
-
-| Pattern            | Description                     | Example                     |
-|--------------------|---------------------------------|---------------------|
-| `"string(min,max)"` | String length min-max chars     | `"string(3,20)"`    |
-| `"string(8,)"`     | Minimum 8 chars                 | `"string(8,)"`      |
-| `"string(,100)"`   | Maximum 100 chars               | `"string(,100)"`    |
-| `"email(,254)"`    | Email with max length           | `"email(,254)"`     |
-| `"username(3,20)"` | Username 3-20 chars             | `"username(3,20)"`  |
-
-### Array Constraints
-
-| Pattern            | Description                     | Example                     |
-|--------------------|---------------------------------|---------------------|
-| `"string[](min,max)"` | Array with min-max items      | `"string[](1,10)"`  |
-| `"number[](1,)"`   | Array with min 1 item           | `"number[](1,)"`    |
-| `"email[](,10)"`   | Array with max 10 items         | `"email[](,10)"`    |
-| `"any[](3,5)"`     | Array with 3-5 items            | `"any[](3,5)"`      |
-
-## Pattern Validation
-
-### Regular Expression Patterns
+### Complex Unions
 
 ```typescript
-const schema = Interface({
-  code: "string(/^[A-Z]{2,4}$/)",           // 2-4 uppercase letters
-  slug: "string(/^[a-z0-9-]+$/)",           // URL slug
-  hex: "string(/^#[0-9a-fA-F]{6}$/)",       // Hex color
-  phone: "string(/^\\+?[1-9]\\d{1,14}$/)",  // International phone
-  zipCode: "string(/^\\d{5}(-\\d{4})?$/)?", // Optional US ZIP code
-});
-```
+const ComplexUnionSchema = Interface({
+  // Union with constraints
+  identifier: "string(3,)|number(1,)", // String 3+ chars OR number 1+
 
-### Common Patterns
+  // Union with formats
+  contact: "email|phone", // Email OR phone number
 
-```typescript
-const ValidationSchema = Interface({
-  uuid: "string(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)", // UUID
-  productCode: "string(/^[A-Z]{3}-\\d{4}$/)", // ABC-1234
-  invoiceId: "string(/^INV-\\d{6}$/)",        // INV-123456
-  hexColor: "string(/^#[0-9a-fA-F]{6}$/)",    // #FF5733
-  ipAddress: "string(/^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$/)", // IP address
-  hashtag: "string(/^#[a-zA-Z0-9_]+$/)",      // #hashtag
-  mention: "string(/^@[a-zA-Z0-9_]+$/)"       // @username
-});
-```
+  // Union with arrays
+  data: "string[]|number[]", // Array of strings OR numbers
 
-## Comparison with Other Libraries
+  // Union with regex
+  code: "string(/^[A-Z]{3}$/)|string(/^\\d{6}$/)", // 3 letters OR 6 digits
 
-### Zod vs. Fortify Schema
-
-| Feature            | Zod                                  | Fortify Schema            |
-|--------------------|--------------------------------------|---------------------------|
-| **Positive Integer** | `z.number().int().positive()`       | `"positive"`              |
-| **String Length**  | `z.string().min(3).max(20)`         | `"string(3,20)"`          |
-| **Email**          | `z.string().email()`                | `"email"`                 |
-| **Optional Field** | `z.string().optional()`             | `"string?"`               |
-| **Array Size**     | `z.array(z.string()).min(1).max(10)` | `"string[](1,10)"`        |
-| **Union**          | `z.enum(["a", "b", "c"])`           | `Make.union("a", "b", "c")` |
-| **Constant**       | `z.literal("admin")`                | `Make.const("admin")`     |
-| **Pattern**        | `z.string().regex(/^[A-Z]+$/)`      | `"string(/^[A-Z]+$/)"`    |
-
-### Joi vs. Fortify Schema
-
-| Feature            | Joi                                  | Fortify Schema            |
-|--------------------|--------------------------------------|---------------------------|
-| **Number Range**   | `Joi.number().min(1).max(100)`      | `"number(1,100)"`         |
-| **String Length**  | `Joi.string().min(3).max(20)`       | `"string(3,20)"`          |
-| **Required**       | `Joi.string().required()`           | `"string"`                |
-| **Optional**       | `Joi.string().optional()`           | `"string?"`               |
-| **Array**          | `Joi.array().items(Joi.string())`   | `"string[]"`              |
-| **Email**          | `Joi.string().email()`              | `"email"`                 |
-
-## Real-World Examples
-
-### User Management Schema
-
-```typescript
-const UserSchema = Interface({
-  id: "positive",                               // User ID
-  uuid: "uuid",                                 // UUID
-  username: "string(3,20)",                     // Username
-  email: "email",                               // Email address
-  firstName: "string(1,50)",                    // First name
-  lastName: "string(1,50)",                     // Last name
-  bio: "string(,500)?",                         // Optional bio
-  avatar: "url?",                               // Optional avatar
-  age: "int(13,120)?",                          // Optional age
-  role: Make.union("user", "admin", "moderator"), // Role
-  status: Make.union("active", "inactive", "suspended"), // Status
-  theme: Make.union("light", "dark", "auto"),   // Theme
-  tags: "string[](,10)?",                       // Optional tags
-  permissions: "string[](,50)?",                // Optional permissions
-  lastLogin: "date?",                           // Optional last login
-  createdAt: "date",                            // Creation date
-  isVerified: "boolean",                        // Email verified
-  twoFactorEnabled: "boolean?"                  // Optional 2FA
-});
-```
-
-### E-commerce Product Schema
-
-```typescript
-const ProductSchema = Interface({
-  id: "positive",                               // Product ID
-  sku: "string(/^[A-Z]{3}-\\d{4}$/)",          // SKU (e.g., ABC-1234)
-  name: "string(1,100)",                        // Product name
-  description: "string(,2000)?",                // Optional description
-  price: "number(0.01,)",                       // Price, min $0.01
-  originalPrice: "number(0.01,)?",              // Optional original price
-  discount: "float(0,100)?",                    // Optional discount
-  currency: Make.const("USD"),                  // Currency
-  stock: "int(0,)",                             // Stock count
-  lowStockThreshold: "int(1,)?",                // Optional low stock alert
-  category: Make.union("electronics", "clothing", "books", "home"), // Category
-  subcategory: "string?",                       // Optional subcategory
-  tags: "string[](,20)?",                       // Optional tags
-  images: "url[](1,10)",                        // 1-10 images
-  videos: "url[](,3)?",                         // Optional, max 3 videos
-  weight: "number(0,)?",                        // Optional weight
-  dimensions: {
-    length: "number(0,)",                       // Length
-    width: "number(0,)",                        // Width
-    height: "number(0,)"                        // Height
+  // Nested unions in objects
+  config: {
+    mode: "development|staging|production",
+    debug: "boolean|string",
+    port: "number|string",
   },
-  isActive: "boolean",                          // Active status
-  isFeatured: "boolean?",                       // Optional featured
-  publishedAt: "date?"                          // Optional publish date
 });
 ```
 
-### API Response Schema
+## Optional Types
+
+### Basic Optional
 
 ```typescript
-const APIResponseSchema = Interface({
-  success: "boolean",                           // Request success
-  status: "int(100,599)",                       // HTTP status code
-  message: "string?",                           // Optional message
-  data: "any?",                                 // Optional data
-  errors: "string[]?",                          // Optional errors
-  warnings: "string[]?",                        // Optional warnings
-  timestamp: "date",                            // Response timestamp
-  requestId: "uuid",                            // Request ID
-  version: Make.const("1.0"),                   // API version
-  pagination: {
-    page: "int(1,)",                            // Current page
-    limit: "int(1,100)",                        // Items per page
-    total: "int(0,)",                           // Total items
-    hasNext: "boolean",                         // Has next page
-    hasPrev: "boolean"                          // Has previous page
-  }
+const OptionalSchema = Interface({
+  // Required fields
+  id: "uuid",
+  name: "string",
+
+  // Optional fields (can be undefined)
+  nickname: "string?",
+  bio: "string?",
+  avatar: "url?",
+
+  // Optional with constraints
+  age: "number(0,120)?",
+  tags: "string[](1,10)?",
+
+  // Optional nested objects
+  profile: {
+    firstName: "string",
+    lastName: "string",
+    middleName: "string?"  // Optional within nested object
+  }?  // Entire profile object is optional
 });
 ```
 
-## Quick Reference
-
-### Common Types
+### Optional vs Nullable
 
 ```typescript
-// Strings
-"string"              // Any string
-"string?"             // Optional string
-"string(3,20)"        // 3-20 chars
-"email"               // Email format
-"url"                 // URL format
+const OptionalVsNullableSchema = Interface({
+  // Optional - can be undefined, not present in object
+  optionalField: "string?",
 
-// Numbers
-"number"              // Any number
-"int"                 // Integer
-"positive"            // Positive number
-"number(0,100)"       // 0-100 range
-"int(1,)"             // Positive integer
+  // Nullable - must be present, can be null
+  nullableField: "string|null",
 
-// Arrays
-"string[]"            // String array
-"string[]?"           // Optional string array
-"string[](1,10)"      // 1-10 items
+  // Both optional and nullable
+  flexibleField: "string|null?",
 
-// Special
-Make.const("value") or "=value"  // Exact value
-Make.union("a", "b") or "a|b"  // Multiple options
-"boolean"             // True or false
-"date"                // Date object
+  // Array variations
+  optionalArray: "string[]?", // Array can be undefined
+  nullableArray: "string[]|null", // Array can be null
+  arrayOfOptional: "string?[]", // Array of optional strings
+});
 ```
 
----
+## Literal Values
 
-**Related Resources**  
-[Complete Documentation](./README.md) | [Quick Reference](./QUICK-REFERENCE.md)
+### Constant Values
+
+```typescript
+const LiteralSchema = Interface({
+  // String literals
+  type: "=user", // Must be exactly "user"
+  version: "=2.0", // Must be exactly "2.0"
+
+  // Number literals
+  apiVersion: "=1", // Must be exactly 1
+  maxRetries: "=3", // Must be exactly 3
+
+  // Boolean literals
+  isEnabled: "=true", // Must be exactly true
+  isLegacy: "=false", // Must be exactly false
+
+  // Complex literals
+  config: '={"theme":"dark"}', // Must be exact object
+  tags: '=["default","user"]', // Must be exact array
+
+  // Optional literals
+  optionalType: "=admin?", // Optional, but if present must be "admin"
+});
+```
+
+## Custom Patterns
+
+### Advanced Regex
+
+```typescript
+const AdvancedPatternSchema = Interface({
+  // Complex email pattern
+  corporateEmail: "string(/^[a-zA-Z0-9._%+-]+@company\\.com$/)",
+
+  // Strong password pattern
+  strongPassword:
+    "string(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$/)",
+
+  // International phone
+  internationalPhone: "string(/^\\+[1-9]\\d{1,14}$/)",
+
+  // Social security number
+  ssn: "string(/^\\d{3}-\\d{2}-\\d{4}$/)",
+
+  // License plate (US format)
+  licensePlate: "string(/^[A-Z]{1,3}[0-9]{1,4}$/)",
+
+  // MAC address
+  macAddress: "string(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/)",
+
+  // IPv4 address
+  ipv4: "string(/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)",
+
+  // Credit card (Luhn algorithm not included)
+  creditCardNumber:
+    "string(/^(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})$/)",
+});
+```
+
+## Special Types
+
+### Any Type
+
+```typescript
+const AnyTypeSchema = Interface({
+  // Any type (use sparingly)
+  metadata: "any",
+  config: "any?",
+
+  // Better alternatives when possible
+  stringOrNumber: "string|number", // Prefer unions
+  jsonData: "json", // Prefer JSON validation
+
+  // Any in arrays
+  mixedArray: "any[]",
+  optionalMixed: "any[]?",
+});
+```
+
+### Nested Objects
+
+```typescript
+const NestedSchema = Interface({
+  user: {
+    id: "uuid",
+    profile: {
+      name: "string",
+      contact: {
+        email: "email",
+        phone: "phone?",
+        address: {
+          street: "string",
+          city: "string",
+          country: "string(2,2)",
+          zipCode: "string(/^\\d{5}(-\\d{4})?$/)"
+        }?
+      }
+    }
+  },
+
+  // Optional nested objects
+  settings: {
+    theme: "light|dark",
+    notifications: {
+      email: "boolean",
+      push: "boolean"
+    }
+  }?
+});
+```
+
+## 🎯 Best Practices
+
+### Type Selection Guidelines
+
+1. **Use specific types over generic ones**
+
+   ```typescript
+   // ✅ Good
+   email: "email",
+   age: "int(0,120)",
+
+   // ❌ Avoid
+   email: "string",
+   age: "number"
+   ```
+
+2. **Prefer constraints over validation logic**
+
+   ```typescript
+   // ✅ Good
+   username: "string(3,20)",
+
+   // ❌ Avoid (handle in business logic instead)
+   username: "string"
+   ```
+
+3. **Use unions for known values**
+
+   ```typescript
+   // ✅ Good
+   status: "active|inactive|pending",
+
+   // ❌ Avoid
+   status: "string"
+   ```
+
+4. **Be explicit with optional fields**
+
+   ```typescript
+   // ✅ Good - clear intent
+   nickname: "string?",
+   bio: "string(,500)?",
+
+   // ❌ Unclear
+   nickname: "string|undefined"
+   ```
+
+### Performance Tips
+
+1. **Simple types are faster than complex regex**
+2. **Built-in formats are optimized**
+3. **Union types with fewer options perform better**
+4. **Array constraints are validated efficiently**
+
+## 🔗 Related Documentation
+
+- **[Getting Started](./GETTING-STARTED.md)** - Basic usage and setup
+- **[Conditional Validation](./CONDITIONAL-VALIDATION.md)** - Advanced business logic
+- **[Examples Collection](./EXAMPLES.md)** - Real-world usage patterns
+- **[Quick Reference](./QUICK-REFERENCE.md)** - Syntax cheat sheet

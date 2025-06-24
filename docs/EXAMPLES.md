@@ -1,347 +1,876 @@
-# Fortify Schema - Real-World Examples
+# Examples Collection
 
-This document provides production-ready schema examples for common use cases, demonstrating practical applications of Fortify Schema.
+Real-world examples and patterns for Fortify Schema usage across different domains and use cases.
 
-## Basic Examples
+## 📚 Table of Contents
 
-### User Schema
+- [User Management](#user-management)
+- [E-commerce](#e-commerce)
+- [API Development](#api-development)
+- [Content Management](#content-management)
+- [Financial Applications](#financial-applications)
+- [IoT and Sensors](#iot-and-sensors)
+- [Social Media](#social-media)
+- [Enterprise Applications](#enterprise-applications)
 
-```typescript
-import { Interface } from 'fortify-schema';
+## User Management
 
-const UserSchema = Interface({
-  id: "positive",                               // Positive integer ID
-  email: "email",                               // Email format
-  username: "string(3,20)",                     // Username with length constraints
-  age: "int(13,120)?",                          // Optional age with range
-  role: "user|admin|moderator",                 // Role options
-  isActive: "boolean",                          // Active status
-  createdAt: "date",                            // Creation date
-});
-
-// Usage
-const result = UserSchema.safeParse({
-  id: 1,
-  email: "john@example.com",
-  username: "johndoe",
-  role: "=user",
-  isActive: true,
-  createdAt: new Date()
-});
-
-if (result.success) {
-  console.log('✓ Valid:', result.data);
-} else {
-  console.log('✗ Errors:', result.errors);
-}
-```
-
-### API Response Schema
+### User Registration Schema
 
 ```typescript
-const APIResponseSchema = Interface({
-  success: "boolean",                           // Success flag
-  status: "int(100,599)",                       // HTTP status code
-  data: "any?",                                 // Optional data
-  errors: "string[]?",                          // Optional error messages
-  timestamp: "date",                            // Response timestamp
-  requestId: "uuid",                            // Request ID
+import { Interface } from "fortify-schema";
+
+const UserRegistrationSchema = Interface({
+  // Basic information
+  email: "email",
+  password: "string(8,128)",
+  confirmPassword: "string(8,128)",
+  
+  // Profile information
+  profile: {
+    firstName: "string(1,50)",
+    lastName: "string(1,50)",
+    displayName: "string(3,50)?",
+    dateOfBirth: "date?",
+    gender: "male|female|other|prefer-not-to-say"?,
+    avatar: "url?",
+    bio: "string(,500)?"
+  },
+  
+  // Contact information
+  contact: {
+    phone: "phone?",
+    address: {
+      street: "string(5,100)",
+      city: "string(2,50)",
+      state: "string(2,50)",
+      zipCode: "string(/^\\d{5}(-\\d{4})?$/)",
+      country: "string(/^[A-Z]{2}$/)"
+    }?
+  }?,
+  
+  // Preferences
+  preferences: {
+    theme: "light|dark|auto",
+    language: "string(/^[a-z]{2}(-[A-Z]{2})?$/)",
+    timezone: "string?",
+    notifications: {
+      email: "boolean",
+      push: "boolean",
+      sms: "boolean",
+      marketing: "boolean"
+    }
+  },
+  
+  // Legal agreements
+  agreements: {
+    termsOfService: "=true",
+    privacyPolicy: "=true",
+    marketingConsent: "boolean",
+    dataProcessing: "=true"
+  },
+  
+  // Runtime configuration for conditional validation
+  config: "any?",
+  
+  // Conditional fields
+  betaFeatures: "when config.beta.$exists() *? string[] : =[]",
+  referralCode: "when config.referral.$exists() *? string : =null"
 });
 
-// Usage
-const apiResult = APIResponseSchema.safeParse(response);
-if (apiResult.success) {
-  console.log('✓ API Response:', apiResult.data);
-} else {
-  console.log('✗ Errors:', apiResult.errors);
-}
+// Usage example
+const registrationData = {
+  email: "john.doe@example.com",
+  password: "SecurePass123!",
+  confirmPassword: "SecurePass123!",
+  profile: {
+    firstName: "John",
+    lastName: "Doe",
+    displayName: "johndoe",
+    dateOfBirth: new Date("1990-05-15")
+  },
+  preferences: {
+    theme: "dark",
+    language: "en-US",
+    notifications: {
+      email: true,
+      push: true,
+      sms: false,
+      marketing: false
+    }
+  },
+  agreements: {
+    termsOfService: true,
+    privacyPolicy: true,
+    marketingConsent: false,
+    dataProcessing: true
+  }
+};
+
+const result = UserRegistrationSchema.safeParse(registrationData);
 ```
 
-## Enterprise Examples
+### User Profile Update Schema
 
-### E-commerce Product Schema
+```typescript
+const UserProfileUpdateSchema = Interface({
+  // Only fields that can be updated
+  profile: {
+    firstName: "string(1,50)?",
+    lastName: "string(1,50)?",
+    displayName: "string(3,50)?",
+    avatar: "url?",
+    bio: "string(,500)?"
+  }?,
+  
+  contact: {
+    phone: "phone?",
+    address: {
+      street: "string(5,100)?",
+      city: "string(2,50)?",
+      state: "string(2,50)?",
+      zipCode: "string(/^\\d{5}(-\\d{4})?$/)?",
+      country: "string(/^[A-Z]{2}$/)?",
+    }?
+  }?,
+  
+  preferences: {
+    theme: "light|dark|auto"?,
+    language: "string(/^[a-z]{2}(-[A-Z]{2})?$/)?",
+    timezone: "string?",
+    notifications: {
+      email: "boolean?",
+      push: "boolean?",
+      sms: "boolean?",
+      marketing: "boolean?"
+    }?
+  }?,
+  
+  // Metadata
+  lastUpdated: "date",
+  updatedBy: "uuid"
+});
+```
+
+## E-commerce
+
+### Product Catalog Schema
 
 ```typescript
 const ProductSchema = Interface({
-  // Basic information
-  id: "uuid",                                   // UUID identifier
-  sku: "string(/^[A-Z]{3}-\\d{4}$/)",          // SKU format (e.g., ABC-1234)
-  name: "string(1,100)",                        // Product name
-  description: "string(,2000)?",                // Optional description
-
+  // Product identification
+  id: "uuid",
+  sku: "string(/^[A-Z0-9-]{8,20}$/)",
+  name: "string(1,200)",
+  slug: "string(/^[a-z0-9-]+$/)",
+  
   // Pricing
-  price: "number(0.01,)",                       // Minimum $0.01
-  originalPrice: "number(0.01,)?",              // Optional original price
-  discount: "float(0,100)?",                    // Optional discount percentage
-  currency: Make.const("USD"),                  // Fixed currency
-
-  // Inventory
-  stock: "int(0,)",                             // Non-negative stock count
-  lowStockThreshold: "int(1,)?",                // Optional low stock alert
-
-  // Categories
-  category: Make.union("electronics", "clothing", "books", "home"), // Category options
-  subcategory: "string?",                       // Optional subcategory
-  tags: "string[](,20)?",                       // Optional tags
-
-  // Media
-  images: "url[](1,10)",                        // 1-10 images
-  videos: "url[](,3)?",                         // Optional, max 3 videos
-
-  // Attributes
-  weight: "number(0,)?",                        // Optional weight
-  dimensions: {
-    length: "number(0,)",                       // Length
-    width: "number(0,)",                        // Width
-    height: "number(0,)"                        // Height
+  pricing: {
+    basePrice: "number(0.01,999999.99)",
+    salePrice: "number(0.01,999999.99)?",
+    currency: "string(/^[A-Z]{3}$/)",
+    taxRate: "number(0,1)?",
+    discountPercentage: "number(0,100)?"
   },
-
-  // Status
-  isActive: "boolean",                          // Active status
-  isFeatured: "boolean?",                       // Optional featured flag
-  publishedAt: "date?",                         // Optional publish date
+  
+  // Product details
+  description: "string(10,5000)",
+  shortDescription: "string(10,500)?",
+  specifications: "any?",
+  
+  // Categorization
+  category: {
+    primary: "electronics|clothing|books|home|sports|beauty|toys",
+    secondary: "string(2,50)?",
+    tags: "string[](1,20)"
+  },
+  
+  // Inventory
+  inventory: {
+    quantity: "int(0,)",
+    trackQuantity: "boolean",
+    allowBackorder: "boolean",
+    lowStockThreshold: "int(0,)?",
+    reservedQuantity: "int(0,)"
+  },
+  
+  // Media
+  media: {
+    images: {
+      primary: "url",
+      gallery: "url[](0,20)",
+      thumbnails: "url[]?"
+    },
+    videos: "url[]?",
+    documents: "url[]?"
+  },
+  
+  // SEO
+  seo: {
+    title: "string(10,60)?",
+    description: "string(50,160)?",
+    keywords: "string[](0,10)",
+    canonicalUrl: "url?"
+  }?,
+  
+  // Shipping
+  shipping: {
+    weight: "number(0,)?",
+    dimensions: {
+      length: "number(0,)",
+      width: "number(0,)",
+      height: "number(0,)"
+    }?,
+    shippingClass: "standard|express|overnight|digital"
+  },
+  
+  // Status and publishing
+  status: "draft|active|inactive|archived",
+  visibility: "public|private|hidden",
+  publishedAt: "date?",
+  
+  // Timestamps
+  createdAt: "date",
+  updatedAt: "date",
+  
+  // Runtime configuration
+  config: "any?",
+  
+  // Conditional fields
+  digitalDownload: "when config.isDigital.$exists() *? any : =null",
+  subscriptionOptions: "when config.isSubscription.$exists() *? any : =null",
+  variantOptions: "when config.hasVariants.$exists() *? any[] : =[]"
 });
 ```
 
-### User Profile Management
+### Shopping Cart Schema
 
 ```typescript
-const UserProfileSchema = Interface({
-  // Identity
-  id: "uuid",                                   // UUID identifier
-  email: "email",                               // Email format
-  username: "string(3,30)",                     // Username with length constraints
-
-  // Personal information
-  firstName: "string(1,50)",                    // First name
-  lastName: "string(1,50)",                     // Last name
-  displayName: "string(1,100)?",                // Optional display name
-  bio: "string(,500)?",                         // Optional bio
-
-  // Contact
-  phone: "string(/^\\+?[1-9]\\d{1,14}$/)?",    // Optional international phone
-  website: "url?",                              // Optional website
-  location: {
-    country: "string(2,2)",                     // ISO country code
-    city: "string(1,100)?",                     // Optional city
-    timezone: "string?"                         // Optional timezone
+const ShoppingCartSchema = Interface({
+  id: "uuid",
+  userId: "uuid?",
+  sessionId: "string?",
+  
+  items: {
+    productId: "uuid",
+    variantId: "uuid?",
+    quantity: "int(1,)",
+    unitPrice: "number(0.01,)",
+    totalPrice: "number(0.01,)",
+    addedAt: "date"
+  }[](0,100),
+  
+  totals: {
+    subtotal: "number(0,)",
+    tax: "number(0,)",
+    shipping: "number(0,)",
+    discount: "number(0,)",
+    total: "number(0,)"
   },
+  
+  discounts: {
+    code: "string",
+    type: "percentage|fixed|shipping",
+    value: "number(0,)",
+    appliedAt: "date"
+  }[]?,
+  
+  shipping: {
+    method: "standard|express|overnight",
+    address: {
+      name: "string(1,100)",
+      street: "string(5,100)",
+      city: "string(2,50)",
+      state: "string(2,50)",
+      zipCode: "string(/^\\d{5}(-\\d{4})?$/)",
+      country: "string(/^[A-Z]{2}$/)",
+      phone: "phone?"
+    }?
+  }?,
+  
+  createdAt: "date",
+  updatedAt: "date",
+  expiresAt: "date"
+});
+```
 
-  // Preferences
-  settings: {
-    theme: Make.union("light", "dark", "auto"), // Theme options
-    language: "string(2,5)",                    // Language code
-    notifications: {
-      email: "boolean",                         // Email notifications
-      push: "boolean",                          // Push notifications
-      sms: "boolean"                            // SMS notifications
+## API Development
+
+### REST API Response Schema
+
+```typescript
+const APIResponseSchema = Interface({
+  // Response metadata
+  meta: {
+    version: "string(/^v\\d+\\.\\d+$/)",
+    timestamp: "date",
+    requestId: "uuid",
+    duration: "number(0,)",
+    environment: "development|staging|production",
+    rateLimit: {
+      limit: "int(1,)",
+      remaining: "int(0,)",
+      resetAt: "date"
+    }?
+  },
+  
+  // Response status
+  status: "success|error|partial",
+  statusCode: "int(100,599)",
+  message: "string?",
+  
+  // Data payload (varies by endpoint)
+  data: "any?",
+  
+  // Error handling
+  errors: {
+    code: "string",
+    message: "string",
+    field: "string?",
+    details: "any?",
+    documentation: "url?"
+  }[]?,
+  
+  // Warnings (non-blocking issues)
+  warnings: {
+    code: "string",
+    message: "string",
+    field: "string?",
+    severity: "low|medium|high"
+  }[]?,
+  
+  // Pagination (for list endpoints)
+  pagination: {
+    page: "int(1,)",
+    limit: "int(1,1000)",
+    total: "int(0,)",
+    totalPages: "int(0,)",
+    hasNext: "boolean",
+    hasPrev: "boolean"
+  }?,
+  
+  // HATEOAS links
+  links: {
+    self: "url",
+    next: "url?",
+    prev: "url?",
+    first: "url?",
+    last: "url?",
+    related: "url[]?"
+  }?,
+  
+  // Runtime context for conditional validation
+  context: "any?",
+  
+  // Conditional fields
+  debugInfo: "when context.debug.$exists() *? any : =null",
+  performanceMetrics: "when context.includeMetrics.$exists() *? any : =null"
+});
+```
+
+### GraphQL Query Variables Schema
+
+```typescript
+const GraphQLVariablesSchema = Interface({
+  // Pagination
+  first: "int(1,100)?",
+  after: "string?",
+  last: "int(1,100)?",
+  before: "string?",
+  
+  // Filtering
+  where: {
+    id: "uuid?",
+    name: "string?",
+    email: "email?",
+    status: "active|inactive|pending"?,
+    createdAt: {
+      gte: "date?",
+      lte: "date?",
+      eq: "date?"
+    }?,
+    tags: "string[]?"
+  }?,
+  
+  // Sorting
+  orderBy: {
+    field: "id|name|email|createdAt|updatedAt",
+    direction: "ASC|DESC"
+  }[]?,
+  
+  // Field selection
+  include: "string[]?",
+  exclude: "string[]?",
+  
+  // Search
+  search: {
+    query: "string(1,100)",
+    fields: "string[]?",
+    fuzzy: "boolean?"
+  }?
+});
+```
+
+## Content Management
+
+### Blog Post Schema
+
+```typescript
+const BlogPostSchema = Interface({
+  id: "uuid",
+  title: "string(5,200)",
+  slug: "string(/^[a-z0-9-]+$/)",
+  
+  content: {
+    excerpt: "string(50,500)",
+    body: "string(100,)",
+    format: "markdown|html|plaintext"
+  },
+  
+  author: {
+    id: "uuid",
+    name: "string",
+    email: "email",
+    avatar: "url?"
+  },
+  
+  categorization: {
+    category: "string",
+    tags: "string[](0,20)",
+    series: "string?"
+  },
+  
+  media: {
+    featuredImage: "url?",
+    gallery: "url[]?",
+    attachments: {
+      name: "string",
+      url: "url",
+      type: "image|video|document|audio",
+      size: "int(0,)"
+    }[]?
+  },
+  
+  seo: {
+    title: "string(10,60)?",
+    description: "string(50,160)?",
+    keywords: "string[](0,15)",
+    canonicalUrl: "url?",
+    noIndex: "boolean?"
+  }?,
+  
+  publishing: {
+    status: "draft|published|scheduled|archived",
+    publishedAt: "date?",
+    scheduledFor: "date?",
+    visibility: "public|private|password-protected",
+    password: "string?"
+  },
+  
+  engagement: {
+    allowComments: "boolean",
+    allowSharing: "boolean",
+    allowRating: "boolean"
+  },
+  
+  timestamps: {
+    createdAt: "date",
+    updatedAt: "date",
+    lastModifiedBy: "uuid"
+  }
+});
+```
+
+### Comment System Schema
+
+```typescript
+const CommentSchema = Interface({
+  id: "uuid",
+  postId: "uuid",
+  parentId: "uuid?",  // For nested comments
+  
+  author: {
+    id: "uuid?",      // Null for anonymous
+    name: "string(1,50)",
+    email: "email",
+    website: "url?",
+    avatar: "url?"
+  },
+  
+  content: {
+    body: "string(1,2000)",
+    format: "plaintext|markdown"
+  },
+  
+  moderation: {
+    status: "pending|approved|rejected|spam",
+    moderatedBy: "uuid?",
+    moderatedAt: "date?",
+    reason: "string?"
+  },
+  
+  metadata: {
+    ipAddress: "ip",
+    userAgent: "string?",
+    referrer: "url?"
+  },
+  
+  engagement: {
+    likes: "int(0,)",
+    dislikes: "int(0,)",
+    replies: "int(0,)"
+  },
+  
+  timestamps: {
+    createdAt: "date",
+    updatedAt: "date?"
+  }
+});
+```
+
+## Financial Applications
+
+### Transaction Schema
+
+```typescript
+const TransactionSchema = Interface({
+  id: "uuid",
+  transactionId: "string(/^TXN[0-9A-Z]{10}$/)",
+  
+  parties: {
+    from: {
+      accountId: "uuid",
+      accountNumber: "string(/^[0-9]{10,12}$/)",
+      name: "string",
+      type: "checking|savings|credit|business"
     },
-    privacy: {
-      profileVisible: "boolean",                // Profile visibility
-      showEmail: "boolean",                     // Show email
-      showPhone: "boolean"                      // Show phone
+    to: {
+      accountId: "uuid",
+      accountNumber: "string(/^[0-9]{10,12}$/)",
+      name: "string",
+      type: "checking|savings|credit|business"
     }
   },
-
-  // Social
-  socialLinks: {
-    twitter: "string(/^@[a-zA-Z0-9_]{1,15}$/)?", // Optional Twitter handle
-    linkedin: "url?",                            // Optional LinkedIn URL
-    github: "string(/^[a-zA-Z0-9-]{1,39}$/)?",   // Optional GitHub username
+  
+  amount: {
+    value: "number(0.01,)",
+    currency: "string(/^[A-Z]{3}$/)",
+    exchangeRate: "number(0,)?"
   },
-
-  // Metadata
-  avatar: "url?",                               // Optional avatar
-  coverImage: "url?",                           // Optional cover image
-  tags: "string[](,20)?",                       // Optional tags
-  interests: "string[](,50)?",                  // Optional interests
-
-  // System
-  role: Make.union("user", "premium", "admin", "moderator"), // Role options
-  status: Make.union("active", "inactive", "suspended", "pending"), // Status options
-  emailVerified: "boolean",                     // Email verification status
-  phoneVerified: "boolean",                     // Phone verification status
-
-  // Timestamps
-  createdAt: "date",                            // Creation date
-  updatedAt: "date",                            // Last updated
-  lastLoginAt: "date?",                         // Optional last login
-  emailVerifiedAt: "date?"                      // Optional email verification date
-});
-```
-
-## Schema Transformation Examples
-
-### API Versioning
-
-```typescript
-import { Mod } from 'fortify-schema';
-
-const BaseUserSchema = Interface({
-  id: "uuid",                                   // UUID identifier
-  email: "email",                               // Email format
-  name: "string",                               // Name
-  createdAt: "date"                             // Creation date
-});
-
-// V1 API: Basic fields
-const UserV1Schema = Mod.pick(BaseUserSchema, ["id", "email", "name"]);
-
-// V2 API: Add timestamps
-const UserV2Schema = Mod.extend(UserV1Schema, {
-  createdAt: "date",                            // Creation date
-  updatedAt: "date"                             // Last updated
-});
-
-// V3 API: Add profile information
-const UserV3Schema = Mod.extend(UserV2Schema, {
-  profile: {
-    avatar: "url?",                             // Optional avatar
-    bio: "string(,500)?"                        // Optional bio
+  
+  details: {
+    type: "transfer|payment|deposit|withdrawal|fee|interest",
+    category: "string?",
+    description: "string(1,500)",
+    reference: "string?",
+    memo: "string(,200)?"
   },
-  preferences: {
-    theme: Make.union("light", "dark")          // Theme options
+  
+  processing: {
+    status: "pending|processing|completed|failed|cancelled",
+    method: "ach|wire|card|check|cash|crypto",
+    processingTime: "instant|same-day|next-day|3-5-days",
+    fees: {
+      amount: "number(0,)",
+      type: "fixed|percentage",
+      description: "string"
+    }[]?
+  },
+  
+  security: {
+    authenticationMethod: "password|2fa|biometric|token",
+    riskScore: "number(0,100)",
+    fraudFlags: "string[]?",
+    encryptionLevel: "standard|high|military"
+  },
+  
+  compliance: {
+    amlChecked: "boolean",
+    kycVerified: "boolean",
+    reportingRequired: "boolean",
+    regulatoryFlags: "string[]?"
+  },
+  
+  timestamps: {
+    initiatedAt: "date",
+    processedAt: "date?",
+    completedAt: "date?",
+    settledAt: "date?"
   }
 });
 ```
 
-### Form Validation
+### Investment Portfolio Schema
 
 ```typescript
-const RegistrationSchema = Interface({
-  email: "email",                               // Email format
-  password: "string(8,)",                       // Minimum 8 characters
-  confirmPassword: "string(8,)",                // Minimum 8 characters
-  firstName: "string(1,50)",                    // First name
-  lastName: "string(1,50)",                     // Last name
-  agreeToTerms: Make.const(true),               // Must be true
-  newsletter: "boolean?"                        // Optional newsletter subscription
-});
-
-const LoginSchema = Mod.pick(RegistrationSchema, ["email", "password"]);
-
-const PasswordResetSchema = Interface({
-  email: "email",                               // Email format
-  token: "string(/^[a-zA-Z0-9]{32}$/)",        // 32-character token
-  newPassword: "string(8,)",                    // Minimum 8 characters
-  confirmPassword: "string(8,)"                 // Minimum 8 characters
-});
-
-const ProfileUpdateSchema = Mod.partial(
-  Mod.omit(RegistrationSchema, ["password", "confirmPassword", "agreeToTerms"])
-);
-```
-
-## API Integration Examples
-
-### REST API Schemas
-
-```typescript
-const GetUserResponseSchema = Interface({
-  success: "boolean",                           // Success flag
-  data: UserProfileSchema,                      // User profile data
-  meta: {
-    requestId: "uuid",                          // Request ID
-    timestamp: "date",                          // Response timestamp
-    version: Make.const("1.0")                  // API version
-  }
-});
-
-const CreateUserRequestSchema = Mod.omit(UserProfileSchema, [
-  "id", "createdAt", "updatedAt", "lastLoginAt"
-]);
-
-const UpdateUserRequestSchema = Mod.partial(CreateUserRequestSchema);
-
-const GetUsersResponseSchema = Interface({
-  success: "boolean",                           // Success flag
-  data: UserProfileSchema.array(),              // Array of users
-  pagination: {
-    page: "int(1,)",                            // Current page
-    limit: "int(1,100)",                        // Items per page
-    total: "int(0,)",                           // Total items
-    hasNext: "boolean",                         // Has next page
-    hasPrev: "boolean"                          // Has previous page
+const PortfolioSchema = Interface({
+  id: "uuid",
+  accountId: "uuid",
+  name: "string(1,100)",
+  
+  holdings: {
+    symbol: "string(/^[A-Z]{1,5}$/)",
+    name: "string",
+    type: "stock|bond|etf|mutual-fund|crypto|commodity",
+    quantity: "number(0,)",
+    averageCost: "number(0,)",
+    currentPrice: "number(0,)",
+    marketValue: "number(0,)",
+    gainLoss: "number",
+    gainLossPercent: "number",
+    lastUpdated: "date"
+  }[],
+  
+  allocation: {
+    stocks: "number(0,100)",
+    bonds: "number(0,100)",
+    cash: "number(0,100)",
+    alternatives: "number(0,100)",
+    international: "number(0,100)"
   },
-  meta: {
-    requestId: "uuid",                          // Request ID
-    timestamp: "date"                           // Response timestamp
+  
+  performance: {
+    totalValue: "number(0,)",
+    totalGainLoss: "number",
+    totalGainLossPercent: "number",
+    dayChange: "number",
+    dayChangePercent: "number",
+    ytdReturn: "number",
+    oneYearReturn: "number",
+    threeYearReturn: "number?",
+    fiveYearReturn: "number?"
+  },
+  
+  riskMetrics: {
+    beta: "number?",
+    sharpeRatio: "number?",
+    volatility: "number(0,100)?",
+    maxDrawdown: "number?"
+  },
+  
+  settings: {
+    riskTolerance: "conservative|moderate|aggressive",
+    investmentGoal: "retirement|education|house|general",
+    timeHorizon: "short|medium|long",
+    autoRebalance: "boolean",
+    dividendReinvestment: "boolean"
   }
 });
 ```
 
-### GraphQL Integration
+## IoT and Sensors
+
+### Sensor Data Schema
 
 ```typescript
-const GraphQLUserSchema = Interface({
-  id: "uuid",                                   // UUID identifier
-  email: "email",                               // Email format
-  profile: {
-    firstName: "string",                        // First name
-    lastName: "string",                         // Last name
-    avatar: "url?"                              // Optional avatar
+const SensorDataSchema = Interface({
+  deviceId: "uuid",
+  sensorId: "string",
+  
+  device: {
+    name: "string",
+    type: "temperature|humidity|pressure|motion|light|sound|air-quality",
+    location: "string",
+    firmware: "string(/^\\d+\\.\\d+\\.\\d+$/)",
+    batteryLevel: "number(0,100)?"
   },
-  posts: {
-    id: "uuid",                                 // Post ID
-    title: "string",                            // Post title
-    content: "string",                          // Post content
-    publishedAt: "date?"                        // Optional publish date
-  }.array(),
-  followers: "int(0,)",                         // Follower count
-  following: "int(0,)"                          // Following count
-});
-
-const GetUserQuerySchema = Interface({
-  id: "uuid",                                   // User ID
-  includeProfile: "boolean?",                   // Include profile data
-  includePosts: "boolean?",                     // Include posts
-  postsLimit: "int(1,50)?"                      // Optional post limit
+  
+  readings: {
+    value: "number",
+    unit: "string",
+    precision: "number(0,10)",
+    calibrated: "boolean"
+  },
+  
+  metadata: {
+    timestamp: "date",
+    timezone: "string",
+    quality: "excellent|good|fair|poor",
+    confidence: "number(0,100)",
+    source: "sensor|calculated|estimated"
+  },
+  
+  environmental: {
+    temperature: "number?",
+    humidity: "number(0,100)?",
+    pressure: "number?",
+    altitude: "number?"
+  }?,
+  
+  location: {
+    latitude: "number(-90,90)?",
+    longitude: "number(-180,180)?",
+    accuracy: "number(0,)?"
+  }?,
+  
+  alerts: {
+    threshold: "number?",
+    triggered: "boolean",
+    severity: "low|medium|high|critical"?,
+    message: "string?"
+  }?,
+  
+  // Runtime configuration
+  config: "any?",
+  
+  // Conditional processing
+  processed: "when config.enableProcessing.$exists() *? boolean : =false",
+  aggregated: "when config.enableAggregation.$exists() *? any : =null"
 });
 ```
 
-## Security & Validation Examples
+## Social Media
 
-### Input Sanitization
+### Social Media Post Schema
 
 ```typescript
-const SecureInputSchema = Interface({
-  title: "string(/^[a-zA-Z0-9\\s\\-_.,!?]{1,100}$/)", // Prevent XSS
-  searchQuery: "string(/^[a-zA-Z0-9\\s]{1,50}$/)",    // Prevent SQL injection
-  filename: "string(/^[a-zA-Z0-9._-]{1,255}$/)",      // File upload validation
-  fileType: Make.union("image/jpeg", "image/png", "image/gif", "application/pdf"), // Allowed file types
-  fileSize: "int(1,10485760)",                        // Max 10MB
-  requestsPerMinute: "int(1,100)",                    // Rate limiting
-  clientIP: "string(/^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$/)" // IP validation
+const SocialPostSchema = Interface({
+  id: "uuid",
+  platform: "twitter|facebook|instagram|linkedin|tiktok",
+  
+  author: {
+    id: "string",
+    username: "string(/^[a-zA-Z0-9_]{1,30}$/)",
+    displayName: "string",
+    avatar: "url?",
+    verified: "boolean",
+    followerCount: "int(0,)?"
+  },
+  
+  content: {
+    text: "string(,2000)?",
+    hashtags: "string(/^#[a-zA-Z0-9_]+$/)[](0,30)",
+    mentions: "string(/^@[a-zA-Z0-9_]+$/)[](0,50)",
+    links: "url[]?",
+    media: {
+      type: "image|video|gif|audio",
+      url: "url",
+      thumbnail: "url?",
+      duration: "number(0,)?"  // For videos/audio
+    }[]?
+  },
+  
+  engagement: {
+    likes: "int(0,)",
+    shares: "int(0,)",
+    comments: "int(0,)",
+    views: "int(0,)?",
+    saves: "int(0,)?"
+  },
+  
+  metadata: {
+    language: "string(/^[a-z]{2}$/)?",
+    location: {
+      name: "string?",
+      coordinates: {
+        lat: "number(-90,90)",
+        lng: "number(-180,180)"
+      }?
+    }?,
+    device: "string?",
+    source: "web|mobile|api|third-party"
+  },
+  
+  moderation: {
+    flagged: "boolean",
+    reasons: "spam|harassment|misinformation|inappropriate|copyright"[]?,
+    reviewed: "boolean",
+    approved: "boolean?"
+  },
+  
+  timestamps: {
+    createdAt: "date",
+    updatedAt: "date?",
+    scheduledFor: "date?",
+    publishedAt: "date?"
+  }
 });
 ```
 
-### Authentication Schemas
+## Enterprise Applications
+
+### Employee Management Schema
 
 ```typescript
-const JWTPayloadSchema = Interface({
-  sub: "uuid",                                  // Subject (user ID)
-  iat: "int(1,)",                              // Issued at
-  exp: "int(1,)",                              // Expires at
-  aud: "string",                               // Audience
-  iss: "string",                               // Issuer
-  scope: "string[]",                           // Permissions
-  role: Make.union("user", "admin", "service") // Role options
-});
-
-const AuthRequestSchema = Interface({
-  email: "email",                               // Email format
-  password: "string(1,)",                      // Non-empty password
-  rememberMe: "boolean?",                      // Optional remember me
-  captcha: "string(/^[a-zA-Z0-9]{6}$/)?"       // Optional 6-char captcha
-});
-
-const RefreshTokenSchema = Interface({
-  refreshToken: "string(/^[a-zA-Z0-9+/]{40,}={0,2}$/)", // Base64 token
-  deviceId: "uuid?"                             // Optional device ID
+const EmployeeSchema = Interface({
+  id: "uuid",
+  employeeId: "string(/^EMP[0-9]{6}$/)",
+  
+  personal: {
+    firstName: "string(1,50)",
+    lastName: "string(1,50)",
+    middleName: "string(1,50)?",
+    preferredName: "string(1,50)?",
+    dateOfBirth: "date",
+    gender: "male|female|other|prefer-not-to-say"?,
+    nationality: "string(/^[A-Z]{2}$/)",
+    maritalStatus: "single|married|divorced|widowed|separated"?
+  },
+  
+  contact: {
+    email: "email",
+    personalEmail: "email?",
+    phone: "phone",
+    emergencyContact: {
+      name: "string",
+      relationship: "string",
+      phone: "phone",
+      email: "email?"
+    },
+    address: {
+      street: "string",
+      city: "string",
+      state: "string",
+      zipCode: "string",
+      country: "string(/^[A-Z]{2}$/)"
+    }
+  },
+  
+  employment: {
+    status: "active|inactive|terminated|on-leave|suspended",
+    type: "full-time|part-time|contract|intern|consultant",
+    startDate: "date",
+    endDate: "date?",
+    probationEndDate: "date?",
+    department: "string",
+    position: "string",
+    level: "junior|mid|senior|lead|manager|director|vp|c-level",
+    reportsTo: "uuid?",
+    location: "string",
+    workArrangement: "office|remote|hybrid"
+  },
+  
+  compensation: {
+    salary: "number(0,)",
+    currency: "string(/^[A-Z]{3}$/)",
+    payFrequency: "weekly|bi-weekly|monthly|annually",
+    benefits: "string[]?",
+    bonusEligible: "boolean",
+    equityGrant: "number(0,)?"
+  },
+  
+  performance: {
+    lastReviewDate: "date?",
+    nextReviewDate: "date?",
+    currentRating: "exceeds|meets|below|unsatisfactory"?,
+    goals: "string[]?",
+    skills: "string[]?"
+  },
+  
+  access: {
+    badgeNumber: "string?",
+    accessLevel: "basic|elevated|admin|executive",
+    systems: "string[]?",
+    permissions: "string[]?"
+  },
+  
+  // Runtime HR configuration
+  hrConfig: "any?",
+  
+  // Conditional fields
+  visaStatus: "when hrConfig.requiresVisa.$exists() *? any : =null",
+  securityClearance: "when hrConfig.requiresClearance.$exists() *? any : =null"
 });
 ```
 
----
-
-**Related Resources**  
-[Complete Documentation](./README.md) | [Quick Reference](./QUICK-REFERENCE.md)
+These examples demonstrate real-world usage patterns across various domains, showing how Fortify Schema can handle complex validation requirements while maintaining type safety and readability.

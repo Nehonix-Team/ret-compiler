@@ -227,7 +227,7 @@ exports.deactivate = deactivate;
 function isFortifySchema(text) {
     // Check for common Fortify patterns
     const patterns = [
-        /\b(string|number|boolean|date|email|url|uuid|phone|slug|username|int|positive|negative|float|any)\b/,
+        /\b(string|number|boolean|date|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|any)\b/,
         /\b(string|number|int|float)\s*\(\s*\d*\s*,?\s*\d*\s*\)/,
         /\b\w+\s*\|\s*\w+/,
         /=\w+/,

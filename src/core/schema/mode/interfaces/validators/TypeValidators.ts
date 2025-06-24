@@ -605,6 +605,41 @@ export class TypeValidators {
   }
 
   /**
+   * Validate IP address format (IPv4 and IPv6)
+   */
+  static validateIp(value: any): SchemaValidationResult {
+    const result: SchemaValidationResult = {
+      success: true,
+      errors: [],
+      warnings: [],
+      data: value,
+    };
+
+    if (typeof value !== "string") {
+      result.success = false;
+      result.errors.push("Expected string for IP address");
+      return result;
+    }
+
+    // IPv4 regex pattern
+    const ipv4Regex =
+      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+    // IPv6 regex pattern (simplified but comprehensive)
+    const ipv6Regex =
+      /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$|^(?:[0-9a-fA-F]{1,4}:)*::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}$/;
+
+    if (!ipv4Regex.test(value) && !ipv6Regex.test(value)) {
+      result.success = false;
+      result.errors.push(
+        "Invalid IP address format (must be valid IPv4 or IPv6)"
+      );
+    }
+
+    return result;
+  }
+
+  /**
    * Validate object type
    */
   static validateObject(value: any): SchemaValidationResult {
