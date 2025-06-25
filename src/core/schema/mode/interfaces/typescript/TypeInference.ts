@@ -5,8 +5,8 @@
  * This is the single source of truth for all TypeScript type operations.
  */
 
-import {
-  ConditionalNode, 
+import { 
+  ConditionalNode,
   FieldAccessNode,
   ComparisonNode,
   MethodCallNode,
@@ -164,9 +164,22 @@ export type InferFieldType<T> = T extends string
 
 /**
  * Main type inference for schema interfaces
+ * FIXED: Handle optional properties correctly in nested objects
  */
 export type InferSchemaType<T> = {
-  [K in keyof T]: InferFieldType<T[K]>;
+  // Required properties (non-optional)
+  [K in keyof T as T[K] extends string
+    ? IsOptional<T[K]> extends true
+      ? never
+      : K
+    : K]: InferFieldType<T[K]>;
+} & {
+  // Optional properties (with ? suffix)
+  [K in keyof T as T[K] extends string
+    ? IsOptional<T[K]> extends true
+      ? K
+      : never
+    : never]?: InferFieldType<T[K]>;
 };
 
 // Additional utility types for Make.ts compatibility

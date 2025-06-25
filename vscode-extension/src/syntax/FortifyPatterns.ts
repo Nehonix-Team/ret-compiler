@@ -90,13 +90,34 @@ export class FortifyPatterns {
 
   /**
    * Generate regex pattern for V2 method calls with $ prefix
+   * ENHANCED: Support bracket notation and array indexing
    */
   static getMethodPattern(): RegExp {
     const methods = FortifySyntaxUtils.getAllMethodNames();
 
-    // V2 syntax uses $method() format
-    const pattern = `\\.\\$(${methods.join("|")})\\b`;
-    return new RegExp(pattern);
+    // V2 syntax uses $method() format with enhanced property access
+    const patterns = [
+      `\\.\\$(${methods.join("|")})\\b`, // Standard: property.$method()
+      `\\["[^"]*"\\]\\.\\$(${methods.join("|")})\\b`, // Bracket notation: ["property"].$method()
+      `\\['[^']*'\\]\\.\\$(${methods.join("|")})\\b`, // Single quotes: ['property'].$method()
+      `\\[\\d+\\]\\.\\$(${methods.join("|")})\\b`, // Array indexing: [0].$method()
+    ];
+
+    return new RegExp(`(${patterns.join("|")})`);
+  }
+
+  /**
+   * Generate regex pattern for property access (bracket notation and array indexing)
+   * ENHANCED: Support advanced property access patterns
+   */
+  static getPropertyAccessPattern(): RegExp {
+    const patterns = [
+      `\\["[^"]*"\\]`, // Bracket notation with double quotes: ["property-name"]
+      `\\['[^']*'\\]`, // Bracket notation with single quotes: ['property-name']
+      `\\[\\d+\\]`, // Array indexing: [0], [1], etc.
+    ];
+
+    return new RegExp(`(${patterns.join("|")})`);
   }
 
   /**
@@ -145,12 +166,14 @@ export class FortifyPatterns {
 
   /**
    * Generate comprehensive schema detection pattern
+   * ENHANCED: Include bracket notation and array indexing patterns
    */
   static getSchemaDetectionPattern(): RegExp {
     const typePattern = this.getTypePattern().source;
     const constraintPattern = this.getConstraintPattern().source;
     const conditionalPattern = this.getConditionalKeywordPattern().source;
     const methodPattern = this.getMethodPattern().source;
+    const propertyAccessPattern = this.getPropertyAccessPattern().source;
 
     const patterns = [
       typePattern,
@@ -160,6 +183,7 @@ export class FortifyPatterns {
       conditionalPattern,
       "\\*\\?", // Conditional then
       methodPattern,
+      propertyAccessPattern, // ENHANCED: Bracket notation and array indexing
       "\\[\\]", // Arrays
     ];
 

@@ -794,7 +794,7 @@ export class ConditionalLexer {
   private _peekNext(): string { 
     if (this._position + 1 >= this._input.length) return "\0";
     return this._input[this._position + 1];
-  }
+  } 
 
   private _isAtEnd(): boolean {
     return this._position >= this._input.length;

@@ -1,8 +1,8 @@
 # API Stability and Production Readiness
 
-## Current Status: **STABLE** (v2.0.0)
+## Current Status: **STABLE** (v2.0.1)
 
-Fortify Schema has reached **STABLE** status with v2.0.0, meaning the core API is production-ready with comprehensive stability guarantees and enterprise-grade support.
+Fortify Schema has reached **STABLE** status with v2.0.1, meaning the core API is production-ready with comprehensive stability guarantees and enterprise-grade support.
 
 ## API Stability Guarantee
 
@@ -19,7 +19,7 @@ Fortify Schema has reached **STABLE** status with v2.0.0, meaning the core API i
 - **V2 Conditional Validation** - Runtime method syntax (property.$method()) is stable
 - **Performance characteristics** - Guaranteed performance levels maintained
 
-### Recently Stabilized (v2.0.0) 🎯
+### Recently Stabilized (v2.0.1) 🎯
 
 - **V2 Runtime Methods** - All 8 methods ($exists, $empty, $null, $contains, $startsWith, $endsWith, $between, $in)
 - **Advanced property access** - Deep nested properties, special characters, Unicode support

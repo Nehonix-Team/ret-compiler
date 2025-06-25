@@ -23,6 +23,29 @@ export function generateSchemaStringBeginPattern(): string {
 }
 
 /**
+ * Generate the begin pattern for single quote schema strings
+ * ENHANCED: Support single quotes for Fortify schema strings
+ */
+export function generateSchemaSingleQuoteBeginPattern(): string {
+  // Create a lookahead pattern that matches single-quoted strings containing any Fortify syntax
+  const typeNames = FortifySyntaxUtils.getAllTypeNames().join("|");
+  const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
+  const methods = FortifySyntaxUtils.getAllMethodNames()
+    .map((name: string) => `\\.${name}`)
+    .join("|");
+
+  const patterns = [
+    typeNames,
+    ...operators,
+    methods,
+    "\\[\\]", // Arrays
+    "\\(\\d+,?\\d*\\)", // Constraints
+  ];
+
+  return `'(?=.*(?:${patterns.join("|")}).*')`;
+}
+
+/**
  * Generate the begin pattern for template literal schema strings
  */
 export function generateSchemaTemplateBeginPattern(): string {

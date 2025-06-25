@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
     "(", // Trigger on parentheses for constraints
     ".", // Trigger on dot for property access
     "$" // Trigger on dollar for V2 method calls
-  );
+  ); 
 
   // Register hover provider for type information
   const hoverProvider = vscode.languages.registerHoverProvider(
@@ -70,7 +70,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
   );
-
+ 
   // Watch for document open to provide initial validation
   const documentOpenListener = vscode.workspace.onDidOpenTextDocument(
     (document) => {

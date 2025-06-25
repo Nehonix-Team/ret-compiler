@@ -80,12 +80,30 @@ class FortifyPatterns {
     }
     /**
      * Generate regex pattern for V2 method calls with $ prefix
+     * ENHANCED: Support bracket notation and array indexing
      */
     static getMethodPattern() {
         const methods = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllMethodNames();
-        // V2 syntax uses $method() format
-        const pattern = `\\.\\$(${methods.join("|")})\\b`;
-        return new RegExp(pattern);
+        // V2 syntax uses $method() format with enhanced property access
+        const patterns = [
+            `\\.\\$(${methods.join("|")})\\b`,
+            `\\["[^"]*"\\]\\.\\$(${methods.join("|")})\\b`,
+            `\\['[^']*'\\]\\.\\$(${methods.join("|")})\\b`,
+            `\\[\\d+\\]\\.\\$(${methods.join("|")})\\b`, // Array indexing: [0].$method()
+        ];
+        return new RegExp(`(${patterns.join("|")})`);
+    }
+    /**
+     * Generate regex pattern for property access (bracket notation and array indexing)
+     * ENHANCED: Support advanced property access patterns
+     */
+    static getPropertyAccessPattern() {
+        const patterns = [
+            `\\["[^"]*"\\]`,
+            `\\['[^']*'\\]`,
+            `\\[\\d+\\]`, // Array indexing: [0], [1], etc.
+        ];
+        return new RegExp(`(${patterns.join("|")})`);
     }
     /**
      * Generate regex pattern for conditional keywords
@@ -127,12 +145,14 @@ class FortifyPatterns {
     }
     /**
      * Generate comprehensive schema detection pattern
+     * ENHANCED: Include bracket notation and array indexing patterns
      */
     static getSchemaDetectionPattern() {
         const typePattern = this.getTypePattern().source;
         const constraintPattern = this.getConstraintPattern().source;
         const conditionalPattern = this.getConditionalKeywordPattern().source;
         const methodPattern = this.getMethodPattern().source;
+        const propertyAccessPattern = this.getPropertyAccessPattern().source;
         const patterns = [
             typePattern,
             `${typePattern}\\s*${constraintPattern}`,
@@ -141,6 +161,7 @@ class FortifyPatterns {
             conditionalPattern,
             "\\*\\?",
             methodPattern,
+            propertyAccessPattern,
             "\\[\\]", // Arrays
         ];
         return new RegExp(`(${patterns.join("|")})`);

@@ -156,6 +156,8 @@ console.log(result.data); // Fully typed product data
 
 ### Field Types & Constraints
 
+_For security purpose fields cannot be null_
+
 ```typescript
 const ComprehensiveSchema = Interface({
   // Basic types
@@ -1130,6 +1132,9 @@ MIT © [Nehonix Team](https://github.com/Nehonix-Team)
 ---
 
 <div align="center">
-  <p><strong>Built with precision and care by the Nehonix Team</strong></p>
+   <strong style="color:red">
+   For security purpose fields cannot be null
+  </strong>
+  <p><strong>Built with precision and care by Nehonix</strong></p>
   <p>🚀 <em>Empowering developers with enterprise-grade validation</em> 🚀</p>
 </div>

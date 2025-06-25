@@ -15,7 +15,8 @@ export interface ParsedConstraints {
 const parseCache = new Map<string, ParsedConstraints>();
 
 // Pre-compiled regex patterns for better performance
-const CONSTRAINT_PATTERN = /^([a-zA-Z\[\]]+)\(([^)]*)\)$/;
+// FIXED: Handle nested parentheses in constraints like string(/^(?=.*[a-z]).*$/)
+const CONSTRAINT_PATTERN = /^([a-zA-Z\[\]]+)\((.+)\)$/;
 const REGEX_PATTERN = /^\/(.+)\/$/;
 const COMMA_SPLIT = /\s*,\s*/;
 const NUMERIC_PATTERN = /^-?\d+(\.\d+)?$/;
@@ -46,6 +47,7 @@ export class ConstraintParser {
 
   /**
    * Internal parsing logic - optimized for speed
+   * FIXED: Handle nested parentheses in regex patterns correctly
    */
   private static parseConstraintsInternal(
     fieldType: string
@@ -61,10 +63,10 @@ export class ConstraintParser {
       type = type.slice(0, -1);
     }
 
-    // Parse constraints using pre-compiled regex
-    const constraintMatch = type.match(CONSTRAINT_PATTERN);
+    // FIXED: Use balanced parentheses parsing for complex constraints
+    const constraintMatch = this.parseBalancedConstraints(type);
     if (constraintMatch) {
-      const [, baseType, constraintStr] = constraintMatch;
+      const { baseType, constraintStr } = constraintMatch;
       type = baseType;
 
       if (constraintStr) {
@@ -73,6 +75,52 @@ export class ConstraintParser {
     }
 
     return { type, constraints, optional };
+  }
+
+  /**
+   * Parse constraints with balanced parentheses support
+   * Handles complex regex patterns like string(/^(?=.*[a-z]).*$/)
+   */
+  private static parseBalancedConstraints(
+    type: string
+  ): { baseType: string; constraintStr: string } | null {
+    // Find the base type (everything before the first opening parenthesis)
+    const openParenIndex = type.indexOf("(");
+    if (openParenIndex === -1) {
+      return null; // No constraints
+    }
+
+    const baseType = type.substring(0, openParenIndex);
+
+    // Validate base type
+    if (!/^[a-zA-Z\[\]]+$/.test(baseType)) {
+      return null;
+    }
+
+    // Find the matching closing parenthesis using balanced counting
+    let depth = 0;
+    let constraintStart = openParenIndex + 1;
+    let constraintEnd = -1;
+
+    for (let i = openParenIndex; i < type.length; i++) {
+      if (type[i] === "(") {
+        depth++;
+      } else if (type[i] === ")") {
+        depth--;
+        if (depth === 0) {
+          constraintEnd = i;
+          break;
+        }
+      }
+    }
+
+    // Check if we found a balanced closing parenthesis and it's at the end
+    if (constraintEnd === -1 || constraintEnd !== type.length - 1) {
+      return null;
+    }
+
+    const constraintStr = type.substring(constraintStart, constraintEnd);
+    return { baseType, constraintStr };
   }
 
   /**

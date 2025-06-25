@@ -21,9 +21,9 @@ Conditional validation allows you to create dynamic validation rules based on th
 ```typescript
 const Schema = Interface({
   role: "admin|user|guest",
-  
+
   // Conditional validation: "when condition *? then : else"
-  permissions: "when role=admin *? string[] : string[]?"
+  permissions: "when role=admin *? string[] : string[]?",
   //           ^^^^           ^^           ^
   //           keyword        operator     separator
 });
@@ -40,34 +40,35 @@ const V1Schema = Interface({
   role: "admin|user|guest",
   accountType: "free|premium|enterprise",
   age: "number(13,120)",
-  
+
   // Basic equality
   adminAccess: "when role=admin *? string[] : string[]?",
-  
+
   // Inequality
   nonGuestAccess: "when role!=guest *? boolean : boolean?",
-  
+
   // Numeric comparisons
   adultContent: "when age>=18 *? boolean : boolean?",
   seniorDiscount: "when age>65 *? number(0,50) : number(0,0)",
   youthProgram: "when age<25 *? boolean : boolean?",
-  
+
   // Value inclusion
-  premiumFeatures: "when accountType.$in(premium,enterprise) *? string[] : string[]?"
+  premiumFeatures:
+    "when accountType.$in(premium,enterprise) *? string[] : string[]?",
 });
 ```
 
 ### V1 Operators
 
-| Operator | Description | Example |
-|----------|-------------|---------|
-| `=` | Equals | `when role=admin` |
-| `!=` | Not equals | `when role!=guest` |
-| `>` | Greater than | `when age>18` |
-| `>=` | Greater than or equal | `when age>=21` |
-| `<` | Less than | `when age<65` |
-| `<=` | Less than or equal | `when age<=25` |
-| `.in()` | Value in list | `when role.in(admin,moderator)` |
+| Operator | Description           | Example                         |
+| -------- | --------------------- | ------------------------------- |
+| `=`      | Equals                | `when role=admin`               |
+| `!=`     | Not equals            | `when role!=guest`              |
+| `>`      | Greater than          | `when age>18`                   |
+| `>=`     | Greater than or equal | `when age>=21`                  |
+| `<`      | Less than             | `when age<65`                   |
+| `<=`     | Less than or equal    | `when age<=25`                  |
+| `.in()`  | Value in list         | `when role.in(admin,moderator)` |
 
 ### V1 Limitations
 
@@ -89,17 +90,17 @@ const V2Schema = Interface({
   config: "any?",
   user: "any?",
   features: "any?",
-  
+
   // Basic user data
   id: "uuid",
   email: "email",
   role: "admin|user|guest",
-  
+
   // V2 Runtime Methods - Enhanced property checking
   hasPermissions: "when config.permissions.$exists() *? boolean : =false",
   hasProfile: "when user.profile.$exists() *? boolean : =false",
   isListEmpty: "when config.items.$empty() *? boolean : =true",
-  hasAdminRole: "when user.roles.$contains(admin) *? boolean : =false"
+  hasAdminRole: "when user.roles.$contains(admin) *? boolean : =false",
 });
 ```
 
@@ -122,19 +123,21 @@ const V2Schema = Interface({
 const ExistsSchema = Interface({
   config: "any?",
   user: "any?",
-  
+
   // Basic existence checking
   hasConfig: "when config.$exists() *? boolean : =false",
   hasUserProfile: "when user.profile.$exists() *? boolean : =false",
-  
+
   // Deep nested checking
-  hasAdvancedSettings: "when user.profile.settings.advanced.$exists() *? boolean : =false",
-  
+  hasAdvancedSettings:
+    "when user.profile.settings.advanced.$exists() *? boolean : =false",
+
   // Special characters
-  hasSpecialFeature: 'when config["admin-override"].$exists() *? boolean : =false',
-  
+  hasSpecialFeature:
+    'when config["admin-override"].$exists() *? boolean : =false',
+
   // Unicode support
-  hasUnicodeFeature: "when features.feature_🚀.$exists() *? boolean : =false"
+  hasUnicodeFeature: "when features.feature_🚀.$exists() *? boolean : =false",
 });
 ```
 
@@ -145,15 +148,15 @@ const ExistsSchema = Interface({
 ```typescript
 const EmptySchema = Interface({
   data: "any?",
-  
+
   // String empty checking
   hasContent: "when data.description.$empty() *? =no_content : =has_content",
-  
+
   // Array empty checking
   hasItems: "when data.items.$empty() *? =no_items : =has_items",
-  
+
   // Object empty checking
-  hasMetadata: "when data.metadata.$empty() *? =no_metadata : =has_metadata"
+  hasMetadata: "when data.metadata.$empty() *? =no_metadata : =has_metadata",
 });
 ```
 
@@ -162,12 +165,13 @@ const EmptySchema = Interface({
 ```typescript
 const NullSchema = Interface({
   data: "any?",
-  
+
   // Null checking
   isDataNull: "when data.value.$null() *? =is_null : =not_null",
-  
+
   // Combined with existence
-  hasValidData: "when data.value.$exists() && !data.value.$null() *? boolean : =false"
+  hasValidData:
+    "when data.value.$exists() && !data.value.$null() *? boolean : =false",
 });
 ```
 
@@ -178,16 +182,38 @@ const NullSchema = Interface({
 ```typescript
 const ContainsSchema = Interface({
   data: "any?",
-  
+
   // Basic contains
-  hasImportantInfo: "when data.description.$contains(important) *? boolean : =false",
-  
+  hasImportantInfo:
+    "when data.description.$contains(important) *? boolean : =none",
+
   // Multiple contains checks
-  hasKeywords: "when data.content.$contains(urgent) || data.content.$contains(priority) *? boolean : =false",
-  
+  hasKeywords:
+    "when data.content.$contains(urgent) || data.content.$contains(priority) *? boolean : =no_keywords",
+
   // Case-sensitive checking
-  hasExactMatch: "when data.title.$contains(URGENT) *? boolean : =false"
+  hasExactMatch: "when data.title.$contains(URGENT) *? boolean : =no_match",
 });
+
+const data = {
+  title: "Big title ..... ",
+  content: "something more beautifull....urgent",
+  description: `Lorem ipsum dolor sit amet consectetur, adipisicing elit. Harum neque
+    architecto commodi ipsam excepturi repellat consequatur, provident
+    asperiores. Excepturi earum vero amet enim consequatur quasi, fugit
+    cupiditate! Corrupti, incidunt exercitationem. something ..... `,
+};
+const result = ContainsSchema.safeParse({
+  data,
+  hasExactMatch: "no_match",
+  hasImportantInfo: "none",
+  hasKeywords: "no_keywords",
+});
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Expected errors:", result.errors);
+}
 ```
 
 #### `$startsWith(prefix)` - Check String Prefix
@@ -195,13 +221,13 @@ const ContainsSchema = Interface({
 ```typescript
 const StartsWithSchema = Interface({
   data: "any?",
-  
+
   // Prefix checking
   isSystemMessage: "when data.message.$startsWith(SYSTEM:) *? boolean : =false",
   isErrorCode: "when data.code.$startsWith(ERR_) *? boolean : =false",
-  
+
   // URL checking
-  isSecureUrl: "when data.url.$startsWith(https://) *? boolean : =false"
+  isSecureUrl: "when data.url.$startsWith(https://) *? boolean : =false",
 });
 ```
 
@@ -210,14 +236,32 @@ const StartsWithSchema = Interface({
 ```typescript
 const EndsWithSchema = Interface({
   data: "any?",
-  
+
   // File extension checking
-  isPdfFile: "when data.filename.$endsWith(.pdf) *? boolean : =false",
-  isImageFile: "when data.filename.$endsWith(.jpg) || data.filename.$endsWith(.png) *? boolean : =false",
-  
+  isPdfFile: "when data.filename.$endsWith(.pdf) *? boolean : =no_pdf_file",
+  isImageFile:
+    "when data.filename.$endsWith(.jpg) || data.filename.$endsWith(.png) *? boolean : =no_img",
+
   // Domain checking
-  isCorporateEmail: "when data.email.$endsWith(@company.com) *? boolean : =false"
+  isCorporateEmail:
+    "when data.email.$endsWith(@company.com) *? boolean : =no_itsnot_corporated",
 });
+
+const data = {
+  filename: "super_file.ehezezpaozdj.pdf", //is pdf
+  email: "mail@somethingelse.com", //false so should fail
+};
+const result = EndsWithSchema.safeParse({
+  data,
+  isPdfFile: true,
+  isCorporateEmail: true,
+  isImageFile: "no_img",
+});
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Expected errors:", result.errors);
+}
 ```
 
 ### Numeric Methods
@@ -227,16 +271,34 @@ const EndsWithSchema = Interface({
 ```typescript
 const BetweenSchema = Interface({
   data: "any?",
-  
+
   // Age range checking
-  isAdult: "when data.age.$between(18,65) *? boolean : =false",
-  
+  isAdult: "when data.age.$between(18,65) *? boolean : =isnt_adult",
+
   // Score validation
-  isPassingGrade: "when data.score.$between(60,100) *? boolean : =false",
-  
+  isPassingGrade:
+    "when data.score.$between(60,100) *? boolean : =itsnt_passgrade",
+
   // Price range
-  isAffordable: "when data.price.$between(0,100) *? boolean : =false"
+  isAffordable: "when data.price.$between(0,100) *? boolean : =yes_itis",
 });
+
+const data = {
+  age: 17,
+  score: 59,
+  price: 40,
+};
+const result = BetweenSchema.safeParse({
+  data,
+  isAdult: true, //should fail because of age >= 18
+  isPassingGrade: true, //should also faild
+  isAffordable: true,
+});
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Expected errors:", result.errors);
+}
 ```
 
 #### `$in(val1,val2,...)` - Check Value Inclusion
@@ -244,16 +306,37 @@ const BetweenSchema = Interface({
 ```typescript
 const InSchema = Interface({
   data: "any?",
-  
+
   // Role checking
-  hasElevatedAccess: "when data.role.$in(admin,moderator,super_admin) *? boolean : =false",
-  
+  hasElevatedAccess:
+    "when data.role.$in(admin,moderator,super_admin) *? boolean : =not_allowed",
+
   // Status checking
-  isActiveStatus: "when data.status.$in(active,pending,processing) *? boolean : =false",
-  
+  isActiveStatus:
+    "when data.status.$in(active,pending,processing) *? boolean : =not_active",
+
   // Category checking
-  isPremiumCategory: "when data.category.$in(premium,enterprise,vip) *? boolean : =false"
+  isPremiumCategory:
+    "when data.category.$in(premium,enterprise,vip) *? boolean : =itsnot_premium",
 });
+
+const data = {
+  age: 17,
+  role: "admin",
+  status: "active",
+  category: "premium",
+};
+const result = InSchema.safeParse({
+  data,
+  hasElevatedAccess: true,
+  isActiveStatus: "not_active", //should faild because "status" contains one of the requirements
+  isPremiumCategory: "itsnot_premium", // should faild also
+});
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Expected errors:", result.errors);
+}
 ```
 
 ## Advanced Patterns
@@ -261,21 +344,47 @@ const InSchema = Interface({
 ### Complex Default Values
 
 ```typescript
+
 const ComplexDefaultsSchema = Interface({
   config: "any?",
-  
+
   // Object defaults
-  defaultSettings: 'when config.settings.$exists() *? any : ={"theme":"dark","lang":"en"}',
-  
+  // @fortify-ignore
+  defaultSettings:
+    'when config.settings.$exists() *? any : ={"theme":"dark","lang":"en"}',
+
   // Array defaults
+  // @fortify-ignore
   defaultTags: 'when config.tags.$exists() *? string[] : =["default","user"]',
-  
+
   // Nested object defaults
-  defaultProfile: 'when config.profile.$exists() *? any : ={"name":"Anonymous","avatar":null}',
-  
+  defaultProfile:
+    'when config.profile.$exists() *? any : ={"name":"Anonymous","avatar":null}',
+
   // Complex conditional defaults
-  advancedConfig: 'when config.advanced.$exists() *? any : ={"features":[],"permissions":{}}'
+  advancedConfig:
+    'when config.advanced.$exists() *? any : ={"features":[],"permissions":{}}',
 });
+
+const config = {
+  // settings: "yes", //not exist
+  // advancedConfig: "yes", //not exist
+  defaultProfile: "yes",
+  defaultTags: "yes"
+};
+const result = ComplexDefaultsSchema.safeParse({
+  config,
+  defaultSettings: "",
+  defaultTags: true,
+  defaultProfile: true,
+  advancedConfig: ""
+});
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Expected errors:", result.errors);
+}
+
 ```
 
 ### Method Combinations
@@ -284,18 +393,22 @@ const ComplexDefaultsSchema = Interface({
 const CombinedMethodsSchema = Interface({
   user: "any?",
   config: "any?",
-  
+
   // Logical AND
-  isValidUser: "when user.email.$exists() && user.verified.$exists() *? boolean : =false",
-  
+  isValidUser:
+    "when user.email.$exists() && user.verified.$exists() *? boolean : =false",
+
   // Logical OR
-  hasContact: "when user.email.$exists() || user.phone.$exists() *? boolean : =false",
-  
+  hasContact:
+    "when user.email.$exists() || user.phone.$exists() *? boolean : =false",
+
   // Complex combinations
-  canAccessFeature: "when user.role.$in(admin,premium) && config.features.$contains(advanced) *? boolean : =false",
-  
+  canAccessFeature:
+    "when user.role.$in(admin,premium) && config.features.$contains(advanced) *? boolean : =false",
+
   // Nested conditions
-  accessLevel: "when user.role=admin *? when config.superAdmin.$exists() *? =super : =admin : =user"
+  accessLevel:
+    "when user.role=admin *? when config.superAdmin.$exists() *? =super : =admin : =user",
 });
 ```
 
@@ -304,34 +417,52 @@ const CombinedMethodsSchema = Interface({
 ```typescript
 const DeepAccessSchema = Interface({
   data: "any?",
-  
+
   // Multi-level property access
-  hasDeepFeature: "when data.user.profile.settings.advanced.features.$exists() *? boolean : =false",
-  
+  hasDeepFeature:
+    "when data.user.profile.settings.advanced.features.$exists() *? boolean : =false",
+
   // Array property access
   hasFirstItem: "when data.items[0].$exists() *? boolean : =false",
-  
+
   // Mixed access patterns
-  hasNestedValue: "when data.config.nested.deep.value.$exists() *? boolean : =false"
+  hasNestedValue:
+    "when data.config.nested.deep.value.$exists() *? boolean : =false",
 });
 ```
 
 ### Special Characters and Unicode
 
 ```typescript
+
 const SpecialCharsSchema = Interface({
   config: "any?",
-  
+
   // Properties with hyphens
-  hasAdminOverride: 'when config["admin-override"].$exists() *? boolean : =false',
-  
+  hasAdminOverride:
+    'when config["admin-override"].$exists() *? boolean : =not_allowed',
+
   // Properties with spaces
-  hasSpecialConfig: 'when config["special config"].$exists() *? boolean : =false',
-  
-  // Unicode properties
-  hasEmojiFeature: "when config.feature_🚀.$exists() *? boolean : =false",
-  hasUnicodeData: "when config.データ.$exists() *? boolean : =false"
+  hasSpecialConfig:
+    'when config["special config"].$exists() *? boolean : =no_sp_config',
 });
+
+const config = {
+  "admin-override": true,
+  "special config":  true
+}
+
+const result = SpecialCharsSchema.safeParse({
+  config,
+  hasAdminOverride: "not_allowed", // should throw err
+  hasSpecialConfig: "no_sp_config", // should also throw err
+});
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Expected errors:", result.errors);
+}
+
 ```
 
 ## Migration from V1 to V2
@@ -341,45 +472,44 @@ const SpecialCharsSchema = Interface({
 #### Basic Property Checking
 
 ```typescript
-// V1 (Legacy)
-const V1Schema = Interface({
+
+const Schema1 = Interface({
   role: "admin|user|guest",
-  permissions: "when role=admin *? string[] : string[]?"
+  permissions: "when role=admin *? string[] : string[]?",
 });
 
-// V2 (Current)
-const V2Schema = Interface({
+const Schema2 = Interface({
   role: "admin|user|guest",
   config: "any?",
-  permissions: "when config.hasPermissions.$exists() *? string[] : =[]"
+  permissions: "when config.hasPermissions.$exists() *? string[] : =[]",
 });
 ```
 
 #### Complex Business Logic
 
 ```typescript
-// V1 (Legacy)
 const V1BusinessSchema = Interface({
   accountType: "free|premium|enterprise",
   userLevel: "basic|advanced|expert",
-  
+
   maxProjects: "when accountType=free *? number(1,3) : number(1,100)",
-  advancedFeatures: "when userLevel.in(advanced,expert) *? string[] : string[]?"
+  advancedFeatures:
+    "when userLevel.in(advanced,expert) *? string[] : string[]?",
 });
 
-// V2 (Current)
 const V2BusinessSchema = Interface({
   accountType: "free|premium|enterprise",
   userLevel: "basic|advanced|expert",
   config: "any?",
   features: "any?",
-  
-  maxProjects: "when config.account.$in(free,trial) *? number(1,3) : number(1,100)",
+
+  maxProjects:
+    "when config.account.$in(free,trial) *? number(1,3) : number(1,100)",
   advancedFeatures: "when features.advanced.$exists() *? string[] : =[]",
-  
+
   // New capabilities not possible in V1
   dynamicLimits: "when config.limits.$exists() *? any : ={}",
-  customFeatures: "when features.custom.$exists() *? string[] : =[]"
+  customFeatures: "when features.custom.$exists() *? string[] : =[]",
 });
 ```
 
@@ -400,14 +530,14 @@ const V2BusinessSchema = Interface({
 const Schema = Interface({
   config: "any?",
   hasPermissions: "when config.permissions.$exists() *? boolean : =false",
-  canEditContent: "when config.editRights.$exists() *? boolean : =false"
+  canEditContent: "when config.editRights.$exists() *? boolean : =false",
 });
 
 // ❌ Avoid
 const Schema = Interface({
   config: "any?",
   p: "when config.permissions.$exists() *? boolean : =false",
-  e: "when config.editRights.$exists() *? boolean : =false"
+  e: "when config.editRights.$exists() *? boolean : =false",
 });
 ```
 
@@ -419,14 +549,14 @@ const Schema = Interface({
   config: "any?",
   userRole: "when config.role.$exists() *? string : =guest",
   permissions: "when config.permissions.$exists() *? string[] : =[]",
-  settings: 'when config.settings.$exists() *? any : ={"theme":"light"}'
+  settings: 'when config.settings.$exists() *? any : ={"theme":"light"}',
 });
 
 // ❌ Avoid - Unclear defaults
 const Schema = Interface({
   config: "any?",
   userRole: "when config.role.$exists() *? string : =unknown",
-  permissions: "when config.permissions.$exists() *? string[] : =null"
+  permissions: "when config.permissions.$exists() *? string[] : =null",
 });
 ```
 
@@ -436,17 +566,19 @@ const Schema = Interface({
 // ✅ Good - Use specific methods for specific checks
 const Schema = Interface({
   data: "any?",
-  hasContent: "when data.description.$exists() && !data.description.$empty() *? boolean : =false",
-  isValidEmail: "when data.email.$exists() && data.email.$contains(@) *? boolean : =false",
-  isAdminUser: "when data.role.$in(admin,super_admin) *? boolean : =false"
+  hasContent:
+    "when data.description.$exists() && !data.description.$empty() *? boolean : =false",
+  isValidEmail:
+    "when data.email.$exists() && data.email.$contains(@) *? boolean : =false",
+  isAdminUser: "when data.role.$in(admin,super_admin) *? boolean : =false",
 });
 
 // ❌ Avoid - Generic existence checking when specific methods exist
 const Schema = Interface({
   data: "any?",
   hasContent: "when data.description.$exists() *? boolean : =false", // Doesn't check if empty
-  isValidEmail: "when data.email.$exists() *? boolean : =false",     // Doesn't validate format
-  isAdminUser: "when data.role.$exists() *? boolean : =false"        // Doesn't check specific values
+  isValidEmail: "when data.email.$exists() *? boolean : =false", // Doesn't validate format
+  isAdminUser: "when data.role.$exists() *? boolean : =false", // Doesn't check specific values
 });
 ```
 
@@ -456,16 +588,18 @@ const Schema = Interface({
 const RobustSchema = Interface({
   user: "any?",
   config: "any?",
-  
+
   // Handle missing nested properties safely
-  hasValidProfile: "when user.$exists() && user.profile.$exists() && !user.profile.$empty() *? boolean : =false",
-  
+  hasValidProfile:
+    "when user.$exists() && user.profile.$exists() && !user.profile.$empty() *? boolean : =false",
+
   // Provide fallbacks for missing configuration
   maxRetries: "when config.retries.$exists() *? number : =3",
   timeout: "when config.timeout.$exists() *? number : =5000",
-  
+
   // Handle array edge cases
-  hasItems: "when config.items.$exists() && !config.items.$empty() *? boolean : =false"
+  hasItems:
+    "when config.items.$exists() && !config.items.$empty() *? boolean : =false",
 });
 ```
 
@@ -475,20 +609,23 @@ const RobustSchema = Interface({
 // ✅ Good - Efficient condition ordering
 const Schema = Interface({
   config: "any?",
-  
+
   // Check existence first (fastest)
-  hasFeature: "when config.$exists() && config.features.$exists() *? boolean : =false",
-  
+  hasFeature:
+    "when config.$exists() && config.features.$exists() *? boolean : =false",
+
   // Simple checks before complex ones
-  isEnabled: "when config.enabled.$exists() && config.features.$contains(advanced) *? boolean : =false"
+  isEnabled:
+    "when config.enabled.$exists() && config.features.$contains(advanced) *? boolean : =false",
 });
 
 // ❌ Avoid - Inefficient ordering
 const Schema = Interface({
   config: "any?",
-  
+
   // Complex check before existence check
-  hasFeature: "when config.features.$contains(advanced) && config.$exists() *? boolean : =false"
+  hasFeature:
+    "when config.features.$contains(advanced) && config.$exists() *? boolean : =false",
 });
 ```
 
@@ -496,6 +633,5 @@ const Schema = Interface({
 
 - **[Getting Started](./GETTING-STARTED.md)** - Basic Fortify Schema usage
 - **[Field Types Reference](./FIELD-TYPES.md)** - Complete type reference
-- **[V2 Migration Guide](./V2-MIGRATION.md)** - Detailed migration instructions
 - **[Examples Collection](./EXAMPLES.md)** - Real-world usage patterns
 - **[Quick Reference](./QUICK-REFERENCE.md)** - Syntax cheat sheet

@@ -44,6 +44,15 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     supportsArrays: true,
   },
   {
+    name: "bool",
+    description: "Validates true or false values with minimal configuration.",
+    category: "basic",
+    examples: ['"bool"', '"bool?"', '"bool[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
     name: "date",
     description:
       "Validates date strings or Date objects with straightforward syntax.",
@@ -59,6 +68,17 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
       "Accepts any value without validation, ideal for flexible schemas.",
     category: "basic",
     examples: ['"any"', '"any?"', '"any[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+
+  {
+    name: "unknown",
+    description:
+      "Accepts unknown value without validation, ideal for flexible schemas.",
+    category: "basic",
+    examples: ['"unknown"', '"unknown?"', '"unknown[]"'],
     supportsConstraints: false,
     supportsOptional: true,
     supportsArrays: true,

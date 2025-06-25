@@ -174,12 +174,18 @@ export class ConditionalParser {
       return expr;
     }
 
+    // Handle NOT operator (!) as prefix
+    let isNegated = false;
+    if (this.match(TokenType.NOT)) {
+      isNegated = true;
+    }
+
     // Parse field access
     const field = this.parseFieldAccess();
 
     // Check for method call
     if (this.match(TokenType.DOT)) {
-      return this.parseMethodCall(field, position);
+      return this.parseMethodCall(field, position, isNegated);
     }
 
     // Parse comparison operator
@@ -210,7 +216,8 @@ export class ConditionalParser {
    */
   private parseMethodCall(
     field: FieldAccessNode,
-    position: number
+    position: number,
+    isNegated: boolean = false
   ): MethodCallNode {
     let methodName = "";
     let methodType: TokenType | undefined;
@@ -228,6 +235,12 @@ export class ConditionalParser {
       methodName = `$${baseMethodName}`;
       methodType = this.getMethodTokenType(baseMethodName); // Map to base method type
       isRuntimeMethod = true;
+
+      // Apply negation if the method call was prefixed with !
+      if (isNegated) {
+        methodType = this.getNegatedMethodType(methodType);
+        methodName = `!${methodName}`;
+      }
     } else {
       throw new Error(
         "Only $method() syntax is supported. Use property.$method() instead of property.method"
@@ -296,12 +309,15 @@ export class ConditionalParser {
         this.advance(); // consume '.'
         path.push(this.advance().value);
       }
-      // Handle bracket notation: field["key"]
+      // Handle bracket notation: field["key"] or field[0]
       else if (this.check(TokenType.LBRACKET)) {
         this.advance(); // consume '['
 
-        if (!this.check(TokenType.STRING)) {
-          throw new Error("Expected string key in bracket notation");
+        // FIXED: Accept both string keys and numeric indices
+        if (!this.check(TokenType.STRING) && !this.check(TokenType.NUMBER)) {
+          throw new Error(
+            "Expected string key or numeric index in bracket notation"
+          );
         }
 
         const key = this.advance().value;
@@ -365,6 +381,17 @@ export class ConditionalParser {
         return ASTBuilder.createConstant(arrayValue, position);
       }
 
+      // ENHANCED: Check if it's an object literal
+      if (this.check(TokenType.LBRACE)) {
+        if (this.config.enableDebug) {
+          console.log(
+            `parseValue: Found LBRACE after EQUALS, parsing object...`
+          );
+        }
+        const objectLiteral = this.parseObjectLiteral();
+        return ASTBuilder.createConstant(objectLiteral, position);
+      }
+
       // Handle regular literal
       const literal = this.parseLiteral();
       return ASTBuilder.createConstant(literal.value.toString(), position);
@@ -396,6 +423,74 @@ export class ConditionalParser {
     }
 
     return ASTBuilder.createArray(elements, position);
+  }
+
+  /**
+   * Parse object literal: {key: value, key2: value2}
+   * ENHANCED: Support for complex object constants like ={test: [1]}
+   * FIXED: Generate proper JSON format for validation
+   */
+  private parseObjectLiteral(): string {
+    this.advance(); // consume '{'
+
+    const objectParts: any = {};
+
+    // Parse object properties
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      // Parse key
+      if (!this.check(TokenType.IDENTIFIER) && !this.check(TokenType.STRING)) {
+        throw new Error("Expected property name in object literal");
+      }
+
+      const keyToken = this.advance();
+      let key = keyToken.value;
+
+      // STRING tokens from lexer already have quotes removed, no need to slice
+      // FIXED: Don't remove characters from already-unquoted string tokens
+
+      // Expect colon
+      if (!this.match(TokenType.COLON)) {
+        throw new Error('Expected ":" after property name');
+      }
+
+      // Parse value
+      let value: any;
+
+      if (this.check(TokenType.LBRACKET)) {
+        // Handle array value
+        this.advance(); // consume '['
+        const arrayNode = this.parseArray(this.peek().position);
+        value = arrayNode.elements.map((el) => el.value);
+      } else if (this.check(TokenType.LBRACE)) {
+        // Handle nested object (recursive)
+        const nestedObject = this.parseObjectLiteral();
+        value = JSON.parse(nestedObject);
+      } else {
+        // Handle primitive value (including null)
+        if (this.check(TokenType.IDENTIFIER) && this.peek().value === "null") {
+          this.advance(); // consume 'null'
+          value = null;
+        } else {
+          const literal = this.parseLiteral();
+          value = literal.value;
+        }
+      }
+
+      objectParts[key] = value;
+
+      // Check for comma (optional for last property)
+      if (this.check(TokenType.COMMA)) {
+        this.advance();
+      }
+    }
+
+    // Expect closing brace
+    if (!this.match(TokenType.RBRACE)) {
+      throw new Error('Expected "}" to close object literal');
+    }
+
+    // Return proper JSON string
+    return JSON.stringify(objectParts);
   }
 
   /**
@@ -664,6 +759,23 @@ export class ConditionalParser {
     };
 
     return methodMap[methodName];
+  }
+
+  /**
+   * Get the negated version of a method type
+   */
+  private getNegatedMethodType(
+    methodType: TokenType | undefined
+  ): TokenType | undefined {
+    const negationMap: Partial<Record<TokenType, TokenType>> = {
+      [TokenType.EXISTS]: TokenType.NOT_EXISTS,
+      [TokenType.EMPTY]: TokenType.NOT_EMPTY,
+      [TokenType.NULL]: TokenType.NOT_NULL,
+      [TokenType.IN]: TokenType.NOT_IN,
+      [TokenType.CONTAINS]: TokenType.NOT_CONTAINS,
+    };
+
+    return methodType ? negationMap[methodType] : undefined;
   }
 
   private addError(

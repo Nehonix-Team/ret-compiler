@@ -286,6 +286,7 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
 
   /**
    * Validate that a property path exists in the schema definition
+   * FIXED: Handle "any" type fields correctly - they can contain arbitrary nested properties
    */
   private validateSchemaPath(path: string[]): {
     isValid: boolean;
@@ -316,6 +317,20 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
       }
 
       currentSchema = currentSchema[segment];
+
+      // FIXED: If we encounter an "any" type field, skip further validation
+      // since "any" can contain arbitrary nested properties
+      if (typeof currentSchema === "string") {
+        const schemaStr = currentSchema as string;
+        if (
+          schemaStr === "any" ||
+          schemaStr === "any?" ||
+          schemaStr.startsWith("any") ||
+          schemaStr.includes("any")
+        ) {
+          return { isValid: true }; // "any" type allows arbitrary nested access
+        }
+      }
     }
 
     return { isValid: true };

@@ -12,6 +12,6 @@ exports.reservedKeywords = [
     "empty",
     "null",
 ];
-exports.default_scheme = "neoncyberpunk";
-// export const default_scheme = "darkvoid" as const;
+// export const default_scheme = "neoncyberpunk" as const;
+exports.default_scheme = "darkvoid";
 //# sourceMappingURL=default.js.map

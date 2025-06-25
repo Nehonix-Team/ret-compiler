@@ -827,11 +827,11 @@ export class InterfaceSchema<T = any> {
 
         // FIXED: Validate user input against expected constant value
         // Do NOT override user data - validate it!
-        if (value !== actualExpectedValue) {
+        if (!ValidationHelpers.deepEquals(value, actualExpectedValue)) {
           return {
             success: false,
             errors: [
-              `Expected constant value '${actualExpectedValue}', got '${value}'`,
+              `Expected constant value ${JSON.stringify(actualExpectedValue)}, got ${JSON.stringify(value)}`,
             ],
             warnings: [],
             data: value, // Return original user input, not the expected value
@@ -944,13 +944,40 @@ export class InterfaceSchema<T = any> {
             };
           }
 
-          // For arrays, just validate that it's an array - don't validate individual elements
-          // against the conditional expression since that doesn't make sense
+          // FIXED: Validate array elements against the expected type
+          // Extract the element type from the array type (e.g., "number[]" -> "number")
+          const elementType = expectedSchema.replace(/\[\]\??$/, "");
+
+          // Validate each array element
+          const validatedArray: any[] = [];
+          const errors: string[] = [];
+
+          for (let i = 0; i < value.length; i++) {
+            const elementResult = this.validateStringFieldType(
+              elementType,
+              value[i]
+            );
+            if (!elementResult.success) {
+              errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+            } else {
+              validatedArray.push(elementResult.data);
+            }
+          }
+
+          if (errors.length > 0) {
+            return {
+              success: false,
+              errors,
+              warnings: [],
+              data: value,
+            };
+          }
+
           return {
             success: true,
             errors: [],
             warnings: [],
-            data: value,
+            data: validatedArray,
           };
         }
 

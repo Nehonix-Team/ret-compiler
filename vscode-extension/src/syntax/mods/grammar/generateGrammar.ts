@@ -1,6 +1,7 @@
 import { FortifyPatterns } from "../../FortifyPatterns";
 import {
   generateSchemaStringBeginPattern,
+  generateSchemaSingleQuoteBeginPattern,
   generateSchemaTemplateBeginPattern,
 } from "./generateSchemaStringBeginPattern";
 
@@ -9,7 +10,7 @@ import {
  */
 export function generateFortifyGrammar(): any {
   return {
-    name: "Fortify Schema Embedded",
+    name: "Nehonix Fortify Schema Embedded",
     scopeName: "source.ts.fortify",
     injectionSelector:
       "L:source.ts -comment -string, L:source.tsx -comment -string",
@@ -21,6 +22,7 @@ export function generateFortifyGrammar(): any {
     repository: {
       "fortify-schema-strings": {
         patterns: [
+          // ENHANCED: Support double quotes
           {
             name: "string.quoted.double.fortify",
             begin: generateSchemaStringBeginPattern(),
@@ -71,6 +73,58 @@ export function generateFortifyGrammar(): any {
               },
             ],
           },
+          // ENHANCED: Support single quotes
+          {
+            name: "string.quoted.single.fortify",
+            begin: generateSchemaSingleQuoteBeginPattern(),
+            end: "'",
+            beginCaptures: {
+              "0": {
+                name: "punctuation.definition.string.begin.fortify",
+              },
+            },
+            endCaptures: {
+              "0": {
+                name: "punctuation.definition.string.end.fortify",
+              },
+            },
+            patterns: [
+              {
+                include: "#fortify-conditional-syntax",
+              },
+              {
+                include: "#fortify-basic-types",
+              },
+              {
+                include: "#fortify-format-types",
+              },
+              {
+                include: "#fortify-numeric-types",
+              },
+              {
+                include: "#fortify-constraints",
+              },
+              {
+                include: "#fortify-arrays",
+              },
+              {
+                include: "#fortify-optional",
+              },
+              {
+                include: "#fortify-unions",
+              },
+              {
+                include: "#fortify-constants",
+              },
+              {
+                include: "#fortify-methods",
+              },
+              {
+                include: "#fortify-operators",
+              },
+            ],
+          },
+          // ENHANCED: Support backticks (template literals)
           {
             name: "string.template.fortify",
             begin: generateSchemaTemplateBeginPattern(),
@@ -128,25 +182,89 @@ export function generateFortifyGrammar(): any {
       },
       "fortify-conditional-syntax": {
         patterns: [
+          // ENHANCED: Complete conditional expression pattern
           {
-            name: "keyword.control.fortify.when",
-            match: FortifyPatterns.getConditionalKeywordPattern().source,
+            name: "meta.conditional.fortify",
+            begin: "\\b(when)\\b",
+            end: "(?=\\s*:)",
+            beginCaptures: {
+              "1": {
+                name: "keyword.control.fortify.when",
+              },
+            },
+            patterns: [
+              {
+                include: "#fortify-conditional-condition",
+              },
+            ],
           },
+          // ENHANCED: Conditional then operator
           {
             name: "keyword.operator.fortify.conditional-then",
-            match: FortifyPatterns.getConditionalOperatorPattern().source,
+            match: "\\*\\?",
           },
+          // ENHANCED: Conditional else separator
           {
             name: "punctuation.separator.fortify.conditional-else",
             match: ":",
           },
+        ],
+      },
+      // ENHANCED: Conditional condition patterns
+      "fortify-conditional-condition": {
+        patterns: [
+          // Property access with bracket notation and methods
           {
-            name: "keyword.operator.fortify.logical",
-            match: FortifyPatterns.getLogicalOperatorPattern().source,
+            name: "meta.property-access.fortify.conditional",
+            match:
+              "([a-zA-Z_$][a-zA-Z0-9_$]*(?:\\.[a-zA-Z_$][a-zA-Z0-9_$]*)*(?:\\[(?:[\"'][^\"']*[\"']|\\d+)\\])*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
+            captures: {
+              "1": {
+                name: "variable.other.property.fortify",
+              },
+              "2": {
+                name: "support.function.fortify.method",
+              },
+              "3": {
+                name: "meta.function-call.arguments.fortify",
+              },
+            },
           },
+          // Simple property access with methods
+          {
+            name: "meta.property-access.fortify.conditional",
+            match:
+              "([a-zA-Z_$][a-zA-Z0-9_$.]*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
+            captures: {
+              "1": {
+                name: "variable.other.property.fortify",
+              },
+              "2": {
+                name: "support.function.fortify.method",
+              },
+              "3": {
+                name: "meta.function-call.arguments.fortify",
+              },
+            },
+          },
+          // Comparison operators
           {
             name: "keyword.operator.fortify.comparison",
-            match: FortifyPatterns.getComparisonOperatorPattern().source,
+            match: "(!=|>=|<=|!~|=|>|<|~)",
+          },
+          // Logical operators
+          {
+            name: "keyword.operator.fortify.logical",
+            match: "(&&|\\|\\|)",
+          },
+          // Property access (dots)
+          {
+            name: "keyword.operator.fortify.field-access",
+            match: "\\.",
+          },
+          // Bracket notation
+          {
+            include: "#fortify-operators",
           },
         ],
       },

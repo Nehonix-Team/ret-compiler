@@ -448,6 +448,8 @@ const ComplexUnionSchema = Interface({
 ### Basic Optional
 
 ```typescript
+import { NehoID as ID } from "nehoid";
+
 const OptionalSchema = Interface({
   // Required fields
   id: "uuid",
@@ -464,11 +466,29 @@ const OptionalSchema = Interface({
 
   // Optional nested objects
   profile: {
-    firstName: "string",
+    firstName: "string?",
     lastName: "string",
-    middleName: "string?"  // Optional within nested object
-  }?  // Entire profile object is optional
+    middleName: "string?", // Optional within nested object
+  },
 });
+
+const profile = {
+  lastName: "Eleazar",
+};
+
+const result = OptionalSchema.safeParse({
+  id: ID.uuid(),
+  age: 1000,
+  name: "Seth",
+  profile,
+});
+
+if (result.success) {
+  console.log("✅ Expected success:", result.data);
+} else {
+  console.log("❌ Unexpected errors:", result.errors);
+}
+
 ```
 
 ### Optional vs Nullable
@@ -543,8 +563,23 @@ const AdvancedPatternSchema = Interface({
   // MAC address
   macAddress: "string(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/)",
 
-  // IPv4 address
-  ipv4: "string(/^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)",
+  // IP address
+  ipv4: "ip", // or use a custom patterns
+
+  //JWT token validation
+  isJWT: "jwt", // or custom can be also use
+
+  //sem version
+  version: "semver" // custom could be use
+
+  //b64 test
+  isB64: "base64", // use custom if you want
+
+  //json test
+  isJson: "json",
+
+  //hexcolor validation
+  isHexC: "hexcolor", // use custom if want
 
   // Credit card (Luhn algorithm not included)
   creditCardNumber:

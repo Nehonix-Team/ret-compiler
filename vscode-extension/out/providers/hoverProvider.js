@@ -47,16 +47,26 @@ class FortifyHoverProvider {
     }
     /**
      * Check if position is in a schema context (inside quotes with schema syntax)
+     * ENHANCED: Support all quote types - double quotes, single quotes, and backticks
      */
     isInSchemaContext(lineText, position) {
         const beforePosition = lineText.substring(0, position);
-        const quoteCount = (beforePosition.match(/"/g) || []).length;
-        // Must be inside quotes (odd number of quotes before position)
-        if (quoteCount % 2 === 0) {
-            return false;
+        // Check for double quotes
+        const doubleQuoteCount = (beforePosition.match(/"/g) || []).length;
+        if (doubleQuoteCount % 2 === 1) {
+            return FortifyPatterns_1.FortifyPatterns.containsSchemaPattern(lineText);
         }
-        // Check if the string contains schema-like patterns
-        return FortifyPatterns_1.FortifyPatterns.containsSchemaPattern(lineText);
+        // Check for single quotes
+        const singleQuoteCount = (beforePosition.match(/'/g) || []).length;
+        if (singleQuoteCount % 2 === 1) {
+            return FortifyPatterns_1.FortifyPatterns.containsSchemaPattern(lineText);
+        }
+        // Check for backticks
+        const backtickCount = (beforePosition.match(/`/g) || []).length;
+        if (backtickCount % 2 === 1) {
+            return FortifyPatterns_1.FortifyPatterns.containsSchemaPattern(lineText);
+        }
+        return false; // Not inside any quotes
     }
     /**
      * Check if the current position is within an Interface({...}) block

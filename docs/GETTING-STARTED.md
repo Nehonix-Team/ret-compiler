@@ -384,7 +384,6 @@ Now that you have the basics, explore more advanced features:
 2. **[Conditional Validation](./CONDITIONAL-VALIDATION.md)** - Advanced business logic validation
 3. **[VS Code Extension](./VSCODE-EXTENSION.md)** - Enhanced development experience
 4. **[Examples Collection](./EXAMPLES.md)** - Real-world usage patterns
-5. **[Best Practices](./BEST-PRACTICES.md)** - Recommended patterns
 
 ## 🤝 Need Help?
 

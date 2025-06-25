@@ -1,5 +1,5 @@
 {
-  "name": "Fortify Schema Embedded",
+  "name": "Nehonix Fortify Schema Embedded",
   "scopeName": "source.ts.fortify",
   "injectionSelector": "L:source.ts -comment -string, L:source.tsx -comment -string",
   "patterns": [
@@ -12,7 +12,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify",
-          "begin": "\"(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)).*\")",
+          "begin": "\"(?=.*(?:string|number|boolean|bool|date|any|unknown|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)).*\")",
           "end": "\"",
           "beginCaptures": {
             "0": {
@@ -61,8 +61,58 @@
           ]
         },
         {
+          "name": "string.quoted.single.fortify",
+          "begin": "'(?=.*(?:string|number|boolean|bool|date|any|unknown|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)).*')",
+          "end": "'",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.fortify"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.fortify"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-conditional-syntax"
+            },
+            {
+              "include": "#fortify-basic-types"
+            },
+            {
+              "include": "#fortify-format-types"
+            },
+            {
+              "include": "#fortify-numeric-types"
+            },
+            {
+              "include": "#fortify-constraints"
+            },
+            {
+              "include": "#fortify-arrays"
+            },
+            {
+              "include": "#fortify-optional"
+            },
+            {
+              "include": "#fortify-unions"
+            },
+            {
+              "include": "#fortify-constants"
+            },
+            {
+              "include": "#fortify-methods"
+            },
+            {
+              "include": "#fortify-operators"
+            }
+          ]
+        },
+        {
           "name": "string.template.fortify",
-          "begin": "`(?=.*(?:string|number|boolean|date|any|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)|\\$\\{[^}]*\\}).*`)",
+          "begin": "`(?=.*(?:string|number|boolean|bool|date|any|unknown|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.in|\\.contains|\\.startsWith|\\.endsWith|\\.between|\\.exists|\\.empty|\\.null|\\[\\]|\\(\\d+,?\\d*\\)|\\$\\{[^}]*\\}).*`)",
           "end": "`",
           "beginCaptures": {
             "0": {
@@ -118,24 +168,76 @@
     "fortify-conditional-syntax": {
       "patterns": [
         {
-          "name": "keyword.control.fortify.when",
-          "match": "\\b(when)\\b"
+          "name": "meta.conditional.fortify",
+          "begin": "\\b(when)\\b",
+          "end": "(?=\\s*:)",
+          "beginCaptures": {
+            "1": {
+              "name": "keyword.control.fortify.when"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-conditional-condition"
+            }
+          ]
         },
         {
           "name": "keyword.operator.fortify.conditional-then",
-          "match": "(\\*\\?)"
+          "match": "\\*\\?"
         },
         {
           "name": "punctuation.separator.fortify.conditional-else",
           "match": ":"
+        }
+      ]
+    },
+    "fortify-conditional-condition": {
+      "patterns": [
+        {
+          "name": "meta.property-access.fortify.conditional",
+          "match": "([a-zA-Z_$][a-zA-Z0-9_$]*(?:\\.[a-zA-Z_$][a-zA-Z0-9_$]*)*(?:\\[(?:[\"'][^\"']*[\"']|\\d+)\\])*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.fortify"
+            },
+            "2": {
+              "name": "support.function.fortify.method"
+            },
+            "3": {
+              "name": "meta.function-call.arguments.fortify"
+            }
+          }
+        },
+        {
+          "name": "meta.property-access.fortify.conditional",
+          "match": "([a-zA-Z_$][a-zA-Z0-9_$.]*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
+          "captures": {
+            "1": {
+              "name": "variable.other.property.fortify"
+            },
+            "2": {
+              "name": "support.function.fortify.method"
+            },
+            "3": {
+              "name": "meta.function-call.arguments.fortify"
+            }
+          }
+        },
+        {
+          "name": "keyword.operator.fortify.comparison",
+          "match": "(!=|>=|<=|!~|=|>|<|~)"
         },
         {
           "name": "keyword.operator.fortify.logical",
           "match": "(&&|\\|\\|)"
         },
         {
-          "name": "keyword.operator.fortify.comparison",
-          "match": "(!=|>=|<=|!~|=|>|<|~)"
+          "name": "keyword.operator.fortify.field-access",
+          "match": "\\."
+        },
+        {
+          "include": "#fortify-operators"
         }
       ]
     },
@@ -143,7 +245,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify.basic-type",
-          "match": "\\b(string|number|boolean|date|any)\\b"
+          "match": "\\b(string|number|boolean|bool|date|any|unknown)\\b"
         }
       ]
     },
@@ -218,7 +320,7 @@
       "patterns": [
         {
           "name": "support.function.fortify.method",
-          "match": "\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b"
+          "match": "(\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b|\\[\"[^\"]*\"\\]\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b|\\['[^']*'\\]\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b|\\[\\d+\\]\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b)"
         },
         {
           "name": "punctuation.definition.fortify.method-call",

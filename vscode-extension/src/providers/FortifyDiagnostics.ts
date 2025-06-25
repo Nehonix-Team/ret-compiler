@@ -8,7 +8,7 @@ import { FortifySyntaxUtils } from "../syntax/FortifySyntaxDefinitions";
  */
 export class FortifyDiagnosticsProvider {
   private diagnosticCollection: vscode.DiagnosticCollection;
- 
+
   constructor() {
     this.diagnosticCollection =
       vscode.languages.createDiagnosticCollection("fortify-schema");
@@ -73,6 +73,7 @@ export class FortifyDiagnosticsProvider {
 
   /**
    * Checks if a line has @fortify-ignore comment to skip validation
+   * ENHANCED: Support multi-line @fortify-ignore comments and better detection
    * @param document The text document
    * @param range The range to check for ignore comments
    * @returns True if validation should be skipped
@@ -85,25 +86,76 @@ export class FortifyDiagnosticsProvider {
 
     // Check current line for inline comment
     const currentLine = document.lineAt(lineNumber).text;
-    if (
-      currentLine.includes("// @fortify-ignore") ||
-      currentLine.includes("/* @fortify-ignore")
-    ) {
+    if (this.lineHasIgnoreComment(currentLine)) {
       return true;
     }
 
-    // Check previous line for comment
-    if (lineNumber > 0) {
-      const previousLine = document.lineAt(lineNumber - 1).text;
-      if (
-        previousLine.includes("// @fortify-ignore") ||
-        previousLine.includes("/* @fortify-ignore")
-      ) {
+    // Check previous lines for @fortify-ignore (up to 5 lines back for multi-line support)
+    for (let i = 1; i <= 5 && lineNumber - i >= 0; i++) {
+      const previousLine = document.lineAt(lineNumber - i).text;
+
+      // If we hit a non-comment, non-empty line, stop searching
+      if (previousLine.trim() && !this.isCommentLine(previousLine)) {
+        break;
+      }
+
+      if (this.lineHasIgnoreComment(previousLine)) {
         return true;
       }
     }
 
-    return false;
+    // Check if we're inside a multi-line /* @fortify-ignore */ block
+    return this.isInIgnoreBlock(document, lineNumber);
+  }
+
+  /**
+   * Check if a single line contains @fortify-ignore comment
+   */
+  private lineHasIgnoreComment(line: string): boolean {
+    return (
+      line.includes("// @fortify-ignore") ||
+      line.includes("/* @fortify-ignore") ||
+      line.includes("* @fortify-ignore") ||
+      line.includes("@fortify-ignore */")
+    );
+  }
+
+  /**
+   * Check if a line is inside a multi-line @fortify-ignore block
+   */
+  private isInIgnoreBlock(
+    document: vscode.TextDocument,
+    lineNumber: number
+  ): boolean {
+    // Look backwards for /* @fortify-ignore
+    let ignoreBlockStart = -1;
+    for (let i = lineNumber; i >= 0; i--) {
+      const line = document.lineAt(i).text;
+      if (line.includes("/* @fortify-ignore")) {
+        ignoreBlockStart = i;
+        break;
+      }
+      // If we hit a */ before finding /*, we're not in a block
+      if (line.includes("*/")) {
+        break;
+      }
+    }
+
+    if (ignoreBlockStart === -1) {
+      return false;
+    }
+
+    // Look forwards for */ from the ignore block start
+    for (let i = ignoreBlockStart; i < document.lineCount; i++) {
+      const line = document.lineAt(i).text;
+      if (line.includes("*/")) {
+        // Found the end of the block, check if our line is within it
+        return lineNumber >= ignoreBlockStart && lineNumber <= i;
+      }
+    }
+
+    // No closing */ found, assume the block extends to end of file
+    return lineNumber >= ignoreBlockStart;
   }
 
   /**
@@ -181,12 +233,24 @@ export class FortifyDiagnosticsProvider {
         continue;
       }
 
-      const stringMatches = line.matchAll(/"([^"\\]|\\.)*"/g);
+      // ENHANCED: Support all quote types - double quotes, single quotes, and backticks
+      const stringMatches = [
+        ...line.matchAll(/"([^"\\]|\\.)*"/g), // Double quotes
+        ...line.matchAll(/'([^'\\]|\\.)*'/g), // Single quotes
+        ...line.matchAll(/`([^`\\]|\\.)*`/g), // Backticks
+      ];
 
       for (const match of stringMatches) {
         if (match.index !== undefined) {
           // Check if this string is inside a comment
           if (this.isStringInComment(line, match.index)) {
+            continue;
+          }
+
+          // ENHANCED: Skip strings that are part of bracket notation
+          if (
+            this.isStringInBracketNotation(line, match.index, match[0].length)
+          ) {
             continue;
           }
 
@@ -291,6 +355,29 @@ export class FortifyDiagnosticsProvider {
     return blocks.some(
       (block) => lineIndex >= block.start && lineIndex <= block.end
     );
+  }
+
+  /**
+   * ENHANCED: Check if a string is part of bracket notation (e.g., config["admin-override"])
+   * @param line The line text
+   * @param stringIndex The start index of the string
+   * @param stringLength The length of the string including quotes
+   * @returns True if the string is part of bracket notation
+   */
+  private isStringInBracketNotation(
+    line: string,
+    stringIndex: number,
+    stringLength: number
+  ): boolean {
+    // Check if there's a [ before the string and ] after it
+    const beforeString = line.substring(0, stringIndex);
+    const afterString = line.substring(stringIndex + stringLength);
+
+    // Look for pattern: something["string"] or something['string']
+    const hasBracketBefore = beforeString.endsWith("[");
+    const hasBracketAfter = afterString.startsWith("]");
+
+    return hasBracketBefore && hasBracketAfter;
   }
 
   /**
@@ -726,11 +813,18 @@ export class FortifyDiagnosticsProvider {
     // Remove "when " prefix if present
     const cleanCondition = condition.replace(/^when\s+/, "");
 
-    // Check for V2 method calls: property.$method() or property.nested.$method()
-    // Only support the new V2 syntax with $ prefix
-    const methodMatch = cleanCondition.match(/([\w.]+)\.\$(\w+)(\([^)]*\))?/);
+    // ENHANCED: Check for V2 method calls with support for bracket notation and array indexing
+    // Patterns supported:
+    // - property.$method()
+    // - property.nested.$method()
+    // - config["admin-override"].$method()
+    // - data.items[0].$method()
+    // - config["special config"].$method()
+    const methodMatch = cleanCondition.match(
+      /([\w.]+(?:\[["'][^"']*["']\])*(?:\[\d+\])*)\.\$(\w+)(\([^)]*\))?/
+    );
     if (methodMatch) {
-      const [fullMatch, , method, hasParens] = methodMatch;
+      const [fullMatch, propertyPath, method, hasParens] = methodMatch;
 
       // Skip if this is part of a domain pattern (preceded by @ or ~)
       const beforeMatch = cleanCondition.substring(
@@ -782,12 +876,17 @@ export class FortifyDiagnosticsProvider {
       return diagnostics;
     }
 
-    // Check for comparison operators (=, !=, >, <, >=, <=, ~, !~)
+    // ENHANCED: Check for comparison operators with bracket notation support
+    // Patterns supported:
+    // - property=value
+    // - config["admin-override"]=true
+    // - data.items[0]=value
+    // - config["special config"]!=null
     const comparisonMatch = cleanCondition.match(
-      /(\w+)\s*([!~=><]+|~|!~)\s*(.+)/
+      /([\w.]+(?:\[["'][^"']*["']\])*(?:\[\d+\])*)\s*([!~=><]+|~|!~)\s*(.+)/
     );
     if (comparisonMatch) {
-      const [, , operator, value] = comparisonMatch;
+      const [, propertyPath, operator, value] = comparisonMatch;
 
       // Validate regex patterns for ~ and !~ operators
       if (operator === "~" || operator === "!~") {
@@ -836,7 +935,12 @@ export class FortifyDiagnosticsProvider {
       diagnostics.push(
         new vscode.Diagnostic(
           range,
-          `Invalid condition: "${cleanCondition}". Expected field=value, field.method(), or field~pattern.`,
+          `Invalid condition: "${cleanCondition}". Expected patterns:\n` +
+            `• field=value (e.g., role=admin)\n` +
+            `• field.$method() (e.g., profile.$exists())\n` +
+            `• field["property"].$method() (e.g., config["admin-override"].$exists())\n` +
+            `• field.items[0].$method() (e.g., data.items[0].$exists())\n` +
+            `• field~pattern (e.g., email~@company.com)`,
           vscode.DiagnosticSeverity.Warning
         )
       );

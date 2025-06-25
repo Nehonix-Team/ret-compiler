@@ -4,7 +4,7 @@ Complete guide to the Fortify Schema VS Code extension - your professional devel
 
 ## 🚀 Installation
 
-### Method 1: Direct Download (Recommended)
+### Method 1: Direct Download
 
 ```bash
 # Download the latest extension
@@ -14,7 +14,7 @@ curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o
 code --install-extension fortify-schema.vsix
 ```
 
-### Method 2: VS Code Marketplace (Coming Soon)
+### Method 2: VS Code Marketplace 
 
 The extension will be available on the VS Code Marketplace soon. For now, use the direct download method.
 

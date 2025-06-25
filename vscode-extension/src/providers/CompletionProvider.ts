@@ -50,15 +50,29 @@ export class FortifyCompletionProvider
       completions.push(...this.getConditionalCompletions());
     }
 
-    // Add method completions if we're after .$ (V2 syntax)
-    if (beforeCursor.endsWith(".$")) {
+    // ENHANCED: Add method completions for various syntax patterns
+    if (this.shouldShowMethodCompletions(beforeCursor)) {
       completions.push(...this.getMethodCompletions());
     }
 
-    // Add property suggestions when typing property names
+    // ENHANCED: Add bracket notation property completions
+    if (this.shouldShowBracketPropertyCompletions(beforeCursor)) {
+      completions.push(
+        ...this.getBracketPropertyCompletions(document, position, beforeCursor)
+      );
+    }
+
+    // Add property suggestions when typing property names in conditions
     if (this.shouldShowPropertySuggestions(beforeCursor)) {
       completions.push(
         ...this.getPropertySuggestions(document, position, beforeCursor)
+      );
+    }
+
+    // Add nested property suggestions when typing after a dot
+    if (this.shouldShowNestedPropertySuggestions(beforeCursor)) {
+      completions.push(
+        ...this.getNestedPropertySuggestions(document, position, beforeCursor)
       );
     }
 
@@ -168,10 +182,28 @@ export class FortifyCompletionProvider
 
   /**
    * Check if cursor is inside a potential schema string
+   * ENHANCED: Support all quote types - double quotes, single quotes, and backticks
    */
   private isInSchemaString(text: string): boolean {
-    const quoteCount = (text.match(/"/g) || []).length;
-    return quoteCount % 2 === 1; // Odd number means we're inside quotes
+    // Check for double quotes
+    const doubleQuoteCount = (text.match(/"/g) || []).length;
+    if (doubleQuoteCount % 2 === 1) {
+      return true; // Inside double quotes
+    }
+
+    // Check for single quotes (but not inside double quotes)
+    const singleQuoteCount = (text.match(/'/g) || []).length;
+    if (singleQuoteCount % 2 === 1) {
+      return true; // Inside single quotes
+    }
+
+    // Check for backticks (template literals)
+    const backtickCount = (text.match(/`/g) || []).length;
+    if (backtickCount % 2 === 1) {
+      return true; // Inside backticks
+    }
+
+    return false; // Not inside any quotes
   }
 
   /**
@@ -475,6 +507,114 @@ export class FortifyCompletionProvider
   }
 
   /**
+   * ENHANCED: Check if we should show method completions for various syntax patterns
+   */
+  private shouldShowMethodCompletions(text: string): boolean {
+    return (
+      text.endsWith(".$") || // Standard: property.$
+      text.endsWith("$") || // Just $
+      text.endsWith("].$") || // Bracket notation: ["property"].$
+      text.endsWith("][0].$") || // Array indexing: ["property"][0].$
+      /\[["'][^"']*["']\]\.$/.test(text) || // Bracket with quotes: ["prop"].$
+      /\[\d+\]\.$/.test(text) // Array index: [0].$
+    );
+  }
+
+  /**
+   * ENHANCED: Check if we should show bracket property completions
+   */
+  private shouldShowBracketPropertyCompletions(text: string): boolean {
+    return (
+      text.endsWith('["') || // Double quote bracket: ["
+      text.endsWith("['") || // Single quote bracket: ['
+      /\w+\[["']$/.test(text) || // Property with bracket: config["
+      /\w+\[["'][^"']*$/.test(text) // Partial property: config["admin
+    );
+  }
+
+  /**
+   * ENHANCED: Get bracket notation property completions
+   */
+  private getBracketPropertyCompletions(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    beforeCursor: string
+  ): vscode.CompletionItem[] {
+    const completions: vscode.CompletionItem[] = [];
+
+    // Extract the schema properties
+    const schemaProperties = this.extractSchemaProperties(document, position);
+
+    // Get the current typing context for bracket notation
+    const typingContext = this.getBracketTypingContext(beforeCursor);
+
+    // Add special character properties that are common in schemas
+    const specialProperties = [
+      "admin-override",
+      "special config",
+      "app.version",
+      "user-settings",
+      "api-key",
+      "feature-flags",
+      "cache-config",
+      "db-connection",
+      "auth-settings",
+    ];
+
+    // Combine schema properties with special properties
+    const allProperties = [...schemaProperties, ...specialProperties];
+
+    // Filter based on what user is typing
+    const filteredProperties = allProperties.filter(
+      (prop) =>
+        typingContext === "" ||
+        prop.toLowerCase().includes(typingContext.toLowerCase())
+    );
+
+    // Add property completions
+    filteredProperties.forEach((property) => {
+      const item = new vscode.CompletionItem(
+        property,
+        vscode.CompletionItemKind.Property
+      );
+      item.detail = `Bracket notation property: ${property}`;
+      item.documentation = new vscode.MarkdownString(
+        `**${property}** - Property accessible via bracket notation\n\n` +
+          `**Usage examples:**\n` +
+          `- \`config["${property}"].$exists()\` - Check if property exists\n` +
+          `- \`config["${property}"].$empty()\` - Check if property is empty\n` +
+          `- \`config["${property}"].$contains("value")\` - Check if contains value`
+      );
+
+      // Determine the quote character being used
+      const quoteChar = beforeCursor.includes('["') ? '"' : "'";
+
+      // Insert the property name with closing quote and bracket
+      item.insertText = new vscode.SnippetString(`${property}${quoteChar}]`);
+
+      // Set sort priority
+      item.sortText = property
+        .toLowerCase()
+        .includes(typingContext.toLowerCase())
+        ? `0${property}`
+        : `1${property}`;
+
+      completions.push(item);
+    });
+
+    return completions;
+  }
+
+  /**
+   * Get typing context for bracket notation
+   */
+  private getBracketTypingContext(text: string): string {
+    // Extract what the user is typing inside the brackets
+    const bracketMatch = text.match(/\[["']([^"']*)$/);
+    return bracketMatch ? bracketMatch[1] : "";
+  }
+
+  /**
    * Get V2 method completions with $ prefix
    */
   private getMethodCompletions(): vscode.CompletionItem[] {
@@ -515,13 +655,42 @@ export class FortifyCompletionProvider
    */
   private shouldShowPropertySuggestions(text: string): boolean {
     // Show property suggestions when we're in a conditional context
-    // and typing after "when " or after a dot in property chains
+    // and typing after "when " but not in method context
     return (
       text.includes("when ") &&
       !text.endsWith(".$") &&
+      !text.endsWith("$") &&
+      !text.includes("*?") &&
+      !text.includes(":") &&
+      !this.isInNestedPropertyContext(text)
+    );
+  }
+
+  /**
+   * Check if we should show nested property suggestions
+   */
+  private shouldShowNestedPropertySuggestions(text: string): boolean {
+    // Show nested property suggestions when we're in a conditional context
+    // and typing after a property followed by a dot (but not .$)
+    return (
+      text.includes("when ") &&
+      this.isInNestedPropertyContext(text) &&
+      !text.endsWith(".$") &&
+      !text.endsWith("$") &&
       !text.includes("*?") &&
       !text.includes(":")
     );
+  }
+
+  /**
+   * Check if we're in a nested property context (property.something)
+   */
+  private isInNestedPropertyContext(text: string): boolean {
+    // Look for pattern like "when property." or "when property.nested."
+    const nestedMatch = text.match(
+      /when\s+[a-zA-Z_$][a-zA-Z0-9_$]*\.[a-zA-Z0-9_$]*\.?$/
+    );
+    return !!nestedMatch;
   }
 
   /**
@@ -541,8 +710,10 @@ export class FortifyCompletionProvider
     const typingContext = this.getTypingContext(beforeCursor);
 
     // Filter properties based on what user is typing
-    const filteredProperties = schemaProperties.filter((prop) =>
-      prop.toLowerCase().startsWith(typingContext.toLowerCase())
+    const filteredProperties = schemaProperties.filter(
+      (prop) =>
+        typingContext === "" ||
+        prop.toLowerCase().startsWith(typingContext.toLowerCase())
     );
 
     // Add property completions
@@ -554,7 +725,75 @@ export class FortifyCompletionProvider
       item.detail = `Schema property: ${property}`;
       item.documentation = new vscode.MarkdownString(
         `**${property}** - Property from the current schema object\n\n` +
-          `Use with V2 methods: \`${property}.$exists()\`, \`${property}.$empty()\`, etc.`
+          `**Usage examples:**\n` +
+          `- \`${property}=${"value"}\` - Equality comparison\n` +
+          `- \`${property}.$exists()\` - Check if property exists\n` +
+          `- \`${property}.$empty()\` - Check if property is empty\n` +
+          `- \`${property}.$contains("text")\` - Check if contains text`
+      );
+
+      // If user hasn't typed anything yet, suggest the property name only
+      if (typingContext === "") {
+        item.insertText = property;
+      } else {
+        // If user is typing, complete with method suggestion
+        item.insertText = new vscode.SnippetString(
+          `${property}$\${1|=,!=,>,>=,<,<=,.$exists(),.$empty(),.$null(),.$contains(),.$startsWith(),.$endsWith(),.$in()|}$2`
+        );
+      }
+
+      // Set sort priority based on how well it matches
+      if (property.toLowerCase().startsWith(typingContext.toLowerCase())) {
+        item.sortText = `0${property}`; // Higher priority for exact matches
+      } else {
+        item.sortText = `1${property}`;
+      }
+
+      completions.push(item);
+    });
+
+    return completions;
+  }
+
+  /**
+   * Get nested property suggestions based on context
+   */
+  private getNestedPropertySuggestions(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    beforeCursor: string
+  ): vscode.CompletionItem[] {
+    const completions: vscode.CompletionItem[] = [];
+
+    // Extract the property path being typed (e.g., "user.profile.")
+    const propertyPath = this.getNestedPropertyPath(beforeCursor);
+    if (!propertyPath) return completions;
+
+    // Get the schema properties and try to infer nested structure
+    const schemaProperties = this.extractSchemaProperties(document, position);
+    const nestedProperties = this.inferNestedProperties(
+      propertyPath,
+      schemaProperties
+    );
+
+    // Get the current typing context
+    const typingContext = this.getNestedTypingContext(beforeCursor);
+
+    // Filter properties based on what user is typing
+    const filteredProperties = nestedProperties.filter((prop) =>
+      prop.toLowerCase().startsWith(typingContext.toLowerCase())
+    );
+
+    // Add nested property completions
+    filteredProperties.forEach((property) => {
+      const item = new vscode.CompletionItem(
+        property,
+        vscode.CompletionItemKind.Property
+      );
+      item.detail = `Nested property: ${propertyPath}.${property}`;
+      item.documentation = new vscode.MarkdownString(
+        `**${property}** - Nested property of \`${propertyPath}\`\n\n` +
+          `Use with V2 methods: \`${propertyPath}.${property}.$exists()\`, \`${propertyPath}.${property}.$empty()\`, etc.`
       );
 
       // Add snippet for common usage
@@ -566,6 +805,68 @@ export class FortifyCompletionProvider
     });
 
     return completions;
+  }
+
+  /**
+   * Extract the property path from nested context (e.g., "user.profile" from "when user.profile.")
+   */
+  private getNestedPropertyPath(beforeCursor: string): string | null {
+    const nestedMatch = beforeCursor.match(
+      /when\s+([a-zA-Z_$][a-zA-Z0-9_$.]*)\.[a-zA-Z0-9_$]*$/
+    );
+    if (nestedMatch) {
+      const fullPath = nestedMatch[1];
+      // Remove the last incomplete part after the last dot
+      const lastDotIndex = fullPath.lastIndexOf(".");
+      return lastDotIndex > 0 ? fullPath.substring(0, lastDotIndex) : fullPath;
+    }
+    return null;
+  }
+
+  /**
+   * Get what the user is currently typing for nested property suggestions
+   */
+  private getNestedTypingContext(beforeCursor: string): string {
+    const nestedMatch = beforeCursor.match(/\.([a-zA-Z_$][a-zA-Z0-9_$]*)$/);
+    return nestedMatch ? nestedMatch[1] : "";
+  }
+
+  /**
+   * Infer nested properties based on common patterns and property path
+   */
+  private inferNestedProperties(
+    propertyPath: string,
+    schemaProperties: string[]
+  ): string[] {
+    // For now, return common nested property names based on the property name
+    // In a real implementation, you might want to analyze the schema more deeply
+    const commonNestedProperties: Record<string, string[]> = {
+      user: ["id", "name", "email", "profile", "settings", "preferences"],
+      profile: ["firstName", "lastName", "avatar", "bio", "dateOfBirth"],
+      settings: ["theme", "language", "notifications", "privacy"],
+      config: ["enabled", "value", "options", "metadata"],
+      data: ["value", "type", "timestamp", "source"],
+      address: ["street", "city", "state", "zipCode", "country"],
+      contact: ["email", "phone", "address", "social"],
+    };
+
+    // Get the last part of the property path to determine context
+    const pathParts = propertyPath.split(".");
+    const lastPart = pathParts[pathParts.length - 1];
+
+    // Return common properties for the context, or generic ones
+    return (
+      commonNestedProperties[lastPart] || [
+        "id",
+        "name",
+        "value",
+        "type",
+        "enabled",
+        "data",
+        "config",
+        "options",
+      ]
+    );
   }
 
   /**
@@ -629,12 +930,14 @@ export class FortifyCompletionProvider
    */
   private getTypingContext(beforeCursor: string): string {
     // Extract the word being typed after "when "
-    const whenMatch = beforeCursor.match(/when\s+([a-zA-Z_$][a-zA-Z0-9_$.]*)$/);
+    const whenMatch = beforeCursor.match(/when\s+([a-zA-Z_$][a-zA-Z0-9_$]*)$/);
     if (whenMatch) {
-      const fullPath = whenMatch[1];
-      // Return the last part after the last dot
-      const parts = fullPath.split(".");
-      return parts[parts.length - 1];
+      return whenMatch[1];
+    }
+
+    // Check if user just typed "when " with nothing after
+    if (beforeCursor.endsWith("when ")) {
+      return "";
     }
 
     return "";
