@@ -53,7 +53,7 @@ const V1Schema = Interface({
   youthProgram: "when age<25 *? boolean : boolean?",
   
   // Value inclusion
-  premiumFeatures: "when accountType.in(premium,enterprise) *? string[] : string[]?"
+  premiumFeatures: "when accountType.$in(premium,enterprise) *? string[] : string[]?"
 });
 ```
 
@@ -71,6 +71,7 @@ const V1Schema = Interface({
 
 ### V1 Limitations
 
+- Will be deprecated in future versions
 - Limited to simple property comparisons
 - No runtime property existence checking
 - No complex method calls

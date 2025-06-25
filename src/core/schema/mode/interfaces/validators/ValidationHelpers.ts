@@ -38,7 +38,7 @@ export class ValidationHelpers {
     // Implement LRU cache behavior
     if (constantCache.size >= MAX_CACHE_SIZE) {
       const firstKey = constantCache.keys().next().value;
-      constantCache.delete(firstKey);
+      constantCache.delete(firstKey || "");
     }
 
     let expectedValue = constantCache.get(constantValue);

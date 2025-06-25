@@ -178,8 +178,14 @@ export class ConditionalLexer {
       return;
     }
 
-    // Handle constant values (=value) BEFORE operators to catch =-1 syntax
-    if (char === "=" && this._peek() !== "=" && this._peek() !== "!") {
+    // Handle constant values (=value) ONLY in type definition contexts
+    // This should only trigger after *? operator, not in comparison contexts like role=admin
+    if (
+      char === "=" &&
+      this._peek() !== "=" &&
+      this._peek() !== "!" &&
+      this._isConstantContext()
+    ) {
       this._scanConstant();
       return;
     }
@@ -314,6 +320,54 @@ export class ConditionalLexer {
   }
 
   /**
+   * Check if we're in a constant context (after *? operator in type definitions)
+   * This prevents treating comparison operators like role=admin as constants
+   */
+  private _isConstantContext(): boolean {
+    if (this._tokens.length === 0) return false;
+
+    // Look for the *? (CONDITIONAL_THEN) token in recent tokens
+    // Constants should only appear after *? in patterns like "when condition *? =value : type"
+    for (
+      let i = this._tokens.length - 1;
+      i >= Math.max(0, this._tokens.length - 5);
+      i--
+    ) {
+      const token = this._tokens[i];
+
+      // If we find *? operator, we're in a type definition context
+      if (token.type === TokenType.CONDITIONAL_THEN) {
+        return true;
+      }
+
+      // If we find : (colon), we're past the constant context
+      if (token.type === TokenType.COLON) {
+        return false;
+      }
+
+      // If we find logical operators, we're in a condition context, not type context
+      if (token.type === TokenType.AND || token.type === TokenType.OR) {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if character is an operator character that should stop identifier scanning
+   */
+  private _isOperatorChar(char: string): boolean {
+    // Check if the character starts any operator
+    for (const [op] of ConditionalLexer._OPERATORS) {
+      if (op.startsWith(char)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Scan string literal with improved escape handling
    */
   private _scanString(quote: string): void {
@@ -418,7 +472,11 @@ export class ConditionalLexer {
     let value = this._input[this._position - 1];
 
     // Handle multi-byte Unicode characters (like emojis)
-    while (this._isAlphaNumeric(this._peek()) || this._isEmojiContinuation()) {
+    // FIXED: Stop at operator characters to prevent consuming "role=admin" as single token
+    while (
+      (this._isAlphaNumeric(this._peek()) || this._isEmojiContinuation()) &&
+      !this._isOperatorChar(this._peek())
+    ) {
       value += this._advance();
     }
 
@@ -733,7 +791,7 @@ export class ConditionalLexer {
     return this._input[this._position];
   }
 
-  private _peekNext(): string {
+  private _peekNext(): string { 
     if (this._position + 1 >= this._input.length) return "\0";
     return this._input[this._position + 1];
   }

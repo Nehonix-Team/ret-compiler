@@ -784,7 +784,7 @@ export class InterfaceSchema<T = any> {
         };
       }
 
-      // CRITICAL FIX: Handle constant values (defaults) properly
+      // CRITICAL FIX: Handle constant values - VALIDATE user input against expected constant
       if (
         typeof expectedSchema === "string" &&
         expectedSchema.startsWith("=")
@@ -825,14 +825,25 @@ export class InterfaceSchema<T = any> {
           }
         }
 
-        // KEY INSIGHT: If we got a constant value, it means the condition was FALSE
-        // (runtime property doesn't exist), so we should ALWAYS use the default
-        // and IGNORE the user's input entirely
+        // FIXED: Validate user input against expected constant value
+        // Do NOT override user data - validate it!
+        if (value !== actualExpectedValue) {
+          return {
+            success: false,
+            errors: [
+              `Expected constant value '${actualExpectedValue}', got '${value}'`,
+            ],
+            warnings: [],
+            data: value, // Return original user input, not the expected value
+          };
+        }
+
+        // User input matches expected constant - validation passes
         return {
           success: true,
           errors: [],
           warnings: [],
-          data: actualExpectedValue, // Always use default when condition is false
+          data: value, // Return user's input, not the expected value
         };
       }
 

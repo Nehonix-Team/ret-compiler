@@ -110,5 +110,5 @@
 ---
 
 *Last updated: 24/06/2025 19:13:56*
-*Generated automatically by scriptsenchmark-vs-zod.js !*
-*Try it yourself: bun run scriptsenchmark-vs-zod.js or npx tsx scriptsenchmark-vs-zod.js*
+*Generated automatically by scripts/enchmark-vs-zod.js !*
+*Try it yourself: bun run scripts/enchmark-vs-zod.js or npx tsx scriptsenchmark-vs-zod.js*

@@ -13,7 +13,7 @@ export const FORTIFY_CONDITIONAL_KEYWORDS: ConditionalKeyword[] = [
     examples: [
       '"when role=admin *? string : string?"',
       '"when age>18 *? boolean : boolean?"',
-      '"when status.in(active,pending) *? string : string?"',
+      '"when status.$in(active,pending) *? string : string?"',
       '"when email~@company\\.com$ *? =corporate : =personal"',
     ],
   },
