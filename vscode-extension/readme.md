@@ -1,32 +1,36 @@
-# FortifyJS VSCode Extension
+# FortiFySchema VSCode Extension
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/fortifyjs.fortifyjs-vscode)](https://marketplace.visualstudio.com/items?itemName=fortifyjs.fortifyjs-vscode)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/fortifyjs.fortifyjs-vscode)](https://marketplace.visualstudio.com/items?itemName=fortifyjs.fortifyjs-vscode)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/fortifyjs.fortifyjs-vscode)](https://marketplace.visualstudio.com/items?itemName=fortifyjs.fortifyjs-vscode)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/NEHONIX.fortify-schema-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.fortify-schema-vscode)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/NEHONIX.fortify-schema-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.fortify-schema-vscode)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/NEHONIX.fortify-schema-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.fortify-schema-vscode)
 
-**Professional TypeScript validation with intelligent IDE support** 
+**Professional TypeScript validation with intelligent IDE support**
 
-The official VSCode extension for FortifyJS - providing syntax highlighting, intelligent autocompletion, real-time validation, and comprehensive documentation for TypeScript schema validation.
+The official VSCode extension for FortiFySchema - providing syntax highlighting, intelligent autocompletion, real-time validation, and comprehensive documentation for TypeScript schema validation.
 
 ## ✨ Key Features
 
 ### 🎨 **Smart Syntax Highlighting**
+
 - **Context-aware highlighting** - Only activates within `Interface({...})` blocks
 - **Semantic token support** - Rich colors for types, operators, and conditional logic
 - **Multiple color themes** - Choose from professional color schemes
 
 ### 🧠 **Intelligent IntelliSense**
-- **Type autocompletion** - All FortifyJS types with constraints
+
+- **Type autocompletion** - All FortiFySchema types with constraints
 - **Conditional syntax** - Smart suggestions for `when` expressions
 - **Method completion** - `.in()`, `.exists`, `.contains()` and more
 - **Context-aware** - Only suggests relevant completions
 
 ### ⚡ **Real-time Validation**
+
 - **Instant error detection** - Catch syntax errors as you type
 - **Detailed diagnostics** - Clear error messages with suggestions
-- **Performance optimized** - No impact on non-FortifyJS code
+- **Performance optimized** - No impact on non-FortiFySchema code
 
 ### 📚 **Rich Documentation**
+
 - **Hover information** - Detailed docs for types and operators
 - **Example snippets** - See usage examples on hover
 - **Quick reference** - Access documentation without leaving your editor
@@ -45,30 +49,32 @@ This extension is designed to be **non-intrusive** and **context-aware**:
 ### 1. Install the Extension
 
 **From VS Code Marketplace:**
+
 1. Open VS Code Extensions (`Ctrl+Shift+X`)
-2. Search for "FortifyJS"
+2. Search for "FortiFySchema"
 3. Click "Install"
 
 **From Command Line:**
+
 ```bash
-code --install-extension fortifyjs.fortifyjs-vscode
+code --install-extension NEHONIX.fortify-schema-vscode
 ```
 
-### 2. Install FortifyJS
+### 2. Install FortiFySchema
 
 ```bash
-npm install fortifyjs
+npm install fortify-schema
 ```
 
 ### 3. Start Using
 
 ```typescript
-import { Interface } from "fortifyjs";
+import { Interface } from "fortify-schema";
 
 const UserSchema = Interface({
-  id: "int(1,)",                    // 🎨 Syntax highlighted
-  email: "email",                   // 💡 Hover for docs
-  role: "admin|user|guest",         // 🌈 Union types
+  id: "int(1,)", // 🎨 Syntax highlighted
+  email: "email", // 💡 Hover for docs
+  role: "admin|user|guest", // 🌈 Union types
   permissions: "when role=admin *? string[] : string[]?", // ⚡ Conditional validation
 });
 
@@ -79,6 +85,7 @@ const result = UserSchema.safeParse(userData);
 ## 📖 Supported Syntax
 
 ### Basic Types
+
 ```typescript
 {
   name: "string",           // String type
@@ -91,6 +98,7 @@ const result = UserSchema.safeParse(userData);
 ```
 
 ### Conditional Validation
+
 ```typescript
 {
   // Complex business logic
@@ -105,6 +113,7 @@ const result = UserSchema.safeParse(userData);
 ```
 
 ### Advanced Features
+
 ```typescript
 {
   // Constraints
@@ -152,15 +161,15 @@ The extension includes multiple professional color themes:
 - **Cyberpunk** - Neon colors for futuristic feel
 - **Pastel** - Soft colors for gentle highlighting
 
-Access themes via: `Ctrl+Shift+P` → "FortifyJS: Apply Color Scheme"
+Access themes via: `Ctrl+Shift+P` → "FortiFySchema: Apply Color Scheme"
 
 ## 🔧 Commands
 
-| Command | Description |
-|---------|-------------|
-| `FortifyJS: Validate Schema` | Manually validate current file |
-| `FortifyJS: Apply Color Scheme` | Choose color theme |
-| `FortifyJS: List Color Schemes` | View available themes |
+| Command                         | Description                    |
+| ------------------------------- | ------------------------------ |
+| `FortiFySchema: Validate Schema`    | Manually validate current file |
+| `FortiFySchema: Apply Color Scheme` | Choose color theme             |
+| `FortiFySchema: List Color Schemes` | View available themes          |
 
 ## 🐛 Troubleshooting
 
@@ -174,6 +183,7 @@ Access themes via: `Ctrl+Shift+P` → "FortifyJS: Apply Color Scheme"
 ### Performance Issues?
 
 The extension is optimized for performance:
+
 - Only processes `Interface({...})` blocks
 - Ignores regular strings and comments
 - Uses efficient parsing algorithms
@@ -181,22 +191,20 @@ The extension is optimized for performance:
 
 ## 📚 Documentation
 
-- **[FortifyJS Documentation](https://github.com/fortifyjs/fortifyjs)**
-- **[Conditional Validation Guide](https://github.com/fortifyjs/fortifyjs/blob/main/docs/CONDITIONAL_VALIDATION_GUIDE.md)**
-- **[Type Reference](https://github.com/fortifyjs/fortifyjs/blob/main/docs/OPERATIONS-REFERENCE.md)**
+- **[FortiFySchema Documentation](https://github.com/Nehonix-Team/fortify-schema)**
+- **[Conditional Validation Guide](https://github.com/Nehonix-Team/fortify-schema/blob/main/docs/CONDITIONAL_VALIDATION_GUIDE.md)**
+- **[Type Reference](https://github.com/Nehonix-Team/fortify-schema/blob/main/docs/OPERATIONS-REFERENCE.md)**
 
 ## 🤝 Contributing
 
 We welcome contributions!
 
-- **Report bugs**: [GitHub Issues](https://github.com/fortifyjs/fortifyjs-vscode/issues)
-- **Feature requests**: [GitHub Discussions](https://github.com/fortifyjs/fortifyjs-vscode/discussions)
-- **Pull requests**: [Contributing Guide](https://github.com/fortifyjs/fortifyjs-vscode/blob/main/CONTRIBUTING.md)
+- **Report bugs**: [GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)
+- **Feature requests**: [GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)
+- **Pull requests**: [Contributing Guide](https://github.com/Nehonix-Team/fortify-schema/blob/main/CONTRIBUTING.md)
 
 ## 📄 License
 
-MIT © [FortifyJS Team](https://github.com/fortifyjs)
+MIT © [Nehonix Team](https://github.com/Nehonix-Team/fortify-schema)
 
 ---
-
-**Made with ❤️ for the TypeScript community**

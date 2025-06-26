@@ -182,28 +182,60 @@ export function generateFortifyGrammar(): any {
       },
       "fortify-conditional-syntax": {
         patterns: [
-          // ENHANCED: Complete conditional expression pattern
+          // ENHANCED: Complete conditional expression pattern (multi-line support)
           {
-            name: "meta.conditional.fortify",
+            name: "meta.conditional.fortify.complete",
             begin: "\\b(when)\\b",
-            end: "(?=\\s*:)",
+            end: "(?=\\s*[,}\\]]|$)",
             beginCaptures: {
               "1": {
                 name: "keyword.control.fortify.when",
               },
             },
             patterns: [
+              // Conditional then operator (*?)
+              {
+                name: "keyword.operator.fortify.conditional-then",
+                match: "\\*\\?",
+              },
+              // Conditional else separator (:)
+              {
+                name: "punctuation.separator.fortify.conditional-else",
+                match: ":",
+              },
+              // Include condition patterns
               {
                 include: "#fortify-conditional-condition",
               },
+              // Include basic types for then/else parts
+              {
+                include: "#fortify-basic-types",
+              },
+              {
+                include: "#fortify-format-types",
+              },
+              {
+                include: "#fortify-numeric-types",
+              },
+              {
+                include: "#fortify-constraints",
+              },
+              {
+                include: "#fortify-arrays",
+              },
+              {
+                include: "#fortify-unions",
+              },
+              {
+                include: "#fortify-constants",
+              },
             ],
           },
-          // ENHANCED: Conditional then operator
+          // Standalone conditional operators (for better highlighting)
           {
             name: "keyword.operator.fortify.conditional-then",
             match: "\\*\\?",
           },
-          // ENHANCED: Conditional else separator
           {
             name: "punctuation.separator.fortify.conditional-else",
             match: ":",
@@ -213,7 +245,17 @@ export function generateFortifyGrammar(): any {
       // ENHANCED: Conditional condition patterns
       "fortify-conditional-condition": {
         patterns: [
-          // Property access with bracket notation and methods
+          // ENHANCED: Method calls with $ prefix (most specific first)
+          {
+            name: "meta.method-call.fortify.conditional",
+            match: "\\$([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+            captures: {
+              "1": {
+                name: "support.function.fortify.method",
+              },
+            },
+          },
+          // ENHANCED: Property access with bracket notation and methods
           {
             name: "meta.property-access.fortify.conditional",
             match:
@@ -230,7 +272,7 @@ export function generateFortifyGrammar(): any {
               },
             },
           },
-          // Simple property access with methods
+          // ENHANCED: Simple property access with methods
           {
             name: "meta.property-access.fortify.conditional",
             match:
@@ -247,24 +289,49 @@ export function generateFortifyGrammar(): any {
               },
             },
           },
-          // Comparison operators
+          // ENHANCED: Property names in conditions
+          {
+            name: "variable.other.property.fortify",
+            match: "\\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[.\\[=!<>~])",
+          },
+          // ENHANCED: Comparison operators
           {
             name: "keyword.operator.fortify.comparison",
             match: "(!=|>=|<=|!~|=|>|<|~)",
           },
-          // Logical operators
+          // ENHANCED: Logical operators
           {
             name: "keyword.operator.fortify.logical",
             match: "(&&|\\|\\|)",
           },
-          // Property access (dots)
+          // ENHANCED: Property access dots
           {
             name: "keyword.operator.fortify.field-access",
             match: "\\.",
           },
-          // Bracket notation
+          // ENHANCED: Bracket notation
           {
-            include: "#fortify-operators",
+            name: "punctuation.definition.bracket.fortify",
+            match: "[\\[\\]]",
+          },
+          // ENHANCED: Parentheses for method calls
+          {
+            name: "punctuation.definition.parameters.fortify",
+            match: "[\\(\\)]",
+          },
+          // ENHANCED: String literals in conditions
+          {
+            name: "string.quoted.single.fortify.condition",
+            match: "'[^']*'",
+          },
+          {
+            name: "string.quoted.double.fortify.condition",
+            match: '"[^"]*"',
+          },
+          // ENHANCED: Numbers in conditions
+          {
+            name: "constant.numeric.fortify.condition",
+            match: "\\b\\d+(?:\\.\\d+)?\\b",
           },
         ],
       },

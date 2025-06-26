@@ -50,7 +50,7 @@ export class TypeValidators {
     ) {
       result.success = false;
       result.errors.push(
-        `String must be at most ${constraints.maxLength} characters`
+        `String must be at most ${constraints.maxLength} characters - (${value.length})`
       );
     }
 

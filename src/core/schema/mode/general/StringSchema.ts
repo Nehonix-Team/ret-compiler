@@ -138,7 +138,7 @@ export class StringSchema extends BaseSchema<string> {
         if (this._maxLength !== undefined && value.length > this._maxLength) {
             result.success = false;
             result.errors.push(
-                `String must be at most ${this._maxLength} characters`
+              `String must be at most ${this._maxLength} characters - (${value.length})`
             );
         }
 

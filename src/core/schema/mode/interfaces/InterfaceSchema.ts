@@ -1197,6 +1197,82 @@ export class InterfaceSchema<T = any> {
   }
 
   /**
+   * Async validation - returns a promise with validation result
+   */
+  async parseAsync(data: T): Promise<T> {
+    return new Promise((resolve, reject) => {
+      try {
+        // Use setTimeout to make it truly async
+        setTimeout(() => {
+          try {
+            const result = this.validate(data);
+            if (!result.success) {
+              reject(
+                new SchemaValidationError(
+                  `Schema validation failed: ${result.errors.join(", ")}`,
+                  result.errors,
+                  result.warnings
+                )
+              );
+            } else {
+              resolve(result.data!);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        }, 0);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Async safe parse - returns a promise with validation result object
+   */
+  async safeParseAsync(data: T): Promise<SchemaValidationResult<T>> {
+    return new Promise((resolve) => {
+      // Use setTimeout to make it truly async
+      setTimeout(() => {
+        try {
+          const result = this.validate(data);
+          resolve(result);
+        } catch (error) {
+          resolve({
+            success: false,
+            errors: [`Unexpected validation error: ${error}`],
+            warnings: [],
+            data: undefined,
+          });
+        }
+      }, 0);
+    });
+  }
+
+  /**
+   * Async safe parse with unknown data
+   */
+  async safeParseUnknownAsync(
+    data: unknown
+  ): Promise<SchemaValidationResult<T>> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        try {
+          const result = this.validate(data);
+          resolve(result);
+        } catch (error) {
+          resolve({
+            success: false,
+            errors: [`Unexpected validation error: ${error}`],
+            warnings: [],
+            data: undefined,
+          });
+        }
+      }, 0);
+    });
+  }
+
+  /**
    * Enable strict mode (no unknown properties allowed)
    */
   strict(): InterfaceSchema<T> {

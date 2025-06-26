@@ -109,7 +109,7 @@ function activate(context) {
         // Show in output channel for better formatting
         const outputChannel = vscode.window.createOutputChannel("Fortify Color Schemes");
         outputChannel.clear();
-        outputChannel.appendLine("Fortify Schema - Available Color Schemes");
+        outputChannel.appendLine("Nehonix Fortify Schema - Available Color Schemes");
         outputChannel.appendLine("=".repeat(50));
         outputChannel.appendLine("");
         schemes.forEach((scheme, index) => {

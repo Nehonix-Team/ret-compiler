@@ -14,7 +14,7 @@ import { FortifyDefinitionProvider } from "./providers/DefinitionProvider";
 import {
   FortifyColorThemeManager,
   FortifyColorSchemes,
-} from "./themes/FortifyColorTheme";
+} from "./themes/FortifyColorTheme"; 
 
 /**
  * Extension activation - called when the extension is activated
@@ -184,7 +184,7 @@ export function activate(context: vscode.ExtensionContext) {
         "Fortify Color Schemes"
       );
       outputChannel.clear();
-      outputChannel.appendLine("Fortify Schema - Available Color Schemes");
+      outputChannel.appendLine("Nehonix Fortify Schema - Available Color Schemes");
       outputChannel.appendLine("=".repeat(50));
       outputChannel.appendLine("");
       schemes.forEach((scheme, index) => {

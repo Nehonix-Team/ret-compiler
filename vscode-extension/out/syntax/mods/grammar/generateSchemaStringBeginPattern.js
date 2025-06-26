@@ -10,7 +10,7 @@ function generateSchemaStringBeginPattern() {
     const typeNames = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllTypeNames().join("|");
     const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
     const methods = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllMethodNames()
-        .map((name) => `\\.${name}`)
+        .map((name) => `\\.\\$${name}`)
         .join("|");
     const patterns = [
         typeNames,
@@ -31,7 +31,7 @@ function generateSchemaSingleQuoteBeginPattern() {
     const typeNames = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllTypeNames().join("|");
     const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
     const methods = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllMethodNames()
-        .map((name) => `\\.${name}`)
+        .map((name) => `\\.\\$${name}`)
         .join("|");
     const patterns = [
         typeNames,
@@ -51,7 +51,7 @@ function generateSchemaTemplateBeginPattern() {
     const typeNames = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllTypeNames().join("|");
     const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
     const methods = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllMethodNames()
-        .map((name) => `\\.${name}`)
+        .map((name) => `\\.\\$${name}`)
         .join("|");
     const patterns = [
         typeNames,

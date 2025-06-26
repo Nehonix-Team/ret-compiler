@@ -5,6 +5,7 @@ All notable changes to Fortify Schema are documented in this file, following the
 ## [Unreleased]
 
 ### Added
+
 - **Conditional Validation**: Enhanced support for conditional fields with full TypeScript inference.
   - `*?` syntax: `"when role=admin *? string[] : string[]?"`
   - Parentheses syntax: `"when(role=admin) then(string[]) else(string[]?)"`
@@ -38,16 +39,19 @@ All notable changes to Fortify Schema are documented in this file, following the
   - [Migration Guide](./docs/MIGRATION.md)
 
 ### Fixed
+
 - ✅ **Regex Pattern Validation**: Resolved issue with regex pattern validation.
 - ✅ **Optional Field Type Inference**: Improved TypeScript inference for optional fields.
 - ✅ **Constraint Parsing**: Enhanced reliability of constraint parsing logic.
 
 ### Changed
+
 - **API Naming**: Renamed `SchemaHelpers` to `Make` for improved developer experience.
 - **Documentation Structure**: Reorganized for better navigation and discoverability.
 - **Type System**: Strengthened type inference for seamless TypeScript integration.
 
 ### Performance
+
 - Optimized validation performance for faster processing.
 - Maintained minimal bundle size despite new features.
 - Improved tree-shaking for better build optimization.
@@ -55,6 +59,7 @@ All notable changes to Fortify Schema are documented in this file, following the
 ## [1.0.0] - 2025-06-14/2025-06-13
 
 ### Added
+
 - **Interface-based Schema Definition**: TypeScript-like syntax for schema creation.
 - **Basic Field Types**: Support for string, number, boolean, date, and array validation.
 - **Format Validation**: Includes email, URL, UUID, and phone number formats.
@@ -67,6 +72,7 @@ All notable changes to Fortify Schema are documented in this file, following the
 - **Documentation**: Includes getting started guide and basic examples.
 
 ### Features
+
 - TypeScript-first design with zero dependencies.
 - Small, tree-shakable bundle size.
 - Precise type inference for robust type safety.
@@ -79,15 +85,17 @@ All notable changes to Fortify Schema are documented in this file, following the
 For users upgrading from pre-release versions:
 
 1. **Update Imports**
+
    ```typescript
    // Old
-   import { Interface, SchemaHelpers } from 'fortify-schema';
+   import { Interface, SchemaHelpers } from "fortify-schema";
 
    // New
-   import { Interface, Make, Mod } from 'fortify-schema';
+   import { Interface, Make, Mod } from "fortify-schema";
    ```
 
 2. **Update Helper Usage**
+
    ```typescript
    // Old
    status: SchemaHelpers.union("active", "inactive"),
@@ -105,6 +113,7 @@ For users upgrading from pre-release versions:
    ```
 
 ### Breaking Changes
+
 - Renamed `SchemaHelpers` to `Make` (use find/replace).
 - Requires TypeScript 4.5+ for enhanced type inference.
 - Default validation is stricter; use `.loose()` for previous behavior.
@@ -112,6 +121,7 @@ For users upgrading from pre-release versions:
 ## Roadmap
 
 ### Upcoming Features
+
 - **Async Validation**: Support for asynchronous validation rules.
 - **Internationalization**: Multi-language error messages.
 - **Plugin System**: Extensible validation plugins.
@@ -119,6 +129,7 @@ For users upgrading from pre-release versions:
 - **Custom Error Formatting**: Flexible error message customization.
 
 ### Long-term Goals
+
 - **Runtime Schema Generation**: Generate schemas from TypeScript types.
 - **Advanced Introspection**: Tools for schema analysis and documentation.
 - **IDE Extensions**: Enhanced IDE support for schema development.
@@ -130,4 +141,4 @@ Contributions are welcome! See the [Contributing Guide](./CONTRIBUTING.md) for d
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+GNU Affero General Public License v3 License - see [LICENSE](./LICENSE) for details.

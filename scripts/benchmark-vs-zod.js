@@ -5,20 +5,20 @@
  * This benchmark tests real-world scenarios with both libraries
  */
 
-const { performance } = require('perf_hooks');
-const fs = require('fs');
-const path = require('path');
+const { performance } = require("perf_hooks");
+const fs = require("fs");
+const path = require("path");
 
 // Import Fortify Schema (assuming it's built)
 let Interface;
 try {
-  Interface = require('../dist/cjs/index.js').Interface;
+  Interface = require("../dist/cjs/index.js").Interface;
 } catch (error) {
   try {
-    Interface = require('../dist/esm/index.js').Interface;
+    Interface = require("../dist/esm/index.js").Interface;
   } catch (error2) {
-    console.log('❌ Fortify Schema not found. Please run: npm run build');
-    console.log('Error:', error.message);
+    console.log("❌ Fortify Schema not found. Please run: npm run build");
+    console.log("Error:", error.message);
     process.exit(1);
   }
 }
@@ -26,25 +26,25 @@ try {
 // Try to import Zod (install if needed)
 let z;
 try {
-  z = require('zod');
+  z = require("zod");
 } catch (error) {
-  console.log('❌ Zod not found. Installing...');
-  require('child_process').execSync('npm install zod', { stdio: 'inherit' });
-  z = require('zod');
+  console.log("❌ Zod not found. Installing...");
+  require("child_process").execSync("npm install zod", { stdio: "inherit" });
+  z = require("zod");
 }
 
-console.log('=== FORTIFY SCHEMA vs ZOD PERFORMANCE COMPARISON ===\n');
+console.log("=== FORTIFY SCHEMA vs ZOD PERFORMANCE COMPARISON ===\n");
 
 // Test 1: Simple Schema
-console.log('📊 Test 1: Simple Schema (5 fields)');
-console.log('─'.repeat(50));
+console.log("📊 Test 1: Simple Schema (5 fields)");
+console.log("─".repeat(50));
 
 const fortifySimple = Interface({
   id: "positive",
   name: "string(2,50)",
   email: "email",
   age: "int(18,120)?",
-  active: "boolean"
+  active: "boolean",
 });
 
 const zodSimple = z.object({
@@ -52,7 +52,7 @@ const zodSimple = z.object({
   name: z.string().min(2).max(50),
   email: z.string().email(),
   age: z.number().int().min(18).max(120).optional(),
-  active: z.boolean()
+  active: z.boolean(),
 });
 
 const simpleData = {
@@ -60,7 +60,7 @@ const simpleData = {
   name: "John Doe",
   email: "john@example.com",
   age: 25,
-  active: true
+  active: true,
 };
 
 function runComparison(name, fortifySchema, zodSchema, data, iterations) {
@@ -94,25 +94,37 @@ function runComparison(name, fortifySchema, zodSchema, data, iterations) {
 
   // Calculate performance difference
   const speedup = zodTime / fortifyTime;
-  const winner = speedup > 1 ? 'Fortify' : 'Zod';
+  const winner = speedup > 1 ? "Fortify" : "Zod";
 
-  console.log(`  Fortify Schema: ${fortifyTime.toFixed(2)}ms (${fortifyAvg.toFixed(4)}ms avg, ${fortifyOps.toFixed(0)} ops/sec)`);
-  console.log(`  Zod:           ${zodTime.toFixed(2)}ms (${zodAvg.toFixed(4)}ms avg, ${zodOps.toFixed(0)} ops/sec)`);
-  console.log(`  Winner: 🏆 ${winner} (${Math.abs(speedup).toFixed(2)}x ${speedup > 1 ? 'faster' : 'slower'})`);
+  console.log(
+    `  Fortify Schema: ${fortifyTime.toFixed(2)}ms (${fortifyAvg.toFixed(4)}ms avg, ${fortifyOps.toFixed(0)} ops/sec)`
+  );
+  console.log(
+    `  Zod:           ${zodTime.toFixed(2)}ms (${zodAvg.toFixed(4)}ms avg, ${zodOps.toFixed(0)} ops/sec)`
+  );
+  console.log(
+    `  Winner: 🏆 ${winner} (${Math.abs(speedup).toFixed(2)}x ${speedup > 1 ? "faster" : "slower"})`
+  );
 
   return {
     fortify: { time: fortifyTime, avg: fortifyAvg, ops: fortifyOps },
     zod: { time: zodTime, avg: zodAvg, ops: zodOps },
     speedup: speedup,
-    winner: winner
+    winner: winner,
   };
 }
 
-const simpleResult = runComparison('Simple Schema', fortifySimple, zodSimple, simpleData, 10000);
+const simpleResult = runComparison(
+  "Simple Schema",
+  fortifySimple,
+  zodSimple,
+  simpleData,
+  10000
+);
 
 // Test 2: Complex Schema with Nested Objects
-console.log('\n📊 Test 2: Complex Schema (nested objects)');
-console.log('─'.repeat(50));
+console.log("\n📊 Test 2: Complex Schema (nested objects)");
+console.log("─".repeat(50));
 
 const fortifyComplex = Interface({
   user: {
@@ -124,15 +136,15 @@ const fortifyComplex = Interface({
       address: {
         street: "string",
         city: "string",
-        zipCode: "string(5,10)"
-      }
-    }
+        zipCode: "string(5,10)",
+      },
+    },
   },
   metadata: {
     created: "date",
     tags: "string[](0,10)?",
-    version: "string"
-  }
+    version: "string",
+  },
 });
 
 const zodComplex = z.object({
@@ -145,15 +157,15 @@ const zodComplex = z.object({
       address: z.object({
         street: z.string(),
         city: z.string(),
-        zipCode: z.string().min(5).max(10)
-      })
-    })
+        zipCode: z.string().min(5).max(10),
+      }),
+    }),
   }),
   metadata: z.object({
     created: z.date(),
     tags: z.array(z.string()).max(10).optional(),
-    version: z.string()
-  })
+    version: z.string(),
+  }),
 });
 
 const complexData = {
@@ -166,70 +178,88 @@ const complexData = {
       address: {
         street: "123 Main St",
         city: "New York",
-        zipCode: "10001"
-      }
-    }
+        zipCode: "10001",
+      },
+    },
   },
   metadata: {
     created: new Date(),
     tags: ["user", "verified"],
-    version: "1.0.0"
-  }
+    version: "1.0.0",
+  },
 };
 
-const complexResult = runComparison('Complex Schema', fortifyComplex, zodComplex, complexData, 5000);
+const complexResult = runComparison(
+  "Complex Schema",
+  fortifyComplex,
+  zodComplex,
+  complexData,
+  5000
+);
 
 // Test 3: Array Validation
-console.log('\n📊 Test 3: Array Validation');
-console.log('─'.repeat(50));
+console.log("\n📊 Test 3: Array Validation");
+console.log("─".repeat(50));
 
 const fortifyArray = Interface({
   users: "any[](1,100)",
   tags: "string[](0,20)",
-  scores: "number[](3,5)"
+  scores: "number[](3,5)",
 });
 
 const zodArray = z.object({
   users: z.array(z.any()).min(1).max(100),
   tags: z.array(z.string()).max(20),
-  scores: z.array(z.number()).min(3).max(5)
+  scores: z.array(z.number()).min(3).max(5),
 });
 
 const arrayData = {
   users: [{ id: 1 }, { id: 2 }, { id: 3 }],
   tags: ["typescript", "validation", "performance"],
-  scores: [85, 92, 78, 95]
+  scores: [85, 92, 78, 95],
 };
 
-const arrayResult = runComparison('Array Schema', fortifyArray, zodArray, arrayData, 8000);
+const arrayResult = runComparison(
+  "Array Schema",
+  fortifyArray,
+  zodArray,
+  arrayData,
+  8000
+);
 
 // Test 4: Union Types
-console.log('\n📊 Test 4: Union Types');
-console.log('─'.repeat(50));
+console.log("\n📊 Test 4: Union Types");
+console.log("─".repeat(50));
 
 const fortifyUnion = Interface({
   status: "active|inactive|pending|suspended",
   priority: "low|medium|high|critical",
-  type: "user|admin|moderator|guest"
+  type: "user|admin|moderator|guest",
 });
 
 const zodUnion = z.object({
   status: z.enum(["active", "inactive", "pending", "suspended"]),
   priority: z.enum(["low", "medium", "high", "critical"]),
-  type: z.enum(["user", "admin", "moderator", "guest"])
+  type: z.enum(["user", "admin", "moderator", "guest"]),
 });
 
 const unionData = {
   status: "active",
   priority: "high",
-  type: "admin"
+  type: "admin",
 };
 
-const unionResult = runComparison('Union Types', fortifyUnion, zodUnion, unionData, 12000);
+const unionResult = runComparison(
+  "Union Types",
+  fortifyUnion,
+  zodUnion,
+  unionData,
+  12000
+);
 
 // Memory Usage Comparison
-console.log('\n📊 Memory Usage Comparison');
-console.log('─'.repeat(50));
+console.log("\n📊 Memory Usage Comparison");
+console.log("─".repeat(50));
 
 const memBefore = process.memoryUsage();
 
@@ -238,48 +268,66 @@ const fortifySchemas = [];
 const zodSchemas = [];
 
 for (let i = 0; i < 1000; i++) {
-  fortifySchemas.push(Interface({
-    id: "positive",
-    name: "string(2,50)",
-    email: "email"
-  }));
+  fortifySchemas.push(
+    Interface({
+      id: "positive",
+      name: "string(2,50)",
+      email: "email",
+    })
+  );
 
-  zodSchemas.push(z.object({
-    id: z.number().positive(),
-    name: z.string().min(2).max(50),
-    email: z.string().email()
-  }));
+  zodSchemas.push(
+    z.object({
+      id: z.number().positive(),
+      name: z.string().min(2).max(50),
+      email: z.string().email(),
+    })
+  );
 }
 
 const memAfter = process.memoryUsage();
 const memDiff = memAfter.heapUsed - memBefore.heapUsed;
 
-console.log(`Memory for 1000 schema instances: ${(memDiff / 1024 / 1024).toFixed(2)} MB`);
+console.log(
+  `Memory for 1000 schema instances: ${(memDiff / 1024 / 1024).toFixed(2)} MB`
+);
 console.log(`Memory per schema pair: ${(memDiff / 1000 / 1024).toFixed(2)} KB`);
 
 // Summary
-console.log('\n🏆 PERFORMANCE SUMMARY');
-console.log('='.repeat(50));
+console.log("\n🏆 PERFORMANCE SUMMARY");
+console.log("=".repeat(50));
 
 const results = [simpleResult, complexResult, arrayResult, unionResult];
-const fortifyWins = results.filter(r => r.winner === 'Fortify').length;
-const zodWins = results.filter(r => r.winner === 'Zod').length;
+const fortifyWins = results.filter((r) => r.winner === "Fortify").length;
+const zodWins = results.filter((r) => r.winner === "Zod").length;
 
 console.log(`Fortify Schema wins: ${fortifyWins}/${results.length} tests`);
 console.log(`Zod wins: ${zodWins}/${results.length} tests`);
 
-const avgSpeedup = results.reduce((sum, r) => sum + r.speedup, 0) / results.length;
-console.log(`Average performance: ${avgSpeedup > 1 ? 'Fortify' : 'Zod'} is ${Math.abs(avgSpeedup).toFixed(2)}x ${avgSpeedup > 1 ? 'faster' : 'slower'}`);
+const avgSpeedup =
+  results.reduce((sum, r) => sum + r.speedup, 0) / results.length;
+console.log(
+  `Average performance: ${avgSpeedup > 1 ? "Fortify" : "Zod"} is ${Math.abs(avgSpeedup).toFixed(2)}x ${avgSpeedup > 1 ? "faster" : "slower"}`
+);
 
-console.log('\n📋 Detailed Results:');
+console.log("\n📋 Detailed Results:");
 results.forEach((result, i) => {
-  const testNames = ['Simple Schema', 'Complex Schema', 'Array Schema', 'Union Types'];
-  console.log(`  ${testNames[i]}: ${result.winner} wins (${result.speedup.toFixed(2)}x)`);
+  const testNames = [
+    "Simple Schema",
+    "Complex Schema",
+    "Array Schema",
+    "Union Types",
+  ];
+  console.log(
+    `  ${testNames[i]}: ${result.winner} wins (${result.speedup.toFixed(2)}x)`
+  );
 });
 
-console.log('\n✅ Benchmark completed successfully!');
-console.log('\nNote: Results may vary based on Node.js version, system specs, and data complexity.');
-console.log('These benchmarks test core validation performance only.');
+console.log("\n✅ Benchmark completed successfully!");
+console.log(
+  "\nNote: Results may vary based on Node.js version, system specs, and data complexity."
+);
+console.log("These benchmarks test core validation performance only.");
 
 // Generate benchmark reports
 generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zodWins);
@@ -287,9 +335,20 @@ generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zodWins);
 /**
  * Generate comprehensive benchmark reports in both Markdown and JSON formats
  */
-function generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zodWins) {
+function generateBenchmarkReports(
+  results,
+  memDiff,
+  avgSpeedup,
+  fortifyWins,
+  zodWins
+) {
   const timestamp = new Date().toISOString();
-  const testNames = ['Simple Schema', 'Complex Schema', 'Array Schema', 'Union Types'];
+  const testNames = [
+    "Simple Schema",
+    "Complex Schema",
+    "Array Schema",
+    "Union Types",
+  ];
 
   // Ensure docs directory exists
   const docsDir = path.join(__dirname, "..", "src", "bench");
@@ -304,19 +363,19 @@ function generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zod
       nodeVersion: process.version,
       platform: process.platform,
       arch: process.arch,
-      fortifyVersion: "1.0.0", // You might want to read this from package.json
-      zodVersion: getZodVersion()
+      fortifyVersion: require("../package.json").version,
+      zodVersion: getZodVersion(),
     },
     summary: {
       totalTests: results.length,
       fortifyWins,
       zodWins,
       averageSpeedup: avgSpeedup,
-      overallWinner: avgSpeedup > 1 ? 'Fortify Schema' : 'Zod',
+      overallWinner: avgSpeedup > 1 ? "Fortify Schema" : "Zod",
       memoryUsage: {
-        totalMB: (memDiff / 1024 / 1024),
-        perSchemaKB: (memDiff / 1000 / 1024)
-      }
+        totalMB: memDiff / 1024 / 1024,
+        perSchemaKB: memDiff / 1000 / 1024,
+      },
     },
     detailedResults: results.map((result, i) => ({
       testName: testNames[i],
@@ -325,18 +384,18 @@ function generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zod
       fortify: {
         totalTime: result.fortify.time,
         averageTime: result.fortify.avg,
-        operationsPerSecond: result.fortify.ops
+        operationsPerSecond: result.fortify.ops,
       },
       zod: {
         totalTime: result.zod.time,
         averageTime: result.zod.avg,
-        operationsPerSecond: result.zod.ops
-      }
-    }))
+        operationsPerSecond: result.zod.ops,
+      },
+    })),
   };
 
   // Write JSON report
-  const jsonPath = path.join(docsDir, 'benchmark-results.json');
+  const jsonPath = path.join(docsDir, "benchmark-results.json");
   fs.writeFileSync(jsonPath, JSON.stringify(jsonReport, null, 2));
   console.log(`\n📄 JSON report saved to: ${jsonPath}`);
 
@@ -344,7 +403,7 @@ function generateBenchmarkReports(results, memDiff, avgSpeedup, fortifyWins, zod
   const markdownReport = generateMarkdownReport(jsonReport);
 
   // Write Markdown report
-  const mdPath = path.join(docsDir, 'BENCHMARK-RESULTS.md');
+  const mdPath = path.join(docsDir, "BENCHMARK-RESULTS.md");
   fs.writeFileSync(mdPath, markdownReport);
   console.log(`📄 Markdown report saved to: ${mdPath}`);
 }
@@ -480,9 +539,9 @@ ${
  */
 function getZodVersion() {
   try {
-    const zodPackage = require('zod/package.json');
+    const zodPackage = require("zod/package.json");
     return zodPackage.version;
   } catch (error) {
-    return 'unknown';
+    return "unknown";
   }
 }

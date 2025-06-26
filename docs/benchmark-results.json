@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-06-25T22:22:31.015Z",
+  "environment": {
+    "node": "v22.6.0",
+    "platform": "win32",
+    "arch": "x64",
+    "memory": "2MB"
+  },
+  "benchmarks": [
+    {
+      "name": "Core Performance",
+      "description": "Core validation performance metrics",
+      "status": "success",
+      "output": "=== PERFORMANCE COMPARISON ===\n\n1. Constraint Parser Cache Performance:\nFirst run (no cache): 4.80ms\nSecond run (no cache): 3.05ms\nThird run (with cache): 2.85ms\nCache speedup: 1.07x\n\n2. Schema Validation Performance:\n1000 validations: 8.28ms (0.0083ms avg, 120823 ops/sec)\n5000 validations: 44.89ms (0.0090ms avg, 111391 ops/sec)\n10000 validations: 68.26ms (0.0068ms avg, 146500 ops/sec)\n\n3. Memory Usage Test:\nMemory used for 50,000 validations: 0.78 MB\nMemory per validation: 16 bytes\n\n4. Cache Statistics:\nConstraint parser cache size: 9 entries\n\n5. Complex Schema Performance:\nComplex schema (5000 validations): 156.41ms\nComplex schema average: 0.0313ms per validation\nComplex schema ops/sec: 31967\n\nPerformance comparison completed! 📊",
+      "timestamp": "2025-06-25T22:22:31.840Z"
+    },
+    {
+      "name": "Precompilation Optimization",
+      "description": "Schema compilation and caching performance",
+      "status": "success",
+      "output": "=== PRE-COMPILATION OPTIMIZATION BENCHMARK ===\n\n\nSimple Schema (3 fields):\n──────────────────────────────────────────────────\n✅ 20000 validations: 82.94ms\n✅ Average time: 0.0041ms per validation\n✅ Throughput: 241140 operations/second\n✅ Memory per validation: ~0.02 KB\n\nMedium Schema (6 fields):\n──────────────────────────────────────────────────\n✅ 15000 validations: 60.52ms\n✅ Average time: 0.0040ms per validation\n✅ Throughput: 247834 operations/second\n✅ Memory per validation: ~0.02 KB\n\nComplex Schema (nested objects):\n──────────────────────────────────────────────────\n✅ 10000 validations: 106.59ms\n✅ Average time: 0.0107ms per validation\n✅ Throughput: 93820 operations/second\n✅ Memory per validation: ~0.11 KB\n\n=== CONSTRAINT PARSER CACHE PERFORMANCE ===\n──────────────────────────────────────────────────\nCold cache (first run): 8.68ms\nWarm cache (cached): 7.29ms\nCache speedup: 1.19x faster\nCache size: 9 entries\n\n=== MEMORY EFFICIENCY TEST ===\n──────────────────────────────────────────────────\nMemory for 1000 schema instances: 0.00 MB\nMemory per schema: 0.00 KB\nValidated 1000 different schemas: 15.98ms\nAverage per schema: 0.0160ms\n\n=== OPTIMIZATION SUMMARY ===\n──────────────────────────────────────────────────\n✅ Pre-compilation eliminates repeated parsing overhead\n✅ Constraint caching provides significant speedup\n✅ Memory usage is optimized for production workloads\n✅ Performance scales well with schema complexity\n✅ Ready for high-throughput validation scenarios\n\nPre-compilation benchmark completed! 🚀",
+      "timestamp": "2025-06-25T22:22:32.326Z"
+    },
+    {
+      "name": "Fortify vs Zod",
+      "description": "Direct performance comparison with Zod",
+      "status": "success",
+      "output": "=== FORTIFY SCHEMA vs ZOD PERFORMANCE COMPARISON ===\n\n📊 Test 1: Simple Schema (5 fields)\n──────────────────────────────────────────────────\n\nSimple Schema:\n  Fortify Schema: 35.34ms (0.0035ms avg, 282939 ops/sec)\n  Zod:           51.09ms (0.0051ms avg, 195731 ops/sec)\n  Winner: 🏆 Fortify (1.45x faster)\n\n📊 Test 2: Complex Schema (nested objects)\n──────────────────────────────────────────────────\n\nComplex Schema:\n  Fortify Schema: 56.41ms (0.0113ms avg, 88629 ops/sec)\n  Zod:           68.46ms (0.0137ms avg, 73033 ops/sec)\n  Winner: 🏆 Fortify (1.21x faster)\n\n📊 Test 3: Array Validation\n──────────────────────────────────────────────────\n\nArray Schema:\n  Fortify Schema: 29.36ms (0.0037ms avg, 272480 ops/sec)\n  Zod:           34.94ms (0.0044ms avg, 228947 ops/sec)\n  Winner: 🏆 Fortify (1.19x faster)\n\n📊 Test 4: Union Types\n──────────────────────────────────────────────────\n\nUnion Types:\n  Fortify Schema: 75.30ms (0.0063ms avg, 159372 ops/sec)\n  Zod:           8.73ms (0.0007ms avg, 1375185 ops/sec)\n  Winner: 🏆 Zod (0.12x slower)\n\n📊 Memory Usage Comparison\n──────────────────────────────────────────────────\nMemory for 1000 schema instances: 9.54 MB\nMemory per schema pair: 9.77 KB\n\n🏆 PERFORMANCE SUMMARY\n==================================================\nFortify Schema wins: 3/4 tests\nZod wins: 1/4 tests\nAverage performance: Zod is 0.99x slower\n\n📋 Detailed Results:\n  Simple Schema: Fortify wins (1.45x)\n  Complex Schema: Fortify wins (1.21x)\n  Array Schema: Fortify wins (1.19x)\n  Union Types: Zod wins (0.12x)\n\n✅ Benchmark completed successfully!\n\nNote: Results may vary based on Node.js version, system specs, and data complexity.\nThese benchmarks test core validation performance only.\n\n📄 JSON report saved to: F:\\Projects\\NEHONIX\\fortifyjs\\src\\core\\schema\\src\\bench\\benchmark-results.json\n📄 Markdown report saved to: F:\\Projects\\NEHONIX\\fortifyjs\\src\\core\\schema\\src\\bench\\BENCHMARK-RESULTS.md",
+      "timestamp": "2025-06-25T22:22:32.981Z"
+    }
+  ]
+}

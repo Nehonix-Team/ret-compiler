@@ -1,6 +1,6 @@
 {
   "name": "fortify-schema",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "The Future of TypeScript Validation. 20+ operators, perfect type inference, and enterprise-grade performance.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -33,7 +33,7 @@
     "test:watch": "jest --watch",
     "demo": "bun examples/superiority-demo.ts",
     "demo:performance": "bun src/core/performance/benchmark.ts",
-    "benchmark": "node scripts/publish-benchmarks.js",
+    "benchmark": "node scripts/benchmark-vs-zod.js",
     "benchmark:core": "bun src/bench/performance-comparison.ts",
     "benchmark:precompile": "bun src/bench/precompilation-benchmark.ts",
     "benchmark:vs-zod": "node scripts/benchmark-vs-zod.js",

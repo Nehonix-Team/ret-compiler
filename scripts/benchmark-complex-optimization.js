@@ -60,31 +60,81 @@ const level4Schema = Interface({
   user: {
     id: "positive",
     profile: {
-      name: "string(2,50)",  
+      name: "string(2,50)",
       email: "email",
-      address: { 
+      address: {
         street: "string",
-        city: "string", 
+        city: "string",
         country: "string",
         coordinates: {
           lat: "number(-90,90)",
-          lng: "number(-180,180)" 
-        }
+          lng: "number(-180,180)",
+        },
       },
       preferences: {
         theme: "light|dark",
         notifications: "boolean",
-        language: "string(2,5)"
-      }
-    }
+        language: "string(2,5)",
+      },
+    },
+  },
+  deepNested: {
+    deep: {
+      deeper: {
+        deepest: "string",
+        moreNested: {
+          level1: {
+            level2: {
+              level3: {
+                level4: {
+                  level5: {
+                    level6: {
+                      level7: {
+                        level8: {
+                          level9: {
+                            level10: {
+                              level11: {
+                                level12: {
+                                  level13: {
+                                    level14: {
+                                      level15: {
+                                        level16: {
+                                          level17: {
+                                            level18: {
+                                              level19: {
+                                                level20: {
+                                                  value: "string[]",
+                                                },
+                                              },
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   permissions: "string[]?",
   metadata: {
     created: "date",
     updated: "date?",
     tags: "string[]?",
-    version: "string"
-  }
+    version: "string",
+  },
 });
 
 // Test data for each level
@@ -92,18 +142,18 @@ const testData = {
   level1: {
     id: 1,
     name: "John Doe",
-    email: "john@example.com"
+    email: "john@example.com",
   },
   level2: {
     user: {
       id: 1,
-      name: "John Doe", 
-      email: "john@example.com"
+      name: "John Doe",
+      email: "john@example.com",
     },
     metadata: {
       created: new Date(),
-      version: "1.0.0"
-    }
+      version: "1.0.0",
+    },
   },
   level3: {
     user: {
@@ -114,15 +164,15 @@ const testData = {
         address: {
           street: "123 Main St",
           city: "New York",
-          country: "USA"
-        }
-      }
+          country: "USA",
+        },
+      },
     },
     metadata: {
       created: new Date(),
       updated: new Date(),
-      tags: ["user", "verified"]
-    }
+      tags: ["user", "verified"],
+    },
   },
   level4: {
     user: {
@@ -132,28 +182,79 @@ const testData = {
         email: "john@example.com",
         address: {
           street: "123 Main St",
-          city: "New York", 
+          city: "New York",
           country: "USA",
           coordinates: {
             lat: 40.7128,
-            lng: -74.0060
-          }
+            lng: -74.006,
+          },
         },
         preferences: {
           theme: "dark",
           notifications: true,
-          language: "en"
-        }
-      }
+          language: "en",
+        },
+      },
+    },
+    deepNested: {
+      deep: {
+        deeper: {
+          deepest: "Hello world",
+          moreNested: {
+            level1: {
+              level2: {
+                level3: {
+                  level4: {
+                    level5: {
+                      level6: {
+                        level7: {
+                          level8: {
+                            level9: {
+                              level10: {
+                                level11: {
+                                  level12: {
+                                    level13: {
+                                      level14: {
+                                        level15: {
+                                          level16: {
+                                            level17: {
+                                              level18: {
+                                                level19: {
+                                                  level20: {
+                                                    value:
+                                                      "bingo!!! You found me ! 😎🤣😂 What a journey! 🏆 My name's deepest nesting property. You deserve a cookie! 🍪😛😜😝🤣😂",
+                                                  },
+                                                },
+                                              },
+                                            },
+                                          },
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     permissions: ["read", "write"],
     metadata: {
       created: new Date(),
       updated: new Date(),
       tags: ["user", "verified"],
-      version: "1.0.0"
-    }
-  }
+      version: "1.0.0",
+    },
+  },
 };
 
 function benchmarkComplexity(name, schema, data, iterations) {
@@ -258,4 +359,3 @@ if (performanceRange > 3) {
 }
 
 console.log('\n✅ Complex schema analysis completed!');
-console.log('Use these insights to prioritize optimization efforts.');

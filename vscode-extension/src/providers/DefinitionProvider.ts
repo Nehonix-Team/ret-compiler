@@ -2,7 +2,7 @@
  * Definition Provider for Fortify Schema
  *
  * Provides go-to-definition functionality for variables in conditional expressions
- * - Ctrl+click on "accountType" in "when accountType=premium" jumps to the property definition
+ * - Ctrl+click on "property" in "when property=premium" jumps to the property definition
  * - Works within Interface({...}) blocks
  * - Supports nested object properties
  */

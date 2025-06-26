@@ -164,12 +164,12 @@ class FortifyColorThemeManager {
      */
     static getCurrentScheme() {
         const config = vscode.workspace.getConfiguration("fortify");
-        const schemeName = config.get("colorTheme", "default");
+        const schemeName = config.get("colorTheme", default_1.default_scheme);
         // Validate that the scheme exists, fallback to default if not
         const scheme = FortifyColorSchemes.getScheme(schemeName);
         if (!scheme) {
             console.warn(`Fortify color scheme '${schemeName}' not found, falling back to 'default'`);
-            return "default";
+            return default_1.default_scheme;
         }
         return schemeName;
     }

@@ -8,7 +8,7 @@ export function generateSchemaStringBeginPattern(): string {
   const typeNames = FortifySyntaxUtils.getAllTypeNames().join("|");
   const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
   const methods = FortifySyntaxUtils.getAllMethodNames()
-    .map((name: string) => `\\.${name}`)
+    .map((name: string) => `\\.\\$${name}`)
     .join("|");
 
   const patterns = [
@@ -31,7 +31,7 @@ export function generateSchemaSingleQuoteBeginPattern(): string {
   const typeNames = FortifySyntaxUtils.getAllTypeNames().join("|");
   const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
   const methods = FortifySyntaxUtils.getAllMethodNames()
-    .map((name: string) => `\\.${name}`)
+    .map((name: string) => `\\.\\$${name}`)
     .join("|");
 
   const patterns = [
@@ -53,7 +53,7 @@ export function generateSchemaTemplateBeginPattern(): string {
   const typeNames = FortifySyntaxUtils.getAllTypeNames().join("|");
   const operators = ["when", "\\*\\?", "\\|", "=\\w+"];
   const methods = FortifySyntaxUtils.getAllMethodNames()
-    .map((name: string) => `\\.${name}`)
+    .map((name: string) => `\\.\\$${name}`)
     .join("|");
 
   const patterns = [

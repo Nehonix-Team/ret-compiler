@@ -2,7 +2,7 @@
 
 ## 📊 Executive Summary
 
-**Generated:** 24/06/2025 19:13:56
+**Generated:** 25/06/2025 22:33:42
 **Node.js Version:** v22.6.0
 **Platform:** win32 (x64)
 
@@ -13,77 +13,77 @@
 | **Total Tests** | 4 |
 | **Fortify Schema Wins** | 1/4 tests |
 | **Zod Wins** | 3/4 tests |
-| **Overall Winner** | **Fortify Schema** |
-| **Average Performance** | Fortify Schema is 1.03x faster |
+| **Overall Winner** | **Zod** |
+| **Average Performance** | Zod is 0.67x slower |
 
 ### 💾 Memory Usage
 
-- **Total Memory for 1000 schemas:** 2.41 MB
-- **Memory per schema pair:** 2.47 KB
+- **Total Memory for 1000 schemas:** 6.28 MB
+- **Memory per schema pair:** 6.43 KB
 
 ## 📋 Detailed Test Results
 
 
 ### 1. Simple Schema
 
-**Winner:** 🏆 **Zod** (0.87x slower)
+**Winner:** 🏆 **Zod** (0.48x slower)
 
 | Library | Total Time | Avg Time | Ops/Second |
 |---------|------------|----------|------------|
-| **Fortify Schema** | 56.02ms | 0.0056ms | 178496 |
-| **Zod** | 48.46ms | 0.0048ms | 206344 |
+| **Fortify Schema** | 118.32ms | 0.0118ms | 84516 |
+| **Zod** | 56.90ms | 0.0057ms | 175748 |
 
 
 ### 2. Complex Schema
 
-**Winner:** 🏆 **Zod** (0.89x slower)
+**Winner:** 🏆 **Zod** (0.81x slower)
 
 | Library | Total Time | Avg Time | Ops/Second |
 |---------|------------|----------|------------|
-| **Fortify Schema** | 49.51ms | 0.0099ms | 100985 |
-| **Zod** | 43.98ms | 0.0088ms | 113684 |
+| **Fortify Schema** | 61.14ms | 0.0122ms | 81780 |
+| **Zod** | 49.30ms | 0.0099ms | 101418 |
 
 
 ### 3. Array Schema
 
-**Winner:** 🏆 **Fortify** (1.60x faster)
+**Winner:** 🏆 **Fortify** (1.34x faster)
 
 | Library | Total Time | Avg Time | Ops/Second |
 |---------|------------|----------|------------|
-| **Fortify Schema** | 30.90ms | 0.0039ms | 258910 |
-| **Zod** | 49.44ms | 0.0062ms | 161822 |
+| **Fortify Schema** | 29.84ms | 0.0037ms | 268129 |
+| **Zod** | 39.87ms | 0.0050ms | 200660 |
 
 
 ### 4. Union Types
 
-**Winner:** 🏆 **Zod** (0.75x slower)
+**Winner:** 🏆 **Zod** (0.06x slower)
 
 | Library | Total Time | Avg Time | Ops/Second |
 |---------|------------|----------|------------|
-| **Fortify Schema** | 26.07ms | 0.0022ms | 460214 |
-| **Zod** | 19.56ms | 0.0016ms | 613362 |
+| **Fortify Schema** | 130.31ms | 0.0109ms | 92090 |
+| **Zod** | 8.34ms | 0.0007ms | 1439056 |
 
 
 ## 🎯 Performance Analysis
 
 ### Strengths of Fortify Schema
-- **Array Schema**: 1.60x faster than Zod
+- **Array Schema**: 1.34x faster than Zod
 
 ### Strengths of Zod
-- **Simple Schema**: 1.16x faster than Fortify Schema
-- **Complex Schema**: 1.13x faster than Fortify Schema
-- **Union Types**: 1.33x faster than Fortify Schema
+- **Simple Schema**: 2.08x faster than Fortify Schema
+- **Complex Schema**: 1.24x faster than Fortify Schema
+- **Union Types**: 15.63x faster than Fortify Schema
 
 ## 📈 Performance Trends
 
 ### Best Performing Test Cases
-1. **Union Types**: 460214 ops/sec
-1. **Array Schema**: 258910 ops/sec
+1. **Array Schema**: 268129 ops/sec
+1. **Union Types**: 92090 ops/sec
 
 ### Areas for Improvement
-- **Union Types**: Currently 1.33x slower than Zod
-- **Simple Schema**: Currently 1.16x slower than Zod
-- **Complex Schema**: Currently 1.13x slower than Zod
+- **Union Types**: Currently 15.63x slower than Zod
+- **Simple Schema**: Currently 2.08x slower than Zod
+- **Complex Schema**: Currently 1.24x slower than Zod
 
 ## 🔧 Technical Details
 
@@ -91,7 +91,7 @@
 - **Node.js:** v22.6.0
 - **Platform:** win32
 - **Architecture:** x64
-- **Fortify Schema Version:** 1.0.0
+- **Fortify Schema Version:** 2.0.1
 - **Zod Version:** 3.25.67
 
 ### Methodology
@@ -109,6 +109,6 @@
 
 ---
 
-*Last updated: 24/06/2025 19:13:56*
-*Generated automatically by scripts/enchmark-vs-zod.js !*
-*Try it yourself: bun run scripts/enchmark-vs-zod.js or npx tsx scriptsenchmark-vs-zod.js*
+*Last updated: 25/06/2025 22:33:42*
+*Generated automatically by scripts/benchmark-vs-zod.js !*
+*Try it yourself: bun run scripts/benchmark-vs-zod.js or npx tsx scripts/benchmark-vs-zod.js*

@@ -3,7 +3,7 @@
  *
  * This file contains type definitions for the SecureArray architecture
  *
- * @author Nehonix 
+ * @author Nehonix
  * @license GNU Affero General Public License v3
  *
  * Copyright (c) 2025 Nehonix Team. All rights reserved.
@@ -107,7 +107,13 @@ export { NumberSchema } from "./core/schema/mode/general/NumberSchema";
 export { BooleanSchema } from "./core/schema/mode/general/BooleanSchema";
 export { ArraySchema } from "./core/schema/mode/general/ArraySchema";
 export { ObjectSchema } from "./core/schema/mode/general/ObjectSchema";
-export { InterfaceSchema } from "./core/schema/mode/interfaces/InterfaceSchema";
+export {
+  InterfaceSchema,
+  SchemaValidationError,
+} from "./core/schema/mode/interfaces/InterfaceSchema";
+
+// Performance and optimization
+export { PerformanceMonitor } from "./core/schema/optimization/PerformanceMonitor";
 
 // Type definitions
 export type {
