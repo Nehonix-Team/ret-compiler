@@ -20,7 +20,7 @@
  *     bio: "string?",
  *     avatar: "url?"
  *   }
- * }); 
+ * });
  *
  * // Validate data
  * const result = UserSchema.safeParse(userData);
@@ -38,6 +38,48 @@ import {
   UnionValue,
 } from "../../../types/SchemaValidator.type";
 import { InferSchemaType } from "./typescript/TypeInference";
+
+/**
+ * Convert Make objects to string syntax that InterfaceSchema understands
+ */
+function convertMakeObjectsToStrings(definition: any): any {
+  if (typeof definition !== "object" || definition === null) {
+    return definition;
+  }
+
+  // Handle arrays
+  if (Array.isArray(definition)) {
+    return definition.map((item) => convertMakeObjectsToStrings(item));
+  }
+
+  // Check if this is a Make.const() object: convert => =constVal
+  if (
+    typeof definition === "object" &&
+    "const" in definition &&
+    Object.keys(definition).length === 1
+  ) {
+    // Convert Make.const() to string syntax
+    return `=${definition.const}`;
+  }
+
+  // Check if this is a Make.union() object
+  if (
+    typeof definition === "object" &&
+    "union" in definition &&
+    Array.isArray(definition.union) &&
+    Object.keys(definition).length === 1
+  ) {
+    // Convert Make.union() to string syntax
+    return definition.union.join("|");
+  }
+
+  // Recursively process nested objects
+  const result: any = {};
+  for (const [key, value] of Object.entries(definition)) {
+    result[key] = convertMakeObjectsToStrings(value);
+  }
+  return result;
+}
 
 /**
  * Create a schema using TypeScript interface-like syntax with full type inference
@@ -103,7 +145,16 @@ export function Interface<const T extends SchemaInterface>(
   definition: T,
   options?: SchemaOptions
 ): InterfaceSchema<InferSchemaType<T>> {
-  return new InterfaceSchema<InferSchemaType<T>>(definition, options);
+  // Convert Make objects to string syntax before creating schema
+  const processedDefinition = convertMakeObjectsToStrings(definition);
+
+  // Debug: Log the conversion (disabled for now)
+  // if (process.env.NODE_ENV !== "production") {
+  //   console.log("DEBUG: Original definition:", JSON.stringify(definition, null, 2));
+  //   console.log("DEBUG: Processed definition:", JSON.stringify(processedDefinition, null, 2));
+  // }
+
+  return new InterfaceSchema<InferSchemaType<T>>(processedDefinition, options);
 }
 
 /**

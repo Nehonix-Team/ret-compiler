@@ -4,7 +4,7 @@
  * Contains optimized helper functions for validation operations
  * extracted from InterfaceSchema to improve maintainability.
  */
-  
+
 import { SchemaValidationResult } from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
@@ -35,6 +35,7 @@ export class ValidationHelpers {
     constantValue: string,
     value: any
   ): SchemaValidationResult {
+    // Validate constant types with enhanced caching
     // Implement LRU cache behavior
     if (constantCache.size >= MAX_CACHE_SIZE) {
       const firstKey = constantCache.keys().next().value;

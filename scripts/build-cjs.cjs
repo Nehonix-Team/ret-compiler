@@ -31,14 +31,14 @@ try {
     process.exit(1);
   }
 
-  // Test strict validation (should fail - string instead of number)
-  const strictResult = UserSchema.safeParse({
-    id: "1", // String instead of number - should fail in strict mode
-    name: "John Doe",
-    email: "john@example.com",
-    status: "active",
-    role: "user"
-  });
+    // Test strict validation (should fail - string instead of number)
+    const strictResult = UserSchema.safeParse({
+      id: "1", // String instead of number - should fail in strict mode
+      name: "John Doe",
+      email: "john@example.com",
+      status: "active",
+      role: "user"
+    });
 
   if (!strictResult.success && strictResult.errors.some(e => e.includes('Expected number, got string'))) {
     console.log('✅ Strict validation test passed - correctly rejected string for number');

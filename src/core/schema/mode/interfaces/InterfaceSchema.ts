@@ -488,6 +488,7 @@ export class InterfaceSchema<T = any> {
 
     // Handle constant values
     if (type.startsWith("=")) {
+      // Validate constant value
       return ValidationHelpers.validateConstantType(type.slice(1), value);
     }
 
