@@ -1,6 +1,6 @@
 {
   "name": "fortify-schema",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "The Future of TypeScript Validation. 20+ operators, perfect type inference, and enterprise-grade performance.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -33,10 +33,10 @@
     "test:watch": "jest --watch",
     "demo": "bun examples/superiority-demo.ts",
     "demo:performance": "bun src/core/performance/benchmark.ts",
-    "benchmark": "node scripts/benchmark-vs-zod.js",
+    "benchmark": "node scripts/benchmark.js",
     "benchmark:core": "bun src/bench/performance-comparison.ts",
     "benchmark:precompile": "bun src/bench/precompilation-benchmark.ts",
-    "benchmark:vs-zod": "node scripts/benchmark-vs-zod.js",
+    "benchmark:vs-zod": "node scripts/benchmark.js",
     "benchmark:optimizations": "node scripts/test-optimizations.js",
     "benchmark:unions": "node scripts/benchmark-union-optimization.js",
     "benchmark:complex": "node scripts/benchmark-complex-optimization.js",
@@ -178,7 +178,7 @@
     "scalable"
   ],
   "author": "Nehonix Team <support@nehonix.space> (https://nehonix.space)",
-  "license": "GNU Affero General Public License v3",
+  "license": "MIT License",
   "repository": {
     "type": "git",
     "url": "https://github.com/Nehonix-Team/fortify-schema.git"
@@ -209,8 +209,5 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  },
-  "dependencies": {
-    "zod": "^3.25.67"
   }
 }

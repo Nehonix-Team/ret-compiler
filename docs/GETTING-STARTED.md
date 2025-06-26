@@ -1,7 +1,7 @@
 # Getting Started with Fortify Schema
 
 Welcome to Fortify Schema! This guide will get you up and running in minutes with TypeScript-first validation using interface-native syntax.
-
+ 
 ## 🚀 Installation
 
 ### Requirements

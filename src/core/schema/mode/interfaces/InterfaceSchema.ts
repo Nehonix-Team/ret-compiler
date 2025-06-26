@@ -132,12 +132,13 @@ export class InterfaceSchema<T = any> {
    * ULTRA-PERFORMANCE: Create precompiled validator for maximum speed
    */
   private createPrecompiledValidator(): void {
-    // Only create precompiled validator for non-conditional schemas
+    // Only create precompiled validator for non-conditional schemas and non-loose mode
     const hasConditionalFields = this.compiledFields.some(
       (field) => field.isConditional
     );
 
-    if (!hasConditionalFields) {
+    // Skip precompilation if loose mode is enabled (needs type coercion support)
+    if (!hasConditionalFields && !this.options.loose) {
       try {
         this.precompiledValidator = SchemaPrecompiler.precompileSchema(
           this.definition,
@@ -242,7 +243,8 @@ export class InterfaceSchema<T = any> {
     let result: SchemaValidationResult<T>;
 
     // ULTRA-PERFORMANCE: Use precompiled validator first (fastest path)
-    if (this.precompiledValidator) {
+    // BUT: Skip precompiled validator if loose mode is enabled (needs type coercion)
+    if (this.precompiledValidator && !this.options.loose) {
       result = this.precompiledValidator(data) as SchemaValidationResult<T>;
     } else if (this.isOptimized && this.compiledValidator) {
       // Use compiled validator (second fastest)

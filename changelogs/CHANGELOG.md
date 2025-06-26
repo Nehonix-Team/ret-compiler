@@ -141,4 +141,4 @@ Contributions are welcome! See the [Contributing Guide](./CONTRIBUTING.md) for d
 
 ## License
 
-GNU Affero General Public License v3 License - see [LICENSE](./LICENSE) for details.
+MIT License - see [LICENSE](./LICENSE) for details.
