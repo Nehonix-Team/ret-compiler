@@ -63,32 +63,50 @@ const simpleData = {
   active: true,
 };
 
-function runComparison(name, fortifySchema, zodSchema, data, iterations) {
+function runComparison(
+  name,
+  fortifySchema,
+  zodSchema,
+  data,
+  iterations = 50000
+) {
   console.log(`\n${name}:`);
 
-  // Warm up both libraries
-  for (let i = 0; i < 100; i++) {
+  // Extended warm up for more reliable results
+  for (let i = 0; i < 1000; i++) {
     fortifySchema.safeParse(data);
     zodSchema.safeParse(data);
   }
 
-  // Benchmark Fortify Schema
-  const fortifyStart = performance.now();
-  for (let i = 0; i < iterations; i++) {
-    fortifySchema.safeParse(data);
+  // Multiple runs for statistical significance
+  const runs = 5;
+  const fortifyTimes = [];
+  const zodTimes = [];
+
+  for (let run = 0; run < runs; run++) {
+    // Benchmark Fortify Schema
+    const fortifyStart = performance.now();
+    for (let i = 0; i < iterations; i++) {
+      fortifySchema.safeParse(data);
+    }
+    const fortifyEnd = performance.now();
+    fortifyTimes.push(fortifyEnd - fortifyStart);
+
+    // Benchmark Zod
+    const zodStart = performance.now();
+    for (let i = 0; i < iterations; i++) {
+      zodSchema.safeParse(data);
+    }
+    const zodEnd = performance.now();
+    zodTimes.push(zodEnd - zodStart);
   }
-  const fortifyEnd = performance.now();
-  const fortifyTime = fortifyEnd - fortifyStart;
+
+  // Calculate averages and remove outliers
+  const fortifyTime = fortifyTimes.sort((a, b) => a - b)[Math.floor(runs / 2)]; // Median
+  const zodTime = zodTimes.sort((a, b) => a - b)[Math.floor(runs / 2)]; // Median
+
   const fortifyAvg = fortifyTime / iterations;
   const fortifyOps = iterations / (fortifyTime / 1000);
-
-  // Benchmark Zod
-  const zodStart = performance.now();
-  for (let i = 0; i < iterations; i++) {
-    zodSchema.safeParse(data);
-  }
-  const zodEnd = performance.now();
-  const zodTime = zodEnd - zodStart;
   const zodAvg = zodTime / iterations;
   const zodOps = iterations / (zodTime / 1000);
 
@@ -119,7 +137,7 @@ const simpleResult = runComparison(
   fortifySimple,
   zodSimple,
   simpleData,
-  10000
+  100000
 );
 
 // Test 2: Complex Schema with Nested Objects

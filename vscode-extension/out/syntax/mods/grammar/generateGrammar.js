@@ -361,6 +361,40 @@ function generateFortifyGrammar() {
                         begin: "\\(",
                         end: "\\)",
                         patterns: [
+                            // ENHANCED: Regex patterns like (/^v\\d+\\.\\d+$/)
+                            {
+                                name: "string.regexp.fortify.constraint",
+                                begin: "/",
+                                end: "/([gimsuy]*)",
+                                beginCaptures: {
+                                    "0": {
+                                        name: "punctuation.definition.string.begin.regexp.fortify",
+                                    },
+                                },
+                                endCaptures: {
+                                    "0": {
+                                        name: "punctuation.definition.string.end.regexp.fortify",
+                                    },
+                                    "1": {
+                                        name: "keyword.other.regexp.flags.fortify",
+                                    },
+                                },
+                                patterns: [
+                                    {
+                                        name: "constant.character.escape.regexp.fortify",
+                                        match: "\\\\.",
+                                    },
+                                    {
+                                        name: "constant.other.character-class.regexp.fortify",
+                                        match: "\\[([^\\]\\\\]|\\\\.)*\\]",
+                                    },
+                                    {
+                                        name: "keyword.operator.regexp.fortify",
+                                        match: "[.*+?^${}()|\\[\\]]",
+                                    },
+                                ],
+                            },
+                            // Numeric constraints like (1,10)
                             {
                                 name: "constant.numeric.fortify.constraint-value",
                                 match: "\\d+(?:\\.\\d+)?",

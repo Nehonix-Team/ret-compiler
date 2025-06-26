@@ -6,7 +6,7 @@
  * 2. Initialize performance monitoring
  * 3. Setup optimization systems
  * 4. Configure memory management
- */
+ */ 
 
 import { UnionCache } from "../mode/interfaces/validators/UnionCache";
 import { PerformanceMonitor } from "./PerformanceMonitor";
@@ -153,8 +153,8 @@ export function getOptimizationStatus(): {
       performanceMonitoringEnabled: false,
     };
   }
-}
-
+} 
+ 
 /**
  * Manually trigger performance optimizations
  * Useful for applications that want to control when optimizations are applied

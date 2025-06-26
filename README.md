@@ -50,7 +50,7 @@ if (result.success) {
 
 ### Performance Leader
 
-- **258,910 ops/sec** for array validation (1.6x faster than Zod)
+- **258,910 ops/sec** for array validation 
 - **460,214 ops/sec** for union types
 - **Sub-millisecond validation** for typical schemas
 - **Memory efficient**: <100 bytes per validation
@@ -535,17 +535,6 @@ const APIResponseSchema = Interface({
 
 ## Performance Benchmarks
 
-### Real-World Performance Data
-
-Based on comprehensive benchmarks against Zod (the leading validation library):
-
-| Test Case            | Fortify Schema      | Zod             | Winner      | Performance Gain |
-| -------------------- | ------------------- | --------------- | ----------- | ---------------- |
-| **Array Validation** | **258,910 ops/sec** | 161,822 ops/sec | **Fortify** | **1.6x faster**  |
-| **Union Types**      | **460,214 ops/sec** | 613,362 ops/sec | Zod         | 0.75x slower     |
-| **Simple Schema**    | 178,496 ops/sec     | 206,344 ops/sec | Zod         | 0.87x slower     |
-| **Complex Schema**   | 100,985 ops/sec     | 113,684 ops/sec | Zod         | 0.89x slower     |
-
 ### Memory Efficiency
 
 - **Total Memory Usage**: 2.41 MB for 1000 schema instances
@@ -586,6 +575,8 @@ const performanceMetrics = {
 - Require **advanced conditional validation**
 - Building **enterprise applications** with complex business logic
 - Want **VS Code extension** support
+
+_Note: these performance metrics are based on our internal benchmarks and may vary based on your specific use case and environment. It's always a good idea to run your own benchmarks to ensure the best performance for your needs._
 
 **Consider alternatives when:**
 
@@ -715,7 +706,7 @@ The Fortify Schema VS Code extension transforms your development workflow with e
 
 #### **Smart Syntax Highlighting**
 
-- **Context-aware highlighting** - Only activates within `Interface({...})` blocks
+- **Context-aware highlighting** - Only activates within fortify schema "interface" blocks
 - **Semantic token support** - Rich colors for types, operators, and conditional logic
 - **Professional color themes** - Multiple color schemes (Professional, Dark Pro, Light Clean, Vibrant, Monochrome)
 - **Performance optimized** - Zero impact on non-Fortify code
@@ -838,6 +829,9 @@ const Schema = Interface({
 
 # Quick theme switching
 Ctrl+Shift+T  # Apply Color Scheme shortcut
+Or just run the command from the palette:
+Open Command Palette (Ctrl+Shift+P), then type:
+> Fortify: Apply Color Scheme
 ```
 
 ### Advanced Configuration
@@ -1794,7 +1788,7 @@ cd fortify-schema
 npm install
 
 # Run tests
-npm test
+npm run test
 
 # Run benchmarks
 npm run benchmark
@@ -1839,7 +1833,7 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes and migration guid
 
 ## License
 
-MIT License - see [LICENSE](./LICENSE) file for details.
+GNU Affero General Public License - see [LICENSE](./LICENSE) file for details.
 
 ## Support
 
@@ -1851,11 +1845,10 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 ---
 
 <div align="center">
-  <p><strong>Built with by Nehonix</strong></p>
+  <p><strong>Built by Nehonix</strong></p>
   <p>
     <a href="https://nehonix.space">Website</a> •
     <a href="https://sdk.nehonix.space">SDK</a> •
     <a href="https://github.com/Nehonix-Team">GitHub</a> •
-    <a href="https://twitter.com/nehonix">Twitter</a>
   </p>
 </div>

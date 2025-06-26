@@ -17,7 +17,8 @@ function generateSchemaStringBeginPattern() {
         ...operators,
         methods,
         "\\[\\]",
-        "\\(\\d+,?\\d*\\)", // Constraints
+        "\\(\\d+,?\\d*\\)",
+        "\\(\\/.*?\\/[gimsuy]*\\)", // Regex patterns like (/^v\\d+\\.\\d+$/)
     ];
     return `"(?=.*(?:${patterns.join("|")}).*")`;
 }
@@ -38,7 +39,8 @@ function generateSchemaSingleQuoteBeginPattern() {
         ...operators,
         methods,
         "\\[\\]",
-        "\\(\\d+,?\\d*\\)", // Constraints
+        "\\(\\d+,?\\d*\\)",
+        "\\(\\/.*?\\/[gimsuy]*\\)", // Regex patterns like (/^v\\d+\\.\\d+$/)
     ];
     return `'(?=.*(?:${patterns.join("|")}).*')`;
 }
@@ -59,6 +61,7 @@ function generateSchemaTemplateBeginPattern() {
         methods,
         "\\[\\]",
         "\\(\\d+,?\\d*\\)",
+        "\\(\\/.*?\\/[gimsuy]*\\)",
         "\\$\\{[^}]*\\}", // Template literal expressions
     ];
     return "`(?=.*(?:" + patterns.join("|") + ").*`)";

@@ -16,7 +16,8 @@ export function generateSchemaStringBeginPattern(): string {
     ...operators,
     methods,
     "\\[\\]", // Arrays
-    "\\(\\d+,?\\d*\\)", // Constraints
+    "\\(\\d+,?\\d*\\)", // Numeric constraints like (1,10)
+    "\\(\\/.*?\\/[gimsuy]*\\)", // Regex patterns like (/^v\\d+\\.\\d+$/)
   ];
 
   return `"(?=.*(?:${patterns.join("|")}).*")`;
@@ -39,7 +40,8 @@ export function generateSchemaSingleQuoteBeginPattern(): string {
     ...operators,
     methods,
     "\\[\\]", // Arrays
-    "\\(\\d+,?\\d*\\)", // Constraints
+    "\\(\\d+,?\\d*\\)", // Numeric constraints like (1,10)
+    "\\(\\/.*?\\/[gimsuy]*\\)", // Regex patterns like (/^v\\d+\\.\\d+$/)
   ];
 
   return `'(?=.*(?:${patterns.join("|")}).*')`;
@@ -61,7 +63,8 @@ export function generateSchemaTemplateBeginPattern(): string {
     ...operators,
     methods,
     "\\[\\]", // Arrays
-    "\\(\\d+,?\\d*\\)", // Constraints
+    "\\(\\d+,?\\d*\\)", // Numeric constraints like (1,10)
+    "\\(\\/.*?\\/[gimsuy]*\\)", // Regex patterns like (/^v\\d+\\.\\d+$/)
     "\\$\\{[^}]*\\}", // Template literal expressions
   ];
 

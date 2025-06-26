@@ -3,8 +3,8 @@
  *
  * Monitors validation performance in real-time and automatically
  * applies optimizations based on usage patterns and bottlenecks.
- */
-
+ */ 
+ 
 import type{ PerformanceMetric, OptimizationRecommendation, PerformanceProfile, PerformanceThresholds } from "../../types/perfoMonitor";
 import { UnionCache } from "../mode/interfaces/validators/UnionCache";
 import { ObjectValidationCache } from "./ObjectValidationCache";
@@ -380,7 +380,7 @@ export class PerformanceMonitor {
   private static optimizeCache(): void {
     try {
 
-      // Get current cache statistics
+      // Get current cache statistics 
       const cacheStats = ObjectValidationCache.getStats();
       const unionStats = UnionCache.getCacheStats();
 

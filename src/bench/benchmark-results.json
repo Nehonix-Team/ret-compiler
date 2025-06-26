@@ -1,82 +1,82 @@
 {
   "metadata": {
-    "timestamp": "2025-06-25T22:33:42.758Z",
-    "nodeVersion": "v22.6.0",
+    "timestamp": "2025-06-26T12:17:50.238Z",
+    "nodeVersion": "v22.12.0",
     "platform": "win32",
     "arch": "x64",
-    "fortifyVersion": "2.0.1",
+    "fortifyVersion": "2.0.2",
     "zodVersion": "3.25.67"
   },
   "summary": {
     "totalTests": 4,
-    "fortifyWins": 1,
-    "zodWins": 3,
-    "averageSpeedup": 0.671871887643248,
-    "overallWinner": "Zod",
+    "fortifyWins": 3,
+    "zodWins": 1,
+    "averageSpeedup": 8.990004594727605,
+    "overallWinner": "Fortify Schema",
     "memoryUsage": {
-      "totalMB": 6.283597946166992,
-      "perSchemaKB": 6.434404296875
+      "totalMB": 9.541160583496094,
+      "perSchemaKB": 9.7701484375
     }
   },
   "detailedResults": [
     {
       "testName": "Simple Schema",
-      "winner": "Zod",
-      "speedup": 0.4808938111211686,
+      "winner": "Fortify",
+      "speedup": 4.012528363115487,
       "fortify": {
-        "totalTime": 118.32029999999997,
-        "averageTime": 0.011832029999999997,
-        "operationsPerSecond": 84516.35095583768
+        "totalTime": 47.33259999999996,
+        "averageTime": 0.00047332599999999955,
+        "operationsPerSecond": 2112708.7884460203
       },
       "zod": {
-        "totalTime": 56.89949999999999,
-        "averageTime": 0.005689949999999999,
-        "operationsPerSecond": 175748.46879146568
+        "totalTime": 189.9233999999999,
+        "averageTime": 0.001899233999999999,
+        "operationsPerSecond": 526528.0634192524
       }
     },
     {
       "testName": "Complex Schema",
-      "winner": "Zod",
-      "speedup": 0.8063634490135728,
+      "winner": "Fortify",
+      "speedup": 28.367680877411257,
       "fortify": {
-        "totalTime": 61.13980000000004,
-        "averageTime": 0.012227960000000006,
-        "operationsPerSecond": 81779.7899240756
+        "totalTime": 1.1305999999999585,
+        "averageTime": 0.00022611999999999172,
+        "operationsPerSecond": 4422430.5678402465
       },
       "zod": {
-        "totalTime": 49.30090000000007,
-        "averageTime": 0.009860180000000014,
-        "operationsPerSecond": 101418.02685143665
+        "totalTime": 32.07249999999999,
+        "averageTime": 0.006414499999999998,
+        "operationsPerSecond": 155896.79632083565
       }
     },
     {
       "testName": "Array Schema",
       "winner": "Fortify",
-      "speedup": 1.336236945475996,
+      "speedup": 2.9095155456800943,
       "fortify": {
-        "totalTime": 29.836400000000026,
-        "averageTime": 0.0037295500000000033,
-        "operationsPerSecond": 268128.86273142847
+        "totalTime": 6.165700000000015,
+        "averageTime": 0.0007707125000000019,
+        "operationsPerSecond": 1297500.689297238
       },
       "zod": {
-        "totalTime": 39.86850000000004,
-        "averageTime": 0.004983562500000005,
-        "operationsPerSecond": 200659.66866072192
+        "totalTime": 17.9391999999998,
+        "averageTime": 0.002242399999999975,
+        "operationsPerSecond": 445950.76703532424
       }
     },
     {
       "testName": "Union Types",
       "winner": "Zod",
-      "speedup": 0.06399334496225458,
+      "speedup": 0.6702935927035762,
       "fortify": {
-        "totalTime": 130.30729999999994,
-        "averageTime": 0.010858941666666662,
-        "operationsPerSecond": 92090.00570190624
+        "totalTime": 12.214200000000119,
+        "averageTime": 0.0010178500000000098,
+        "operationsPerSecond": 982463.034828305
       },
       "zod": {
-        "totalTime": 8.338799999999992,
-        "averageTime": 0.0006948999999999994,
-        "operationsPerSecond": 1439055.9792775954
+        "totalTime": 8.1871000000001,
+        "averageTime": 0.0006822583333333417,
+        "operationsPerSecond": 1465720.4626790748
       }
     }
   ]

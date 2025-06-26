@@ -25,6 +25,13 @@ import { SchemaCompiler } from "../../optimization/SchemaCompiler";
 import { ObjectValidationCache } from "../../optimization/ObjectValidationCache";
 import { PerformanceMonitor } from "../../optimization/PerformanceMonitor";
 
+// Import ULTRA-OPTIMIZED precompilation system
+import {
+  SchemaPrecompiler,
+  PrecompiledValidator,
+  OptimizationLevel,
+} from "./precompilation/SchemaPrecompiler";
+
 /**
  * Interface Schema class for TypeScript-like schema definitions
  */
@@ -54,6 +61,10 @@ export class InterfaceSchema<T = any> {
   private schemaComplexity: number = 0;
   private isOptimized: boolean = false;
 
+  // ULTRA-OPTIMIZED: Precompiled validator for maximum performance
+  private precompiledValidator?: PrecompiledValidator;
+  private optimizationLevel: OptimizationLevel = OptimizationLevel.NONE;
+
   constructor(
     private definition: SchemaInterface,
     private options: SchemaOptions = {}
@@ -66,12 +77,15 @@ export class InterfaceSchema<T = any> {
       enableDebug: false,
     });
 
-    // Pre-compile schema at initialization
+    // ULTRA-OPTIMIZED: Pre-compile schema with advanced optimization
     this.precompileSchema();
 
     // Apply performance optimizations (skip if requested to prevent circular dependency)
     if (!this.options.skipOptimization) {
       this.applyOptimizations();
+
+      // ULTRA-PERFORMANCE: Create precompiled validator for maximum speed
+      this.createPrecompiledValidator();
     }
   }
 
@@ -111,6 +125,32 @@ export class InterfaceSchema<T = any> {
     // Start performance monitoring if enabled
     if (this.options.enablePerformanceMonitoring) {
       PerformanceMonitor.startMonitoring();
+    }
+  }
+
+  /**
+   * ULTRA-PERFORMANCE: Create precompiled validator for maximum speed
+   */
+  private createPrecompiledValidator(): void {
+    // Only create precompiled validator for non-conditional schemas
+    const hasConditionalFields = this.compiledFields.some(
+      (field) => field.isConditional
+    );
+
+    if (!hasConditionalFields) {
+      try {
+        this.precompiledValidator = SchemaPrecompiler.precompileSchema(
+          this.definition,
+          this.options
+        );
+        this.optimizationLevel = this.precompiledValidator._optimizationLevel;
+      } catch (error) {
+        // Fallback to standard validation if precompilation fails
+        console.warn(
+          "Schema precompilation failed, falling back to standard validation:",
+          error
+        );
+      }
     }
   }
 
@@ -193,7 +233,7 @@ export class InterfaceSchema<T = any> {
   }
 
   /**
-   * Validate data against the interface schema - optimized version
+   * Validate data against the interface schema - ULTRA-OPTIMIZED version
    */
   validate(data: any): SchemaValidationResult<T> {
     const startTime = performance.now();
@@ -201,8 +241,11 @@ export class InterfaceSchema<T = any> {
 
     let result: SchemaValidationResult<T>;
 
-    // Use optimized validation path if available
-    if (this.isOptimized && this.compiledValidator) {
+    // ULTRA-PERFORMANCE: Use precompiled validator first (fastest path)
+    if (this.precompiledValidator) {
+      result = this.precompiledValidator(data) as SchemaValidationResult<T>;
+    } else if (this.isOptimized && this.compiledValidator) {
+      // Use compiled validator (second fastest)
       result = this.compiledValidator.validate(data);
     } else if (this.isOptimized && this.schemaComplexity > 5) {
       // Use cached validation for medium complexity
@@ -212,7 +255,7 @@ export class InterfaceSchema<T = any> {
         []
       ) as SchemaValidationResult<T>;
     } else {
-      // Standard validation for simple schemas
+      // Standard validation for simple schemas or conditional schemas
       result = this.validateStandard(data);
     }
 
@@ -222,7 +265,7 @@ export class InterfaceSchema<T = any> {
       operationId,
       duration,
       this.schemaComplexity,
-      this.isOptimized
+      this.isOptimized || !!this.precompiledValidator
     );
 
     return result;
