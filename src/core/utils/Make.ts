@@ -27,7 +27,7 @@ export class Make {
       const: value,
     };
   }
-
+ 
   /**
    * Create a union type (multiple allowed values) with proper type inference
    * @example
