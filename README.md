@@ -155,7 +155,7 @@ const ComprehensiveSchema = Interface({
   email: "email",
   website: "url",
   secureApi: "url.https", // HTTPS-only validation
-  devServer: "url.dev", // Development mode (allows localhost)
+  devServer: "url.dev", // Development mode (allows localhost and security features disabled)
   phone: "phone",
   userId: "uuid",
 
@@ -169,8 +169,8 @@ const ComprehensiveSchema = Interface({
   role: "user|admin|moderator",
 
   // Literal values
-  version: "2.0",
-  type: "user",
+  version: "=2.0",
+  type: "=user",
 });
 ```
 
@@ -703,7 +703,6 @@ MIT License - see [LICENSE](./LICENSE) file for complete terms.
 ## Support Resources
 
 - **Complete Documentation**: [Full documentation](./docs/)
-- **Example Applications**: [Example repository](./examples/)
 - **Issue Tracking**: [GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)
 - **Community Discussions**: [GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)
 

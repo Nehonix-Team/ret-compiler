@@ -339,7 +339,7 @@ export class SchemaPrecompiler {
   private static isSimpleType(fieldType: any): boolean {
     if (typeof fieldType !== "string") return false;
 
-    // Handle constants (=value) as simple types 
+    // Handle constants (=value) as simple types
     if (fieldType.startsWith("=")) return true;
 
     const simpleTypes = [
@@ -375,17 +375,80 @@ export class SchemaPrecompiler {
     fields: FieldCompilation[],
     schemaHash: string
   ): PrecompiledValidator {
-    // Placeholder - will implement aggressive optimization
-    return this.generateBasicValidator(fields, schemaHash);
+    // AGGRESSIVE optimization: Use the basic validator for now
+    // TODO: Implement more aggressive optimizations like field grouping, early exits, etc.
+    const basicValidator = this.generateBasicValidator(fields, schemaHash);
+
+    // Mark as aggressive optimization level
+    (basicValidator as any)._optimizationLevel = OptimizationLevel.AGGRESSIVE;
+
+    return basicValidator;
   }
 
   private static generateBasicValidator(
     fields: FieldCompilation[],
     schemaHash: string
   ): PrecompiledValidator {
-    // Placeholder - will implement basic optimization
+    // BASIC optimization: Use compiled field validators with simple iteration
     const validator = (data: any): SchemaValidationResult => {
-      return { success: true, errors: [], warnings: [], data };
+      // Fast path for non-objects
+      if (typeof data !== "object" || data === null || Array.isArray(data)) {
+        return {
+          success: false,
+          errors: ["Expected object"],
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      const validatedData: any = {};
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      // Validate each field using compiled validators
+      for (const field of fields) {
+        const value = data[field.fieldName];
+
+        // Handle optional fields
+        if (value === undefined) {
+          if (!field.isOptional) {
+            errors.push(`${field.fieldName}: Required field is missing`);
+          } else if (field.hasDefault) {
+            validatedData[field.fieldName] = field.defaultValue;
+          }
+          continue;
+        }
+
+        // Use the compiled field validator
+        const result = field.validator(value);
+        if (!result.success) {
+          errors.push(`${field.fieldName}: ${result.errors.join(", ")}`);
+        } else {
+          validatedData[field.fieldName] = result.data;
+        }
+
+        // Collect warnings
+        if (result.warnings && result.warnings.length > 0) {
+          warnings.push(...result.warnings);
+        }
+      }
+
+      // Return validation result
+      if (errors.length === 0) {
+        return {
+          success: true,
+          errors: [],
+          warnings,
+          data: validatedData,
+        };
+      } else {
+        return {
+          success: false,
+          errors,
+          warnings,
+          data: undefined,
+        };
+      }
     };
 
     (validator as any)._isPrecompiled = true;

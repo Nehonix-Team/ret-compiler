@@ -236,7 +236,7 @@ export class InterfaceSchema<T = any> {
   /**
    * Validate data against the interface schema - ULTRA-OPTIMIZED version
    */
-  validate(data: any): SchemaValidationResult<T> {
+  private validate(data: any): SchemaValidationResult<T> {
     const startTime = performance.now();
     const operationId = `schema-${this.schemaComplexity}`;
 
@@ -756,7 +756,7 @@ export class InterfaceSchema<T = any> {
    */
   private validateBasicType(
     fieldType: string,
-    value: any
+    value: any 
   ): SchemaValidationResult {
     // Handle union types before constraint parsing (e.g., "(user|admin|guest)")
     if (fieldType.includes("|")) {
