@@ -1,4 +1,5 @@
 import { SECURITY_CONSTANTS } from "../../../../../../constants/SECURITY_CONSTANTS";
+import { MAX_OBJECT_DEPTH } from "../../../../../../constants/VALIDATION_CONSTANTS";
 import { SchemaValidationResult } from "../../../../../types/types";
 import {
   validateJsonDeep,
@@ -443,10 +444,7 @@ export class SecurityValidators {
     }
   }
 
-   static validateJsonSync(
-    value: any,
-    options: any
-  ): SchemaValidationResult {
+  static validateJsonSync(value: any, options: any): SchemaValidationResult {
     const result: SchemaValidationResult = {
       success: true,
       errors: [],
@@ -455,7 +453,7 @@ export class SecurityValidators {
     };
 
     const {
-      maxDepth = 10,
+      maxDepth = MAX_OBJECT_DEPTH,
       maxKeys = 1000,
       maxStringLength = 10000,
       maxArrayLength = 1000,
@@ -818,7 +816,7 @@ export class SecurityValidators {
     const {
       allowNull = false,
       allowArray = false,
-      maxDepth = 10,
+      maxDepth = MAX_OBJECT_DEPTH,
       maxKeys = 1000,
       requiredKeys = [],
       allowedKeys = [],

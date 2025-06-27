@@ -180,21 +180,116 @@ export class ValidationHelpers {
     }
 
     try {
-      const result = OUV.validateUnion(unionType, value);
+      // Split union into parts
+      const unionParts = unionType.split("|").map((part) => part.trim());
 
-      if (!result.isValid) {
+      // Check if this is a type union (contains basic types) or literal union
+      const basicTypes = new Set([
+        "string",
+        "number",
+        "boolean",
+        "date",
+        "any",
+        "null",
+        "undefined",
+      ]);
+      const isTypeUnion = unionParts.some((part) => basicTypes.has(part));
+
+      if (isTypeUnion) {
+        // Handle type union - validate that value matches one of the types
+        for (const type of unionParts) {
+          const typeResult = this.validateSingleType(type, value);
+          if (typeResult.success) {
+            return this.createSuccessResult(value);
+          }
+        }
+
+        // None of the types matched
         return this.createErrorResult(
-          `Union validation failed: ${result.error || "Value does not match any union member"}`,
+          `Expected one of types: ${unionParts.join(", ")}, got ${typeof value}`,
           value
         );
-      }
+      } else {
+        // Handle literal union - use the optimized literal validator
+        const result = OUV.validateUnion(unionType, value);
 
-      return this.createSuccessResult(value);
+        if (!result.isValid) {
+          return this.createErrorResult(
+            result.error ||
+              `Expected one of: ${unionParts.join(", ")}, got ${value}`,
+            value
+          );
+        }
+
+        return this.createSuccessResult(value);
+      }
     } catch (error) {
       return this.createErrorResult(
         `Union type validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
         value
       );
+    }
+  }
+
+  /**
+   * Validate a single type (helper for type unions)
+   */
+  private static validateSingleType(
+    type: string,
+    value: any
+  ): SchemaValidationResult {
+    switch (type) {
+      case "string":
+        return typeof value === "string"
+          ? this.createSuccessResult(value)
+          : this.createErrorResult(
+              `Expected string, got ${typeof value}`,
+              value
+            );
+
+      case "number":
+        return typeof value === "number" && !isNaN(value)
+          ? this.createSuccessResult(value)
+          : this.createErrorResult(
+              `Expected number, got ${typeof value}`,
+              value
+            );
+
+      case "boolean":
+        return typeof value === "boolean"
+          ? this.createSuccessResult(value)
+          : this.createErrorResult(
+              `Expected boolean, got ${typeof value}`,
+              value
+            );
+
+      case "date":
+        return value instanceof Date
+          ? this.createSuccessResult(value)
+          : this.createErrorResult(
+              `Expected Date object, got ${typeof value}`,
+              value
+            );
+
+      case "any":
+        return this.createSuccessResult(value);
+
+      case "null":
+        return value === null
+          ? this.createSuccessResult(value)
+          : this.createErrorResult(`Expected null, got ${typeof value}`, value);
+
+      case "undefined":
+        return value === undefined
+          ? this.createSuccessResult(value)
+          : this.createErrorResult(
+              `Expected undefined, got ${typeof value}`,
+              value
+            );
+
+      default:
+        // For other types, delegate to the type validation system
+        return this.routeTypeValidation(type, value, {}, {});
     }
   }
 

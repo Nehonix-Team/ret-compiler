@@ -20,37 +20,9 @@ export class FieldPrecompilers {
    *
    */
   static precompileUnion(unionType: string): CompiledFieldValidator {
-    // Get cached union values at compile time
-    const cachedUnion = UnionCache.getCachedUnion(unionType);
-    const allowedValues = cachedUnion.allowedValues;
-    const valuesArray = cachedUnion.valuesArray;
-    const errorTemplate = cachedUnion.errorTemplate;
-
-    // Pre-allocate result objects for zero allocation
-    const successResult = Object.freeze({
-      success: true as const,
-      errors: [] as string[],
-      warnings: [] as string[],
-      data: null as any,
-    });
-
-    // Generate ultra-optimized validator
+    // Use the fixed union validation from ValidationHelpers
     const validator = (value: any): SchemaValidationResult => {
-      //  Direct Set lookup with minimal overhead
-      if (allowedValues.has(String(value))) {
-        return {
-          ...successResult,
-          data: value,
-        };
-      }
-
-      // Only create error object on failure (hot path optimization)
-      return {
-        success: false,
-        errors: [`${errorTemplate}, got ${value}`],
-        warnings: [],
-        data: undefined,
-      };
+      return ValidationHelpers.validateUnionType(unionType, value);
     };
 
     (validator as any)._fieldType = unionType;

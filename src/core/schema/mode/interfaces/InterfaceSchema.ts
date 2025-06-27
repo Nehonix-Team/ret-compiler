@@ -31,6 +31,7 @@ import {
   PrecompiledValidator,
   OptimizationLevel,
 } from "./precompilation/SchemaPrecompiler";
+import { MAX_OBJECT_DEPTH } from "../../../../constants/VALIDATION_CONSTANTS";
 
 /**
  * Interface Schema class for TypeScript-like schema definitions
@@ -72,7 +73,7 @@ export class InterfaceSchema<T = any> {
     // Initialize conditional parser
     this.ConditionalParser = new ConditionalParser({
       allowNestedConditionals: true,
-      maxNestingDepth: 5,
+      maxNestingDepth: MAX_OBJECT_DEPTH,
       strictMode: false,
       enableDebug: false,
     });
@@ -108,19 +109,38 @@ export class InterfaceSchema<T = any> {
       (field) => field.isConditional
     );
 
-    // Apply optimizations based on complexity, but avoid advanced optimizations for conditional fields
-    if (this.schemaComplexity > 15 && !hasConditionalFields) {
-      // High complexity - use advanced optimizations (only for non-conditional schemas)
+    // Check nesting depth to avoid optimization bugs with deep nested objects
+    const maxNestingDepth = this.calculateMaxNestingDepth();
+
+    // debugging optimization decisions:
+    // console.log(`[DEBUG] Schema optimization analysis:
+    //   - Complexity: ${this.schemaComplexity}
+    //   - Has conditionals: ${hasConditionalFields}
+    //   - Max nesting depth: ${maxNestingDepth}
+    //   - Will use advanced optimization: ${this.schemaComplexity > 15 && !hasConditionalFields && maxNestingDepth <= 3}
+    //   - Will use caching: ${this.schemaComplexity > 5 && !hasConditionalFields && maxNestingDepth <= 3}`);
+
+    // Apply optimizations based on complexity, but avoid advanced optimizations for conditional fields or deep nesting
+    if (
+      this.schemaComplexity > 15 &&
+      !hasConditionalFields &&
+      maxNestingDepth <= 3
+    ) {
+      // High complexity, no conditionals, shallow nesting - use advanced optimizations
       this.compiledValidator = SchemaCompiler.compileSchema(
         this.definition,
         this.options
       );
       this.isOptimized = true;
-    } else if (this.schemaComplexity > 5 && !hasConditionalFields) {
-      // Medium complexity - use caching (only for non-conditional schemas)
+    } else if (
+      this.schemaComplexity > 5 &&
+      !hasConditionalFields &&
+      maxNestingDepth <= 3
+    ) {
+      // Medium complexity, no conditionals, shallow nesting - use caching
       this.isOptimized = true;
     }
-    // Note: Conditional fields use the standard validation path for reliability
+    // Note: Conditional fields or deep nesting use the standard validation path for reliability
 
     // Start performance monitoring if enabled
     if (this.options.enablePerformanceMonitoring) {
@@ -130,6 +150,7 @@ export class InterfaceSchema<T = any> {
 
   /**
    * ULTRA-PERFORMANCE: Create precompiled validator for maximum speed
+   * SAFETY: Now includes recursion protection and cycle detection
    */
   private createPrecompiledValidator(): void {
     // Only create precompiled validator for non-conditional schemas and non-loose mode
@@ -137,8 +158,11 @@ export class InterfaceSchema<T = any> {
       (field) => field.isConditional
     );
 
-    // Skip precompilation if loose mode is enabled (needs type coercion support)
-    if (!hasConditionalFields && !this.options.loose) {
+    // Check nesting depth to avoid precompilation bugs with deep nested objects
+    const maxNestingDepth = this.calculateMaxNestingDepth();
+
+    // Skip precompilation if loose mode is enabled (needs type coercion support) or deep nesting
+    if (!hasConditionalFields && !this.options.loose && maxNestingDepth <= 3) {
       try {
         this.precompiledValidator = SchemaPrecompiler.precompileSchema(
           this.definition,
@@ -168,6 +192,32 @@ export class InterfaceSchema<T = any> {
     }
 
     return complexity;
+  }
+
+  /**
+   * Calculate maximum nesting depth to avoid optimization bugs
+   */
+  private calculateMaxNestingDepth(): number {
+    const calculateDepth = (obj: any, currentDepth: number = 0): number => {
+      if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+        return currentDepth;
+      }
+
+      let maxDepth = currentDepth;
+      for (const value of Object.values(obj)) {
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          const depth = calculateDepth(value, currentDepth + 1);
+          maxDepth = Math.max(maxDepth, depth);
+        }
+      }
+      return maxDepth;
+    };
+
+    return calculateDepth(this.definition);
   }
 
   /**
@@ -756,7 +806,7 @@ export class InterfaceSchema<T = any> {
    */
   private validateBasicType(
     fieldType: string,
-    value: any 
+    value: any
   ): SchemaValidationResult {
     // Handle union types before constraint parsing (e.g., "(user|admin|guest)")
     if (fieldType.includes("|")) {

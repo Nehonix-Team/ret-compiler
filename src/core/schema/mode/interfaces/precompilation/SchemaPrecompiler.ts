@@ -4,12 +4,12 @@
  * This module precompiles entire schemas at creation time to eliminate
  * runtime overhead while maintaining full security and validation.
  *
- * Target: Beat Zod performance by 2-5x across all validation types
  */
 
 import { SchemaValidationResult } from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
-import { FieldPrecompilers } from "./FieldPrecompilers";
+import { FieldPrecompilers, CompiledFieldValidator } from "./FieldPrecompilers";
+import { MAX_COMPILATION_DEPTH as IMPORTED_MAX_COMPILATION_DEPTH } from "../../../../../constants/VALIDATION_CONSTANTS";
 
 // Precompiled validator function signature
 export interface PrecompiledValidator {
@@ -57,6 +57,14 @@ export class SchemaPrecompiler {
     averageSpeedup: 0,
   };
 
+  // SAFETY: Track compilation depth to prevent infinite recursion
+  private static compilationDepth = 0;
+  private static readonly MAX_COMPILATION_DEPTH =
+    IMPORTED_MAX_COMPILATION_DEPTH;
+
+  // SAFETY: Track circular references
+  private static compilationStack = new Set<string>();
+
   /**
    * MAIN ENTRY POINT: Precompile entire schema for maximum performance
    */
@@ -66,8 +74,22 @@ export class SchemaPrecompiler {
   ): PrecompiledValidator {
     const startTime = performance.now();
 
+    // SAFETY: Check compilation depth to prevent infinite recursion
+    if (this.compilationDepth >= this.MAX_COMPILATION_DEPTH) {
+      throw new Error(
+        `Schema compilation depth exceeded (${this.MAX_COMPILATION_DEPTH}). Possible circular reference detected.`
+      );
+    }
+
     // Generate cache key
     const schemaHash = this.generateSchemaHash(schemaDefinition, options);
+
+    // SAFETY: Check for circular references
+    if (this.compilationStack.has(schemaHash)) {
+      throw new Error(
+        `Circular reference detected in schema compilation: ${schemaHash}`
+      );
+    }
 
     // Check cache first
     const cached = this.compilationCache.get(schemaHash);
@@ -76,35 +98,47 @@ export class SchemaPrecompiler {
       return cached.validator;
     }
 
-    // Analyze schema complexity and determine optimization level
-    const optimizationLevel = this.analyzeOptimizationLevel(schemaDefinition);
+    // SAFETY: Track compilation
+    this.compilationDepth++;
+    this.compilationStack.add(schemaHash);
 
-    // Compile fields
-    const compiledFields = this.compileFields(schemaDefinition, options);
+    try {
+      // Analyze schema complexity and determine optimization level
+      const optimizationLevel = this.analyzeOptimizationLevel(schemaDefinition);
 
-    // Generate ultra-optimized validator
-    const validator = this.generateOptimizedValidator(
-      compiledFields,
-      optimizationLevel,
-      schemaHash
-    );
+      // Compile fields
+      const compiledFields = this.compileFields(schemaDefinition, options);
 
-    const compilationTime = performance.now() - startTime;
+      // Generate ultra-optimized validator
+      const validator = this.generateOptimizedValidator(
+        compiledFields,
+        optimizationLevel,
+        schemaHash
+      );
 
-    // Cache the compilation
-    const compilation: SchemaCompilation = {
-      fields: compiledFields,
-      validator,
-      optimizationLevel,
-      compilationTime,
-      estimatedPerformanceGain: this.estimatePerformanceGain(compiledFields),
-    };
+      const compilationTime = performance.now() - startTime;
 
-    this.compilationCache.set(schemaHash, compilation);
-    this.performanceStats.compilations++;
-    this.performanceStats.totalCompilationTime += compilationTime;
+      // Cache the compilation
+      const compilation: SchemaCompilation = {
+        fields: compiledFields,
+        validator,
+        optimizationLevel,
+        compilationTime,
+        estimatedPerformanceGain: this.estimatePerformanceGain(compiledFields),
+      };
 
-    return validator;
+      this.compilationCache.set(schemaHash, compilation);
+      this.performanceStats.compilations++;
+      this.performanceStats.totalCompilationTime += compilationTime;
+
+      return validator;
+    } catch (error) {
+      // console.error('Schema precompilation failed:', error);
+      throw error;
+    } finally {
+      this.compilationDepth--;
+      this.compilationStack.delete(schemaHash);
+    }
   }
 
   /**
@@ -303,7 +337,7 @@ export class SchemaPrecompiler {
     const fields: FieldCompilation[] = [];
 
     for (const [fieldName, fieldType] of Object.entries(schema)) {
-      const compilation = this.compileField(fieldName, fieldType, options);
+      const compilation = this.compileField(fieldName, fieldType, options, 0);
       fields.push(compilation);
     }
 
@@ -316,8 +350,111 @@ export class SchemaPrecompiler {
   private static compileField(
     fieldName: string,
     fieldType: any,
-    options: SchemaOptions
+    options: SchemaOptions,
+    depth: number = 0
   ): FieldCompilation {
+    // Handle nested objects properly
+    if (
+      typeof fieldType === "object" &&
+      fieldType !== null &&
+      !Array.isArray(fieldType)
+    ) {
+      // This is a nested object - create a validator that recursively validates the nested schema
+      const validator = (value: any): SchemaValidationResult => {
+        if (
+          typeof value !== "object" ||
+          value === null ||
+          Array.isArray(value)
+        ) {
+          return {
+            success: false,
+            errors: ["Expected object"],
+            warnings: [],
+            data: undefined,
+          };
+        }
+
+        // Recursively validate nested object with depth tracking
+        const validatedData: any = {};
+        const errors: string[] = [];
+        const warnings: string[] = [];
+
+        for (const [key, nestedFieldType] of Object.entries(fieldType)) {
+          const nestedValue = value[key];
+
+          // For nested fields, use FieldPrecompilers directly for string types
+          if (typeof nestedFieldType === "string") {
+            const fieldValidator =
+              FieldPrecompilers.parseAndCompile(nestedFieldType);
+            const result = fieldValidator(nestedValue);
+
+            if (!result.success) {
+              errors.push(`${key}: ${result.errors.join(", ")}`);
+            } else {
+              validatedData[key] = result.data;
+              if (result.warnings) warnings.push(...result.warnings);
+            }
+          } else if (
+            typeof nestedFieldType === "object" &&
+            nestedFieldType !== null
+          ) {
+            // For nested objects, validate recursively with depth limit
+            if (depth < this.MAX_COMPILATION_DEPTH - 1) {
+              // Safe to recurse - compile and validate the nested object
+              const nestedField = this.compileField(
+                key,
+                nestedFieldType,
+                options,
+                depth + 1
+              );
+              const nestedResult = nestedField.validator(nestedValue);
+
+              if (!nestedResult.success) {
+                errors.push(`${key}: ${nestedResult.errors.join(", ")}`);
+              } else {
+                validatedData[key] = nestedResult.data;
+                if (nestedResult.warnings)
+                  warnings.push(...nestedResult.warnings);
+              }
+            } else {
+              // Depth limit reached - do basic type checking only
+              if (typeof nestedValue === "object" && nestedValue !== null) {
+                validatedData[key] = nestedValue;
+                warnings.push(
+                  `${key}: Maximum nesting depth reached - basic validation only`
+                );
+              } else {
+                errors.push(`${key}: Expected object`);
+              }
+            }
+          } else {
+            // Unknown field type
+            errors.push(`${key}: Unknown field type`);
+          }
+        }
+
+        return {
+          success: errors.length === 0,
+          errors,
+          warnings,
+          data: errors.length === 0 ? validatedData : undefined,
+        };
+      };
+
+      return {
+        fieldName,
+        fieldType: "[nested object]",
+        validator: validator as CompiledFieldValidator,
+        isOptional: false,
+        hasDefault: false,
+        isSimpleType: false,
+        isUnion: false,
+        isArray: false,
+        isNested: true,
+      };
+    }
+
+    // Handle string field types
     const fieldTypeStr = String(fieldType);
 
     // Create precompiled validator for this field

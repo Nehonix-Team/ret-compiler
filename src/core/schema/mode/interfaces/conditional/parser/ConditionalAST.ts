@@ -5,6 +5,7 @@
  * that can be efficiently evaluated and analyzed.
  */
 
+import { MAX_AST_TRAVERSAL_DEPTH } from "../../../../../../constants/VALIDATION_CONSTANTS";
 import {
   ASTNode,
   ASTNodeType,
@@ -387,7 +388,7 @@ export interface ASTVisitor<T> {
  * AST Walker - Traverses AST nodes using visitor pattern
  */
 export class ASTWalker {
-  private static readonly MAX_DEPTH = 1000;
+  private static readonly MAX_DEPTH = MAX_AST_TRAVERSAL_DEPTH;
   private static _currentDepth = 0;
 
   private static _checkDepth(): void {
