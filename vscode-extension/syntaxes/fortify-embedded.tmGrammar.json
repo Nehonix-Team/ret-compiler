@@ -12,7 +12,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify",
-          "begin": "\"(?=.*(?:string|number|boolean|bool|date|any|unknown|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)).*\")",
+          "begin": "\"(?=.*(?:text|password|string|number|boolean|bool|date|any|unknown|email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)).*\")",
           "end": "\"",
           "beginCaptures": {
             "0": {
@@ -62,7 +62,7 @@
         },
         {
           "name": "string.quoted.single.fortify",
-          "begin": "'(?=.*(?:string|number|boolean|bool|date|any|unknown|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)).*')",
+          "begin": "'(?=.*(?:text|password|string|number|boolean|bool|date|any|unknown|email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)).*')",
           "end": "'",
           "beginCaptures": {
             "0": {
@@ -112,7 +112,7 @@
         },
         {
           "name": "string.template.fortify",
-          "begin": "`(?=.*(?:string|number|boolean|bool|date|any|unknown|email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)|\\$\\{[^}]*\\}).*`)",
+          "begin": "`(?=.*(?:text|password|string|number|boolean|bool|date|any|unknown|email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)|\\$\\{[^}]*\\}).*`)",
           "end": "`",
           "beginCaptures": {
             "0": {
@@ -304,7 +304,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify.basic-type",
-          "match": "\\b(string|number|boolean|bool|date|any|unknown)\\b"
+          "match": "\\b(text|password|string|number|boolean|bool|date|any|unknown)\\b"
         }
       ]
     },
@@ -312,7 +312,7 @@
       "patterns": [
         {
           "name": "string.quoted.double.fortify.format-type",
-          "match": "\\b(email|url|uuid|phone|slug|username|ip|json|hexcolor|base64|jwt|semver)\\b"
+          "match": "\\b(email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver)\\b"
         }
       ]
     },

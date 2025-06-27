@@ -350,8 +350,8 @@ class FortifyDiagnosticsProvider {
         if (optionalMatch) {
             return this.validateRegularSchema(optionalMatch[1], range); // Validate base type without ?
         }
-        // Handle array types with constraints (string[](1,10))
-        const arrayConstraintMatch = schema.match(/^(\w+)\[\]\(([^)]*)\)$/);
+        // Handle array types with constraints (string[](1,10), url.https[](1,5))
+        const arrayConstraintMatch = schema.match(/^([\w.]+)\[\]\(([^)]*)\)$/);
         if (arrayConstraintMatch) {
             const [, type, constraints] = arrayConstraintMatch;
             // Validate base type
@@ -369,8 +369,8 @@ class FortifyDiagnosticsProvider {
             // Validate the union content inside parentheses
             return this.validateUnionSchema(unionContent, range);
         }
-        // Handle simple array types (string[], number[])
-        const arrayMatch = schema.match(/^(\w+)\[\]$/);
+        // Handle simple array types (string[], number[], url.https[])
+        const arrayMatch = schema.match(/^([\w.]+)\[\]$/);
         if (arrayMatch) {
             const type = arrayMatch[1];
             if (!FortifySyntaxDefinitions_1.FortifySyntaxUtils.isValidType(type)) {
@@ -378,8 +378,8 @@ class FortifyDiagnosticsProvider {
             }
             return diagnostics;
         }
-        // Handle types with constraints (string(1,10), number(0,100))
-        const constraintMatch = schema.match(/^(\w+)\(([^)]*)\)$/);
+        // Handle types with constraints (string(1,10), number(0,100), url.https(constraints))
+        const constraintMatch = schema.match(/^([\w.]+)\(([^)]*)\)$/);
         if (constraintMatch) {
             const [, type, constraints] = constraintMatch;
             // Validate base type
@@ -390,8 +390,8 @@ class FortifyDiagnosticsProvider {
             diagnostics.push(...this.validateConstraintSyntax(constraints, type, range));
             return diagnostics;
         }
-        // Handle simple types (string, number, boolean) - but also catch invalid types
-        const simpleMatch = schema.match(/^(\w+)$/);
+        // Handle simple types (string, number, boolean, url.https) - but also catch invalid types
+        const simpleMatch = schema.match(/^([\w.]+)$/);
         if (simpleMatch) {
             const type = simpleMatch[1];
             if (!FortifySyntaxDefinitions_1.FortifySyntaxUtils.isValidType(type)) {

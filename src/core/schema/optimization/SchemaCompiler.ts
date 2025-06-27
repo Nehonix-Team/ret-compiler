@@ -8,6 +8,9 @@
 import { SchemaValidationResult } from "../../types/types";
 import { SchemaFieldType } from "../../types/SchemaValidator.type";
 import { CompiledValidator, OptimizationStrategy } from "../../types/scompiler";
+import { ValidationHelpers } from "../mode/interfaces/validators/ValidationHelpers";
+import { ConstraintParser } from "../mode/interfaces/validators/ConstraintParser";
+import { OptimizedUnionValidator } from "../mode/interfaces/validators/UnionCache";
 
 export class SchemaCompiler {
   private static compiledCache = new Map<string, CompiledValidator>();
@@ -243,13 +246,22 @@ export class SchemaCompiler {
     schema: Record<string, SchemaFieldType>,
     options: any
   ): (value: any) => SchemaValidationResult {
-    // Create a simple validator without triggering optimization to prevent circular dependency
-    const { InterfaceSchema } = require("../mode/interfaces/InterfaceSchema");
-    const tempSchema = new InterfaceSchema(schema, {
-      ...options,
-      skipOptimization: true,
-    });
-    return (value: any) => tempSchema.safeParse(value);
+    // Use lazy initialization to avoid circular dependency
+    let InterfaceSchema: any = null;
+    let tempSchema: any = null;
+
+    return (value: any) => {
+      if (!InterfaceSchema) {
+        // Lazy load InterfaceSchema to avoid circular dependency
+        InterfaceSchema =
+          require("../mode/interfaces/InterfaceSchema").InterfaceSchema;
+        tempSchema = new InterfaceSchema(schema, {
+          ...options,
+          skipOptimization: true,
+        });
+      }
+      return tempSchema.safeParse(value);
+    };
   }
 
   /**
@@ -263,17 +275,27 @@ export class SchemaCompiler {
       // Check for conditional syntax first
       if (fieldType.includes("when ") && fieldType.includes(" *? ")) {
         // This is a conditional field - delegate to InterfaceSchema
-        const {
-          InterfaceSchema,
-        } = require("../mode/interfaces/InterfaceSchema");
-        const tempSchema = new InterfaceSchema(
-          { temp: fieldType },
-          {
-            ...options,
-            skipOptimization: true,
+        // Use lazy loading to avoid circular dependency
+        let InterfaceSchema: any = null;
+        let tempSchema: any = null;
+
+        const initializeSchema = () => {
+          if (!InterfaceSchema) {
+            InterfaceSchema =
+              require("../mode/interfaces/InterfaceSchema").InterfaceSchema;
+            tempSchema = new InterfaceSchema(
+              { temp: fieldType },
+              {
+                ...options,
+                skipOptimization: true,
+              }
+            );
           }
-        );
+        };
         return (value: any, fullData?: any) => {
+          // Initialize schema on first use
+          initializeSchema();
+
           // For conditional fields, we need the full data context for runtime methods
           const dataToValidate = fullData
             ? { temp: value, ...fullData }
@@ -293,12 +315,7 @@ export class SchemaCompiler {
       }
 
       // Pre-parse the field type for optimization
-      const {
-        ValidationHelpers,
-      } = require("../mode/interfaces/validators/ValidationHelpers");
-      const {
-        ConstraintParser,
-      } = require("../mode/interfaces/validators/ConstraintParser");
+      // ValidationHelpers and ConstraintParser are already imported at the top
 
       const parsed = ConstraintParser.parseConstraints(fieldType);
       const { type, constraints, optional } = parsed;
@@ -306,9 +323,7 @@ export class SchemaCompiler {
       // Return optimized validator based on type
       if (type.includes("|")) {
         // Union type - use ultra-optimized cached validation
-        const {
-          OptimizedUnionValidator,
-        } = require("../mode/interfaces/validators/UnionCache");
+        // OptimizedUnionValidator is already imported at the top
 
         // Pre-compile the union for maximum performance
         const preCompiledUnion =

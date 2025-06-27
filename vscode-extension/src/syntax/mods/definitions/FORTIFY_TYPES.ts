@@ -9,6 +9,39 @@ import { TypeDefinition } from "../../../types";
 export const FORTIFY_TYPES: TypeDefinition[] = [
   // Basic Types
   {
+    name: "text",
+    description:
+      "Validates any text value, with optional length or regex constraints.",
+    category: "basic",
+    examples: [
+      '"text"',
+      '"text(2,50)"',
+      '"text(/^[a-z]+$/)"',
+      '"text?"',
+      '"text[]"',
+    ],
+    supportsConstraints: true,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "password",
+    description:
+      "Validates password complexity with optional length or regex constraints.",
+    category: "basic",
+    examples: [
+      '"password"',
+      '"password(8,20)"',
+      '"password(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$/)"',
+      '"password?"',
+      '"password[]"',
+    ],
+    supportsConstraints: true,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  // String is an alias for text
+  {
     name: "string",
     description:
       "Validates any text value, with optional length or regex constraints.",
@@ -105,6 +138,53 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     supportsArrays: true,
   },
   {
+    name: "url.https",
+    description: "Validates HTTPS URL format with simple declaration.",
+    category: "format",
+    examples: ['"url.https"', '"url.https?"', '"url.https[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "url.http",
+    description: "Validates HTTP URL format with simple declaration.",
+    category: "format",
+    examples: ['"url.http"', '"url.http?"', '"url.http[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "url.web",
+    description: "Validates web URL format with simple declaration.",
+    category: "format",
+    examples: ['"url.web"', '"url.web?"', '"url.web[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "url.dev",
+    description:
+      "Validates development URL format with simple declaration - lost security features.",
+    category: "format",
+    examples: ['"url.dev"', '"url.dev?"', '"url.dev[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  {
+    name: "url.ftp",
+    description: "Validates FTP URL format with simple declaration.",
+    category: "format",
+    examples: ['"url.ftp"', '"url.ftp?"', '"url.ftp[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+
+  {
     name: "uuid",
     description: "Validates UUID v4 format, concise and reliable.",
     category: "format",
@@ -162,6 +242,26 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     supportsOptional: true,
     supportsArrays: true,
   },
+  {
+    name: "json.fast",
+    description:
+      "Validates JSON string format with proper syntax checking (fast mode).",
+    category: "format",
+    examples: ['"json.fast"', '"json.fast?"', '"json.fast[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
+  // {
+  //   name: "json.secure",
+  //   description:
+  //     "Validates JSON string format with proper syntax checking (secure mode).",
+  //   category: "format",
+  //   examples: ['"json.secure"', '"json.secure?"', '"json.secure[]"'],
+  //   supportsConstraints: false,
+  //   supportsOptional: true,
+  //   supportsArrays: true,
+  // },
   {
     name: "hexcolor",
     description:

@@ -154,6 +154,8 @@ const ComprehensiveSchema = Interface({
   // Format validation
   email: "email",
   website: "url",
+  secureApi: "url.https", // HTTPS-only validation
+  devServer: "url.dev", // Development mode (allows localhost)
   phone: "phone",
   userId: "uuid",
 
@@ -281,7 +283,7 @@ const ECommerceProductSchema = Interface({
   price: "number(0.01,999999.99)",
   compareAtPrice: "number(0.01,999999.99)?",
   cost: "number(0,999999.99)?",
-  
+
   // Inventory management
   inventory: {
     quantity: "number(0,)",
@@ -630,8 +632,7 @@ const CombinedSchema = Mod.merge(UserSchema, ProfileSchema);
 #### Method Chaining
 
 ```typescript
-const FlexibleSchema = UserSchema
-  .loose() // Enable automatic type coercion
+const FlexibleSchema = UserSchema.loose() // Enable automatic type coercion
   .allowUnknown() // Accept extra properties
   .min(1) // Set minimum constraints
   .max(100) // Set maximum constraints

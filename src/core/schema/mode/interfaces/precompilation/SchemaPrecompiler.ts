@@ -339,10 +339,35 @@ export class SchemaPrecompiler {
   private static isSimpleType(fieldType: any): boolean {
     if (typeof fieldType !== "string") return false;
 
-    // Handle constants (=value) as simple types
+    // Handle constants (=value) as simple types 
     if (fieldType.startsWith("=")) return true;
 
-    const simpleTypes = ["string", "number", "boolean", "int", "float", "date"];
+    const simpleTypes = [
+      "string",
+      "number",
+      "boolean",
+      "int",
+      "float",
+      "date",
+      "any",
+      // Format types
+      "email",
+      "url",
+      "uuid",
+      "phone",
+      "slug",
+      "username",
+      "ip",
+      "json",
+      "password",
+      "text",
+      "object",
+      // New types
+      "hexcolor",
+      "base64",
+      "jwt",
+      "semver",
+    ];
     return simpleTypes.some((type) => fieldType.startsWith(type));
   }
 

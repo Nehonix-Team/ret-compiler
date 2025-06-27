@@ -227,6 +227,135 @@ const FormatSchema = Interface({
 });
 ```
 
+### URL Validation with Arguments
+
+Fortify Schema provides powerful URL validation with specialized arguments for different use cases. Each URL argument enforces specific protocol and security restrictions.
+
+#### Available URL Arguments
+
+```typescript
+const UrlSchema = Interface({
+  // Basic URL validation (defaults to web protocols)
+  website: "url",
+
+  // HTTPS-only validation (most secure)
+  secureApi: "url.https",
+  paymentGateway: "url.https",
+
+  // HTTP-only validation
+  legacyEndpoint: "url.http",
+
+  // Web protocols (HTTP + HTTPS)
+  publicWebsite: "url.web",
+
+  // Development mode (permissive for localhost/IPs)
+  devServer: "url.dev",
+  localApi: "url.dev",
+
+  // FTP-only validation
+  fileServer: "url.ftp",
+  backupLocation: "url.ftp",
+
+  // Optional URL arguments
+  optionalWebsite: "url.https?",
+  optionalApi: "url.web?",
+
+  // URL arrays with arguments
+  apiEndpoints: "url.https[]",
+  devServers: "url.dev[](1,5)",
+});
+```
+
+#### URL Argument Specifications
+
+| Argument    | Protocols   | Localhost | Private IPs | Use Case              |
+| ----------- | ----------- | --------- | ----------- | --------------------- |
+| `url`       | HTTP, HTTPS | ❌        | ❌          | General web URLs      |
+| `url.https` | HTTPS only  | ❌        | ❌          | Secure APIs, payments |
+| `url.http`  | HTTP only   | ❌        | ❌          | Legacy systems        |
+| `url.web`   | HTTP, HTTPS | ❌        | ❌          | Public websites       |
+| `url.dev`   | HTTP, HTTPS | ✅        | ✅          | Development/testing   |
+| `url.ftp`   | FTP only    | ❌        | ❌          | File transfers        |
+
+#### Security Features
+
+```typescript
+const SecurityExamples = Interface({
+  // ✅ HTTPS-only - blocks HTTP, localhost, IPs
+  securePayment: "url.https",
+  // Valid: "https://api.stripe.com/v1/charges"
+  // Invalid: "http://api.stripe.com", "https://localhost:3000"
+
+  // ✅ Development mode - allows localhost and IPs
+  devEnvironment: "url.dev",
+  // Valid: "http://localhost:3000", "https://192.168.1.100:8080"
+  // Invalid: "ftp://files.example.com"
+
+  // ✅ Web protocols - production-ready validation
+  publicApi: "url.web",
+  // Valid: "https://api.example.com", "http://legacy.example.com"
+  // Invalid: "ftp://files.com", "https://localhost:3000"
+});
+```
+
+#### Error Handling for Invalid Arguments
+
+```typescript
+// ❌ Invalid URL arguments throw clear errors
+try {
+  const InvalidSchema = Interface({
+    badUrl: "url.invalid", // Invalid argument
+  });
+} catch (error) {
+  console.log(error.message);
+  // "Invalid URL argument: url.invalid. Valid arguments are: url.https, url.http, url.web, url.dev, url.ftp"
+}
+
+// ❌ Case-sensitive validation
+try {
+  const CaseSchema = Interface({
+    badCase: "URL.HTTPS", // Wrong case
+  });
+} catch (error) {
+  console.log("URL arguments are case-sensitive");
+}
+```
+
+#### Real-World Examples
+
+```typescript
+const ECommerceSchema = Interface({
+  // Payment processing (HTTPS required)
+  paymentWebhook: "url.https",
+  stripeEndpoint: "url.https",
+
+  // Public website URLs
+  companyWebsite: "url.web",
+  socialMediaLinks: "url.web[]?",
+
+  // Development configuration
+  devApiUrl: "url.dev",
+  testingEndpoints: "url.dev[](1,10)",
+
+  // File storage
+  ftpBackupServer: "url.ftp",
+  assetCdnUrls: "url.https[]",
+});
+
+const MicroserviceSchema = Interface({
+  // Service discovery
+  authService: "url.https",
+  userService: "url.https",
+
+  // Internal communication (dev environment)
+  internalServices: "url.dev[]",
+
+  // External integrations
+  thirdPartyApis: "url.https[]",
+  webhookUrls: "url.https[](1,5)",
+});
+```
+
 ### Advanced Format Types
 
 #### Hex Color Validation
@@ -488,7 +617,6 @@ if (result.success) {
 } else {
   console.log("❌ Unexpected errors:", result.errors);
 }
-
 ```
 
 ### Optional vs Nullable

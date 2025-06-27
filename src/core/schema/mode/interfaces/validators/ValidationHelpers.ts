@@ -6,6 +6,7 @@
  */
 
 import { SchemaValidationResult } from "../../../../types/types";
+import { UrlArgs, UrlArgType } from "../../../../utils/UrlArgs";
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
 import { OptimizedUnionValidator as OUV } from "./UnionCache";
@@ -29,13 +30,13 @@ const SEMVER_PATTERN =
 export class ValidationHelpers {
   /**
    * Validate constant types (e.g., "=admin", "=user")
-   * Enhanced with better caching, type safety, and deep equality checks
+   * with better caching, type safety, and deep equality checks
    */
   static validateConstantType(
     constantValue: string,
     value: any
   ): SchemaValidationResult {
-    // Validate constant types with enhanced caching
+    // Validate constant types with caching
     // Implement LRU cache behavior
     if (constantCache.size >= MAX_CACHE_SIZE) {
       const firstKey = constantCache.keys().next().value;
@@ -56,7 +57,7 @@ export class ValidationHelpers {
       }
     }
 
-    // Enhanced equality check including deep object/array comparison
+    // equality check including deep object/array comparison
     if (!this.deepEquals(value, expectedValue)) {
       return this.createErrorResult(
         `Expected constant value: ${JSON.stringify(expectedValue)}, got ${JSON.stringify(value)}`,
@@ -68,7 +69,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced deep equality check for constants
+   * deep equality check for constants
    */
   static deepEquals(a: any, b: any): boolean {
     if (a === b) return true;
@@ -95,7 +96,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced constant value parser with better error handling and type support
+   * constant value parser with better error handling and type support
    */
   private static parseConstantValue(constantValue: string): any {
     if (!constantValue || typeof constantValue !== "string") {
@@ -110,7 +111,7 @@ export class ValidationHelpers {
       return constantValue.slice(1, -1);
     }
 
-    // Enhanced numeric check with scientific notation support
+    // numeric check with scientific notation support
     if (NUMERIC_PATTERN.test(constantValue)) {
       const num = parseFloat(constantValue);
       if (isNaN(num) || !isFinite(num)) {
@@ -119,12 +120,12 @@ export class ValidationHelpers {
       return num;
     }
 
-    // Enhanced boolean check (case insensitive)
+    // boolean check (case insensitive)
     if (BOOLEAN_PATTERN.test(constantValue)) {
       return constantValue.toLowerCase() === "true";
     }
 
-    // Array check with enhanced validation
+    // Array check with validation
     if (constantValue.startsWith("[") && constantValue.endsWith("]")) {
       try {
         const parsed = JSON.parse(constantValue);
@@ -137,7 +138,7 @@ export class ValidationHelpers {
       }
     }
 
-    // Object check with enhanced validation
+    // Object check with validation
     if (constantValue.startsWith("{") && constantValue.endsWith("}")) {
       try {
         const parsed = JSON.parse(constantValue);
@@ -150,7 +151,7 @@ export class ValidationHelpers {
       }
     }
 
-    // Enhanced special values
+    // special values
     switch (constantValue.toLowerCase()) {
       case "null":
         return null;
@@ -168,7 +169,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced union type validation with better error messages and nested union support
+   * union type validation with better error messages and nested union support
    */
   static validateUnionType(
     unionType: string,
@@ -198,7 +199,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced record type validation with better type safety and performance
+   * record type validation with better type safety and performance
    */
   static validateRecordType(
     type: string,
@@ -238,7 +239,7 @@ export class ValidationHelpers {
     const errors: string[] = [];
     const validatedRecord: Record<string, any> = {};
 
-    // Enhanced validation with proper key type checking
+    // validation with proper key type checking
     for (const [key, val] of Object.entries(value)) {
       // Validate key type more comprehensively
       if (!this.validateKeyType(key, trimmedKeyType)) {
@@ -272,7 +273,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced key type validation for records
+   * key type validation for records
    */
   private static validateKeyType(key: string, keyType: string): boolean {
     switch (keyType) {
@@ -289,7 +290,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced array validation with better constraint handling and performance
+   * array validation with better constraint handling and performance
    */
   static validateArrayWithConstraints(
     value: any,
@@ -307,7 +308,7 @@ export class ValidationHelpers {
       );
     }
 
-    // Enhanced constraint validation
+    // constraint validation
     const constraintErrors = this.validateArrayConstraints(value, constraints);
     if (constraintErrors.length > 0) {
       return {
@@ -348,7 +349,7 @@ export class ValidationHelpers {
       };
     }
 
-    // Enhanced uniqueness check
+    // uniqueness check
     if (constraints.unique) {
       const uniqueCheck = this.checkArrayUniqueness(validatedArray);
       if (!uniqueCheck.success) {
@@ -360,7 +361,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced array constraints validation with more constraint types
+   * array constraints validation with more constraint types
    */
   private static validateArrayConstraints(
     value: any[],
@@ -401,7 +402,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced array uniqueness check with better performance and type handling
+   * array uniqueness check with better performance and type handling
    */
   private static checkArrayUniqueness(array: any[]): SchemaValidationResult {
     const seen = new Set();
@@ -439,7 +440,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced optional value handling with better default value support
+   * optional value handling with better default value support
    */
   static handleOptionalValue(
     value: any,
@@ -468,7 +469,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced type validation routing with new types and better error handling
+   * type validation routing with new types and better error handling
    */
   static routeTypeValidation(
     type: string,
@@ -492,7 +493,38 @@ export class ValidationHelpers {
       );
     }
 
-    // Enhanced switch with new types and better grouping
+    const urlType = type.startsWith("url"); // Case-sensitive URL detection
+
+    if (urlType) {
+      // For basic "url" type, use "url.web" as default
+      const urlArgType = type === "url" ? "url.web" : type;
+
+      // Validate URL arg before proceeding
+      if (urlArgType !== "url.web") {
+        // Check if it's a valid URL arg
+        const validUrlArgs = [
+          "url.https",
+          "url.http",
+          "url.web",
+          "url.dev",
+          "url.ftp",
+        ];
+        if (!validUrlArgs.includes(urlArgType)) {
+          return {
+            success: false,
+            errors: [
+              `Invalid URL argument: ${urlArgType}. Valid arguments are: ${validUrlArgs.join(", ")}`,
+            ],
+            warnings: [],
+            data: value,
+          };
+        }
+      }
+
+      return TypeValidators.validateUrl(value, urlArgType as UrlArgType);
+    }
+
+    // switch with new types and better grouping
     switch (type.toLowerCase()) {
       case "string":
         return TypeValidators.validateString(value, options, constraints);
@@ -542,10 +574,6 @@ export class ValidationHelpers {
       case "email":
         return TypeValidators.validateEmail(value);
 
-      case "url":
-      case "uri":
-        return TypeValidators.validateUrl(value, type as "url" | "uri");
-
       case "uuid":
       case "guid":
         return TypeValidators.validateUuid(value, type as "uuid" | "guid");
@@ -566,10 +594,16 @@ export class ValidationHelpers {
         return TypeValidators.validatePassword(value);
 
       case "text":
-        return TypeValidators.validateText(value);
+        return TypeValidators.validateText(value, {});
 
       case "json":
-        return TypeValidators.validateJson(value);
+        return TypeValidators.validateJson(value, { securityMode: "fast" }); // Default to fast
+
+      case "json.fast":
+        return TypeValidators.validateJson(value, { securityMode: "fast" });
+
+      case "json.secure":
+        return TypeValidators.validateJson(value, { securityMode: "secure" });
 
       case "object":
         return TypeValidators.validateObject(value);
@@ -789,7 +823,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced result merging with better performance and warning handling
+   * result merging with better performance and warning handling
    */
   static mergeResults(
     results: SchemaValidationResult[]
@@ -828,7 +862,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced error result creation with context
+   * error result creation with context
    */
   static createErrorResult(
     error: string,
@@ -845,7 +879,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced success result creation
+   * success result creation
    */
   static createSuccessResult(
     data: any,
@@ -860,7 +894,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced cache management with selective clearing
+   * cache management with selective clearing
    */
   static clearCaches(cacheType?: "constant" | "all"): void {
     if (!cacheType || cacheType === "all" || cacheType === "constant") {
@@ -869,7 +903,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced cache statistics with memory usage estimation
+   * cache statistics with memory usage estimation
    */
   static getCacheStats(): {
     constantCacheSize: number;
@@ -919,7 +953,7 @@ export class ValidationHelpers {
   }
 
   /**
-   * Enhanced validation with comprehensive error context
+   * validation with comprehensive error context
    */
   static validateWithContext(
     type: string,

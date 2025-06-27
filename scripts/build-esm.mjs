@@ -9,7 +9,7 @@ try {
   // Test basic interface
   const UserSchema = Interface({
     id: "number",
-    name: "string",
+    name: "string", 
     email: "email",
     status: Make.union("active", "inactive"),
     role: Make.const("user")

@@ -7,6 +7,9 @@
 
 import { SchemaValidationResult } from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
+import { validatePassword } from "./mods/passValidator";
+import { Security } from "./mods/securityValidator";
+import { UrlValidation } from "./mods/urlValidation";
 
 /**
  * Validates basic types with enhanced constraints
@@ -312,126 +315,20 @@ export class TypeValidators {
   /**
    * Validate email format with comprehensive RFC 5322 compliance and plus addressing support
    */
-  static validateEmail(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for email");
-      return result;
-    }
-
-    // Comprehensive email validation with plus addressing support
-    // RFC 5322 compliant regex that includes plus addressing
-    const emailRegex =
-      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-
-    if (!emailRegex.test(value)) {
-      result.success = false;
-      result.errors.push("Invalid email format");
-      return result;
-    }
-
-    // Additional validation checks
-    if (value.length > 254) {
-      result.success = false;
-      result.errors.push("Email address is too long (max 254 characters)");
-      return result;
-    }
-
-    const [localPart, domain] = value.split("@");
-
-    // Local part validation
-    if (localPart.length > 64) {
-      result.success = false;
-      result.errors.push("Email local part is too long (max 64 characters)");
-      return result;
-    }
-
-    // Check for consecutive dots
-    if (localPart.includes("..")) {
-      result.success = false;
-      result.errors.push("Email local part cannot contain consecutive dots");
-      return result;
-    }
-
-    // Check for leading/trailing dots
-    if (localPart.startsWith(".") || localPart.endsWith(".")) {
-      result.success = false;
-      result.errors.push("Email local part cannot start or end with a dot");
-      return result;
-    }
-
-    // Plus addressing detection and validation
-    if (localPart.includes("+")) {
-      result.warnings.push("Email uses plus addressing (alias detected)");
-
-      // Validate plus addressing format
-      const plusIndex = localPart.indexOf("+");
-      const basePart = localPart.substring(0, plusIndex);
-      const tagPart = localPart.substring(plusIndex + 1);
-
-      if (basePart.length === 0) {
-        result.success = false;
-        result.errors.push("Email local part cannot start with plus sign");
-        return result;
-      }
-
-      if (tagPart.length === 0) {
-        result.warnings.push("Empty tag in plus addressing");
-      }
-    }
-
-    // Domain validation
-    if (domain.length > 253) {
-      result.success = false;
-      result.errors.push("Email domain is too long (max 253 characters)");
-      return result;
-    }
-
-    if (domain.includes("..")) {
-      result.success = false;
-      result.errors.push("Email domain cannot contain consecutive dots");
-      return result;
-    }
-
-    return result;
+  static validateEmail(
+    ...args: Parameters<typeof Security.validateEmail>
+  ): SchemaValidationResult {
+    return Security.validateEmail(...args);
   }
 
   /**
-   * Validate URL format
+   *  URL validation with comprehensive checks
    */
   static validateUrl(
-    value: any,
-    type: "url" | "uri" = "url"
+    ...args: Parameters<typeof UrlValidation>
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push(`Expected string for ${type.toUpperCase()}`);
-    } else {
-      try {
-        new URL(value);
-      } catch {
-        result.success = false;
-        result.errors.push(`Invalid ${type.toUpperCase()} format`);
-      }
-    }
-
-    return result;
+    return UrlValidation(...args);
   }
-
   /**
    * Validate UUID/GUID format
    */
@@ -537,125 +434,43 @@ export class TypeValidators {
   /**
    * Validate password format
    */
-  static validatePassword(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for password");
-    } else if (value.length < 8) {
-      result.success = false;
-      result.errors.push("Password must be at least 8 characters");
-    }
-
-    return result;
+  static validatePassword(
+    ...args: Parameters<typeof validatePassword>
+  ): SchemaValidationResult {
+    return validatePassword(...args);
   }
 
   /**
    * Validate text format (alias for string)
    */
-  static validateText(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for text");
-    }
-
-    return result;
+  static validateText(
+    ...args: Parameters<typeof Security.validateText>
+  ): SchemaValidationResult {
+    return Security.validateTextSync(...args);
   }
 
   /**
-   * Validate JSON format
+   * Validate JSON format with optional security mode
    */
-  static validateJson(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value === "string") {
-      try {
-        result.data = JSON.parse(value);
-        result.warnings.push("JSON string parsed to object");
-      } catch {
-        result.success = false;
-        result.errors.push("Invalid JSON string");
-      }
-    } else if (typeof value === "object") {
-      result.data = value;
-    } else {
-      result.success = false;
-      result.errors.push("Expected JSON string or object");
-    }
-
-    return result;
+  static validateJson(
+    value: any,
+    options?: { securityMode?: "fast" | "secure" }
+  ): SchemaValidationResult {
+    return Security.validateJsonSync(value, options);
   }
 
   /**
    * Validate IP address format (IPv4 and IPv6)
    */
   static validateIp(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for IP address");
-      return result;
-    }
-
-    // IPv4 regex pattern
-    const ipv4Regex =
-      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-
-    // IPv6 regex pattern (simplified but comprehensive)
-    const ipv6Regex =
-      /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^::$|^(?:[0-9a-fA-F]{1,4}:)*::(?:[0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}$/;
-
-    if (!ipv4Regex.test(value) && !ipv6Regex.test(value)) {
-      result.success = false;
-      result.errors.push(
-        "Invalid IP address format (must be valid IPv4 or IPv6)"
-      );
-    }
-
-    return result;
+    return Security.validateIp(value);
   }
 
   /**
    * Validate object type
    */
   static validateObject(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
-      result.success = false;
-      result.errors.push("Expected object");
-    }
-
-    return result;
+    return Security.validateObject(value);
   }
 
   /**

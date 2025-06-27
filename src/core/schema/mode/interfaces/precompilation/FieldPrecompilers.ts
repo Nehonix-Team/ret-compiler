@@ -1,11 +1,12 @@
 /**
- * ULTRA-OPTIMIZED Field-Specific Precompilers
+ * Field-Specific Precompilers
  *
  * Each field type gets its own specialized precompiler for maximum performance
  */
 
 import { SchemaValidationResult } from "../../../../types/types";
 import { UnionCache } from "../validators/UnionCache";
+import { ValidationHelpers } from "../validators/ValidationHelpers";
 
 export interface CompiledFieldValidator {
   (value: any): SchemaValidationResult;
@@ -15,8 +16,8 @@ export interface CompiledFieldValidator {
 
 export class FieldPrecompilers {
   /**
-   * ULTRA-FAST: Precompile union field validators
-   * Target: Beat Zod's z.enum() performance
+   *  Precompile union field validators
+   *
    */
   static precompileUnion(unionType: string): CompiledFieldValidator {
     // Get cached union values at compile time
@@ -35,7 +36,7 @@ export class FieldPrecompilers {
 
     // Generate ultra-optimized validator
     const validator = (value: any): SchemaValidationResult => {
-      // ULTRA-FAST: Direct Set lookup with minimal overhead
+      //  Direct Set lookup with minimal overhead
       if (allowedValues.has(String(value))) {
         return {
           ...successResult,
@@ -59,7 +60,7 @@ export class FieldPrecompilers {
   }
 
   /**
-   * ULTRA-FAST: Precompile string field validators
+   *  Precompile string field validators
    */
   static precompileString(
     constraints: {
@@ -72,7 +73,7 @@ export class FieldPrecompilers {
 
     // Pre-compile validation logic based on constraints
     if (!minLength && !maxLength && !pattern) {
-      // ULTRA-FAST: Simple string validation
+      //  Simple string validation
       const validator = (value: any): SchemaValidationResult => {
         if (typeof value === "string") {
           return {
@@ -144,7 +145,7 @@ export class FieldPrecompilers {
   }
 
   /**
-   * ULTRA-FAST: Precompile number field validators
+   *  Precompile number field validators
    */
   static precompileNumber(
     constraints: { min?: number; max?: number; integer?: boolean } = {}
@@ -198,7 +199,7 @@ export class FieldPrecompilers {
   }
 
   /**
-   * ULTRA-FAST: Precompile boolean field validators
+   *  Precompile boolean field validators
    */
   static precompileBoolean(): CompiledFieldValidator {
     const validator = (value: any): SchemaValidationResult => {
@@ -224,7 +225,7 @@ export class FieldPrecompilers {
   }
 
   /**
-   * ULTRA-FAST: Precompile array field validators
+   *  Precompile array field validators
    */
   static precompileArray(
     elementValidator: CompiledFieldValidator,
@@ -300,7 +301,7 @@ export class FieldPrecompilers {
   }
 
   /**
-   * ULTRA-FAST: Precompile optional field validators
+   *  Precompile optional field validators
    */
   static precompileOptional(
     baseValidator: CompiledFieldValidator,
@@ -325,7 +326,7 @@ export class FieldPrecompilers {
   }
 
   /**
-   * ULTRA-FAST: Precompile constant field validators
+   *  Precompile constant field validators
    */
   static precompileConstant(constantValue: any): CompiledFieldValidator {
     const stringValue = String(constantValue);
@@ -349,6 +350,20 @@ export class FieldPrecompilers {
     };
 
     (validator as any)._fieldType = `=${constantValue}`;
+    (validator as any)._isCompiled = true;
+    return validator as CompiledFieldValidator;
+  }
+
+  /**
+   *  Precompile special field types (email, url, json, etc.)
+   */
+  static precompileSpecialType(type: string): CompiledFieldValidator {
+    const validator = (value: any): SchemaValidationResult => {
+      // Use the imported ValidationHelpers for proper validation
+      return ValidationHelpers.routeTypeValidation(type, value, {}, {});
+    };
+
+    (validator as any)._fieldType = type;
     (validator as any)._isCompiled = true;
     return validator as CompiledFieldValidator;
   }
@@ -382,8 +397,8 @@ export class FieldPrecompilers {
       return isOptional ? this.precompileOptional(validator) : validator;
     }
 
-    // Handle basic types with constraints
-    const constraintMatch = baseType.match(/^(\w+)(?:\(([^)]*)\))?$/);
+    // Handle basic types with constraints (including URL args like url.https)
+    const constraintMatch = baseType.match(/^([\w.]+)(?:\(([^)]*)\))?$/);
     if (constraintMatch) {
       const [, type, constraintsStr] = constraintMatch;
 
@@ -416,7 +431,38 @@ export class FieldPrecompilers {
             ? this.precompileOptional(boolValidator)
             : boolValidator;
 
+        // Handle new field types by delegating to ValidationHelpers
+        case "json":
+        case "ip":
+        case "password":
+        case "text":
+        case "object":
+        case "url":
+        case "email":
+        case "uuid":
+        case "phone":
+        case "slug":
+        case "username":
+        case "hexcolor":
+        case "base64":
+        case "jwt":
+        case "semver":
+        case "date":
+        case "any":
+          const specialValidator = this.precompileSpecialType(type);
+          return isOptional
+            ? this.precompileOptional(specialValidator)
+            : specialValidator;
+
         default:
+          // Check if it's a URL arg (url.https, url.http, etc.)
+          if (type.startsWith("url.")) {
+            const urlArgValidator = this.precompileSpecialType(type);
+            return isOptional
+              ? this.precompileOptional(urlArgValidator)
+              : urlArgValidator;
+          }
+
           // Fallback for unknown types
           return this.createFallbackValidator(fieldType);
       }

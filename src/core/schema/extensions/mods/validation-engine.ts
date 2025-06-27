@@ -108,7 +108,7 @@ export class ValidationEngine {
           validationResult = TypeValidators.validateEmail(value);
           break;
         case "url":
-          validationResult = TypeValidators.validateUrl(value);
+          validationResult = TypeValidators.validateUrl(value, "url.web");
           break;
         case "uuid":
         case "guid":
