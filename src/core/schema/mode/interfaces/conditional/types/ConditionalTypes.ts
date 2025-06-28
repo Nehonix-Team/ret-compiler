@@ -177,6 +177,7 @@ export interface EvaluationContext {
   data: Record<string, any>;
   schema?: Record<string, any>; // Add schema for path validation
   fieldPath: string[];
+  parentContext?: Record<string, any>; // NEW: Parent context for nested field resolution
   options?: {
     strict?: boolean;
     debug?: boolean;

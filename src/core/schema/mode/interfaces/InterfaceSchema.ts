@@ -161,8 +161,16 @@ export class InterfaceSchema<T = any> {
     // Check nesting depth to avoid precompilation bugs with deep nested objects
     const maxNestingDepth = this.calculateMaxNestingDepth();
 
-    // Skip precompilation if loose mode is enabled (needs type coercion support) or deep nesting
-    if (!hasConditionalFields && !this.options.loose && maxNestingDepth <= 3) {
+    // CRITICAL FIX: Also check for nested conditional fields
+    const hasNestedConditionalFields = this.hasNestedConditionalFields();
+
+    // Skip precompilation if loose mode is enabled (needs type coercion support), deep nesting, or nested conditionals
+    if (
+      !hasConditionalFields &&
+      !hasNestedConditionalFields &&
+      !this.options.loose &&
+      maxNestingDepth <= 3
+    ) {
       try {
         this.precompiledValidator = SchemaPrecompiler.precompileSchema(
           this.definition,
@@ -177,6 +185,35 @@ export class InterfaceSchema<T = any> {
         );
       }
     }
+  }
+
+  /**
+   * Check if schema has nested conditional fields
+   * CRITICAL FIX: This prevents precompilation for schemas with nested conditionals
+   */
+  private hasNestedConditionalFields(): boolean {
+    const checkObject = (obj: any): boolean => {
+      for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === "string") {
+          // Check if this field has conditional syntax
+          if (this.isConditionalSyntax(value)) {
+            return true;
+          }
+        } else if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          // Recursively check nested objects
+          if (checkObject(value)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    return checkObject(this.definition);
   }
 
   /**
@@ -240,7 +277,6 @@ export class InterfaceSchema<T = any> {
         // Check for conditional syntax (when ... *? ... : ...)
         if (this.isConditionalSyntax(fieldType)) {
           compiled.isConditional = true;
-          compiled.isConditional = true;
 
           // Parse with parser
           const { ast, errors } = this.ConditionalParser.parse(fieldType);
@@ -292,15 +328,33 @@ export class InterfaceSchema<T = any> {
 
     let result: SchemaValidationResult<T>;
 
+    // Check if schema has conditional fields - if so, force standard validation
+    const hasConditionalFields = this.compiledFields.some(
+      (field) => field.isConditional
+    );
+
     // ULTRA-PERFORMANCE: Use precompiled validator first (fastest path)
     // BUT: Skip precompiled validator if loose mode is enabled (needs type coercion)
-    if (this.precompiledValidator && !this.options.loose) {
+    // ALSO: Skip ALL optimizations if schema has conditional fields (they need special handling)
+    if (
+      this.precompiledValidator &&
+      !this.options.loose &&
+      !hasConditionalFields
+    ) {
       result = this.precompiledValidator(data) as SchemaValidationResult<T>;
-    } else if (this.isOptimized && this.compiledValidator) {
-      // Use compiled validator (second fastest)
+    } else if (
+      this.isOptimized &&
+      this.compiledValidator &&
+      !hasConditionalFields
+    ) {
+      // Use compiled validator (second fastest) - but not for conditional fields
       result = this.compiledValidator.validate(data);
-    } else if (this.isOptimized && this.schemaComplexity > 5) {
-      // Use cached validation for medium complexity
+    } else if (
+      this.isOptimized &&
+      this.schemaComplexity > 5 &&
+      !hasConditionalFields
+    ) {
+      // Use cached validation for medium complexity - but not for conditional fields
       result = ObjectValidationCache.getCachedValidation(
         data,
         (value) => this.validateStandard(value),
@@ -352,11 +406,13 @@ export class InterfaceSchema<T = any> {
       // Use pre-compiled information to skip parsing
       if (field.isConditional) {
         if (field.isConditional && field.ConditionalAST) {
-          // Use conditional validation
+          // FIXED: Use conditional validation with proper nested context
+          // Pass the current data object as nested context for field resolution
           fieldResult = this.validateEnhancedConditionalField(
             field.ConditionalAST,
             value,
-            data
+            data, // Full data for fallback
+            data // Nested context (same as data at this level)
           );
         } else {
           // Use legacy conditional validation
@@ -371,7 +427,12 @@ export class InterfaceSchema<T = any> {
         fieldResult = this.validatePrecompiledStringField(field, value);
       } else {
         // Fallback to original validation for complex types
-        fieldResult = this.validateField(field.key, field.originalType, value);
+        fieldResult = this.validateField(
+          field.key,
+          field.originalType,
+          value,
+          data
+        );
       }
 
       // Process field result
@@ -562,7 +623,8 @@ export class InterfaceSchema<T = any> {
   private validateField(
     _key: string,
     fieldType: SchemaFieldType,
-    value: any
+    value: any,
+    fullData?: any // NEW: Add full data context for nested validation
   ): SchemaValidationResult {
     const result: SchemaValidationResult = {
       success: true,
@@ -620,7 +682,13 @@ export class InterfaceSchema<T = any> {
     // Handle nested objects
     if (TypeGuards.isSchemaInterface(fieldType)) {
       const nestedSchema = new InterfaceSchema(fieldType, this.options);
-      return nestedSchema.validate(value);
+      // CRITICAL FIX: For nested objects, we need to pass the full data context
+      // so that conditional validation can access parent fields
+      return this.validateNestedObjectWithContext(
+        nestedSchema,
+        value,
+        fullData
+      );
     }
 
     // Handle array of schemas
@@ -841,20 +909,77 @@ export class InterfaceSchema<T = any> {
   }
 
   /**
+   * Validate nested object with full data context for conditional field resolution
+   * CRITICAL FIX: This method ensures nested conditional validation has access to parent context
+   */
+  private validateNestedObjectWithContext(
+    nestedSchema: InterfaceSchema<any>,
+    nestedValue: any,
+    fullDataContext?: any
+  ): SchemaValidationResult {
+    // If we don't have full data context, fall back to standard validation
+    if (!fullDataContext) {
+      return nestedSchema.validate(nestedValue);
+    }
+
+    // CRITICAL FIX: Temporarily store the full context in the nested schema
+    // so that conditional validation can access parent fields
+    const originalValidateEnhancedConditionalField =
+      nestedSchema["validateEnhancedConditionalField"];
+
+    // Override the conditional validation method to pass parent context
+    nestedSchema["validateEnhancedConditionalField"] = function (
+      ast: any,
+      value: any,
+      localData: any,
+      nestedContext?: any
+    ) {
+      return originalValidateEnhancedConditionalField.call(
+        this,
+        ast,
+        value,
+        fullDataContext,
+        localData
+      );
+    };
+
+    try {
+      // Perform the validation with the modified context
+      const result = nestedSchema.validate(nestedValue);
+      return result;
+    } finally {
+      // Restore the original method
+      nestedSchema["validateEnhancedConditionalField"] =
+        originalValidateEnhancedConditionalField;
+    }
+  }
+
+  /**
    * Validate enhanced conditional field using our new AST-based system
+   * FIXED: Now properly handles nested context for field resolution
    */
   private validateEnhancedConditionalField(
     ast: ConditionalNode,
     value: any,
-    fullData: any
+    fullData: any,
+    nestedContext?: any // Add nested context parameter
   ): SchemaValidationResult {
     try {
-      // Evaluate the full conditional to get the expected schema
-      const evaluationResult = ConditionalEvaluator.evaluate(ast, fullData, {
+      // CRITICAL FIX: For nested conditional validation, we need to provide both
+      // the local context (nested object) and the full context (root object)
+      // This allows field resolution to work correctly for both local and parent references
+
+      // Create enhanced context that supports both local and parent field resolution
+      const contextData = nestedContext || fullData;
+
+      // FIXED: Pass both contexts to the evaluator for proper field resolution
+      const evaluationResult = ConditionalEvaluator.evaluate(ast, contextData, {
         strict: this.options.strict || false,
         debug: true, // Enable debug to get condition result
         schema: this.definition,
         validatePaths: true,
+        // NEW: Add parent context for nested field resolution
+        parentContext: fullData !== contextData ? fullData : undefined,
       });
 
       if (!evaluationResult.success) {

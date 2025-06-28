@@ -1,6 +1,6 @@
 // Fixed Enhanced test suite with proper validation and debugging
 
-import { Interface } from "../core/schema/mode/interfaces/Interface";
+import { Interface } from "../src/core/schema/mode/interfaces/Interface";
 import { NehoID as ID } from "nehoid";
 import type {
   EnhancedValidationResult,

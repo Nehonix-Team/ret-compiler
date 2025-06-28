@@ -9,7 +9,7 @@
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true, 
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
@@ -24,9 +24,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": false
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*", "__tests__"],
   "exclude": [
     "node_modules",
     "dist",
@@ -34,8 +32,6 @@
     "**/*.spec.ts",
     "**/private/**",
     "**/__tests__/**",
-    "**/src/core/compiler/*",
-
+    "**/src/core/compiler/*"
   ]
 }
- 

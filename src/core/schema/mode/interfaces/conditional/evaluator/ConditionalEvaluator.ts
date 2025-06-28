@@ -47,12 +47,14 @@ export class ConditionalEvaluator {
       schema?: Record<string, any>;
       validatePaths?: boolean;
       enableCaching?: boolean;
+      parentContext?: Record<string, any>; // NEW: Support for parent context in nested validation
     } = {}
   ): EvaluationResult {
     const context: EvaluationContext = {
       data,
       schema: options.schema,
       fieldPath: [],
+      parentContext: options.parentContext, // NEW: Add parent context to evaluation context
       options: {
         strict: false,
         debug: false,
@@ -216,7 +218,7 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
 
   /**
    * Get field value from runtime data without schema validation
-   * Used for runtime methods (starting with $) - with performance caching
+   * Used for runtime methods (starting with $) - with performance caching and parent context support
    */
   private getRuntimeFieldValue(path: string[]): any {
     const pathKey = path.join(".");
@@ -229,35 +231,79 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
       return ConditionalEvaluator.fieldValueCache.get(pathKey);
     }
 
+    // CRITICAL FIX: Try to resolve field in local context first
     let current = this.context.data;
+    let foundInLocal = true;
 
     for (const segment of path) {
       if (current === null || current === undefined) {
-        const result = undefined;
-        // Cache the result if caching is enabled
-        if (this.context.options?.enableCaching) {
-          ConditionalEvaluator.fieldValueCache.set(pathKey, result);
-        }
-        return result;
+        foundInLocal = false;
+        break;
+      }
+      if (!(segment in current)) {
+        foundInLocal = false;
+        break;
       }
       current = current[segment];
     }
 
-    // Cache the result if caching is enabled
-    if (this.context.options?.enableCaching) {
-      ConditionalEvaluator.fieldValueCache.set(pathKey, current);
+    // If found in local context, cache and return the value
+    if (foundInLocal) {
+      if (this.context.options?.enableCaching) {
+        ConditionalEvaluator.fieldValueCache.set(pathKey, current);
+      }
+      return current;
     }
 
-    return current;
+    // CRITICAL FIX: If not found in local context and we have a parent context,
+    // try to resolve the field in the parent context
+    if (this.context.parentContext) {
+      let parentCurrent = this.context.parentContext;
+      let foundInParent = true;
+
+      for (const segment of path) {
+        if (parentCurrent === null || parentCurrent === undefined) {
+          foundInParent = false;
+          break;
+        }
+        if (!(segment in parentCurrent)) {
+          foundInParent = false;
+          break;
+        }
+        parentCurrent = parentCurrent[segment];
+      }
+
+      if (foundInParent) {
+        // Cache the result if caching is enabled
+        if (this.context.options?.enableCaching) {
+          ConditionalEvaluator.fieldValueCache.set(pathKey, parentCurrent);
+        }
+        return parentCurrent;
+      }
+    }
+
+    // Field not found in either context
+    const result = undefined;
+    // Cache the result if caching is enabled
+    if (this.context.options?.enableCaching) {
+      ConditionalEvaluator.fieldValueCache.set(pathKey, result);
+    }
+    return result;
   }
 
   /**
    * Get field value from data using path
-   * Enhanced with schema path validation
+   * Enhanced with schema path validation and parent context support
    */
   private getFieldValue(path: string[]): any {
-    // Validate path against schema if validation is enabled
-    if (this.context.options?.validatePaths && this.context.schema) {
+    // CRITICAL FIX: Skip strict schema path validation when we have parent context
+    // This allows nested conditional validation to reference parent fields
+    const shouldValidatePaths =
+      this.context.options?.validatePaths &&
+      this.context.schema &&
+      !this.context.parentContext;
+
+    if (shouldValidatePaths) {
       const pathValidation = this.validateSchemaPath(path);
       if (!pathValidation.isValid) {
         throw new Error(
@@ -266,22 +312,58 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
       }
     }
 
+    // CRITICAL FIX: Try to resolve field in local context first
     let current = this.context.data;
+    let foundInLocal = true;
 
     for (const segment of path) {
       if (current === null || current === undefined) {
-        // If path validation is enabled, this should have been caught above
-        if (this.context.options?.validatePaths) {
-          throw new Error(
-            `Property path ${path.join(".")} references undefined value at segment: ${segment}`
-          );
-        }
-        return undefined;
+        foundInLocal = false;
+        break;
+      }
+      if (!(segment in current)) {
+        foundInLocal = false;
+        break;
       }
       current = current[segment];
     }
 
-    return current;
+    // If found in local context, return the value
+    if (foundInLocal) {
+      return current;
+    }
+
+    // CRITICAL FIX: If not found in local context and we have a parent context,
+    // try to resolve the field in the parent context
+    if (this.context.parentContext) {
+      let parentCurrent = this.context.parentContext;
+      let foundInParent = true;
+
+      for (const segment of path) {
+        if (parentCurrent === null || parentCurrent === undefined) {
+          foundInParent = false;
+          break;
+        }
+        if (!(segment in parentCurrent)) {
+          foundInParent = false;
+          break;
+        }
+        parentCurrent = parentCurrent[segment];
+      }
+
+      if (foundInParent) {
+        return parentCurrent;
+      }
+    }
+
+    // If path validation is enabled and we couldn't find the field anywhere, throw error
+    if (this.context.options?.validatePaths) {
+      throw new Error(
+        `Property path ${path.join(".")} not found in local or parent context`
+      );
+    }
+
+    return undefined;
   }
 
   /**
