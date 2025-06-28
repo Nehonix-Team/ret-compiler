@@ -12,37 +12,109 @@ import { Security } from "./mods/securityValidator";
 import { UrlValidation } from "./mods/urlValidation";
 
 /**
- * Validates basic types with enhanced constraints
+ * Validates basic types with enhanced constraints 
  */
 export class TypeValidators {
-  /**
-   * Validate string type with constraints
-   */
-  static validateString(
-    value: any,
-    options: SchemaOptions,
-    constraints: any
-  ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+  // Private constants for validation patterns
+  private static readonly UUID_PATTERN =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  private static readonly PHONE_PATTERN = /^[1-9]\d{6,14}$/;
+  private static readonly SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  private static readonly USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,20}$/;
 
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push(`Expected string, got ${typeof value}`);
-      return result;
+  // Private constants for loose mode conversion
+  private static readonly TRUTHY_VALUES = ["true", "1", "yes", "on"];
+  private static readonly FALSY_VALUES = ["false", "0", "no", "off"];
+
+  // Private utility methods
+  private static createResult(
+    success: boolean = true,
+    data: any = null,
+    errors: string[] = [],
+    warnings: string[] = []
+  ): SchemaValidationResult {
+    return {
+      success,
+      errors: [...errors],
+      warnings: [...warnings],
+      data,
+    };
+  }
+
+  private static addError(
+    result: SchemaValidationResult,
+    message: string
+  ): void {
+    result.success = false;
+    result.errors.push(message);
+  }
+
+  private static addWarning(
+    result: SchemaValidationResult,
+    message: string
+  ): void {
+    result.warnings.push(message);
+  }
+
+  private static isValidNumber(value: any): boolean {
+    return typeof value === "number" && isFinite(value);
+  }
+
+  private static isValidInteger(value: any): boolean {
+    return this.isValidNumber(value) && value % 1 === 0;
+  }
+
+  private static tryParseNumber(value: string): number | null {
+    const num = parseFloat(value);
+    return isNaN(num) ? null : num;
+  }
+
+  private static tryParseInteger(value: string): number | null {
+    const num = parseInt(value, 10);
+    return isNaN(num) ? null : num;
+  }
+
+  private static validateNumberConstraints(
+    result: SchemaValidationResult,
+    value: number,
+    constraints: any,
+    typeLabel: string = "Number"
+  ): void {
+    if (constraints.min !== undefined && value < constraints.min) {
+      this.addError(result, `${typeLabel} must be at least ${constraints.min}`);
     }
 
-    // Apply string constraints
+    if (constraints.max !== undefined && value > constraints.max) {
+      this.addError(result, `${typeLabel} must be at most ${constraints.max}`);
+    }
+  }
+
+  private static handleLooseStringToNumber(
+    result: SchemaValidationResult,
+    value: string,
+    parser: (val: string) => number | null,
+    warningMessage: string
+  ): boolean {
+    const parsed = parser(value);
+    if (parsed !== null) {
+      result.data = parsed;
+      this.addWarning(result, warningMessage);
+      return true;
+    }
+    return false;
+  }
+
+  private static validateStringConstraints(
+    result: SchemaValidationResult,
+    value: string,
+    constraints: any
+  ): void {
     if (
       constraints.minLength !== undefined &&
       value.length < constraints.minLength
     ) {
-      result.success = false;
-      result.errors.push(
+      this.addError(
+        result,
         `String must be at least ${constraints.minLength} characters`
       );
     }
@@ -51,17 +123,94 @@ export class TypeValidators {
       constraints.maxLength !== undefined &&
       value.length > constraints.maxLength
     ) {
-      result.success = false;
-      result.errors.push(
+      this.addError(
+        result,
         `String must be at most ${constraints.maxLength} characters - (${value.length})`
       );
     }
 
     if (constraints.pattern && !constraints.pattern.test(value)) {
-      result.success = false;
-      result.errors.push("String does not match required pattern");
+      this.addError(result, "String does not match required pattern");
+    }
+  }
+
+  private static handleLooseBooleanConversion(
+    result: SchemaValidationResult,
+    value: any
+  ): boolean {
+    if (typeof value === "string") {
+      const lower = value.toLowerCase();
+      if (this.TRUTHY_VALUES.includes(lower)) {
+        result.data = true;
+        this.addWarning(result, "String converted to boolean (loose mode)");
+        return true;
+      } else if (this.FALSY_VALUES.includes(lower)) {
+        result.data = false;
+        this.addWarning(result, "String converted to boolean (loose mode)");
+        return true;
+      }
+    } else if (typeof value === "number") {
+      result.data = Boolean(value);
+      this.addWarning(result, "Number converted to boolean (loose mode)");
+      return true;
+    }
+    return false;
+  }
+
+  private static handleLooseDateConversion(
+    result: SchemaValidationResult,
+    value: any
+  ): boolean {
+    if (typeof value === "string") {
+      const parsedDate = new Date(value);
+      if (!isNaN(parsedDate.getTime())) {
+        result.data = parsedDate;
+        this.addWarning(result, "String converted to Date (loose mode)");
+        return true;
+      }
+    } else if (typeof value === "number") {
+      const parsedDate = new Date(value);
+      if (!isNaN(parsedDate.getTime())) {
+        result.data = parsedDate;
+        this.addWarning(result, "Number converted to Date (loose mode)");
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static validatePattern(
+    value: string,
+    pattern: RegExp,
+    typeName: string
+  ): SchemaValidationResult {
+    const result = this.createResult(true, value);
+
+    if (typeof value !== "string") {
+      this.addError(result, `Expected string for ${typeName}`);
+    } else if (!pattern.test(value)) {
+      this.addError(result, `Invalid ${typeName} format`);
     }
 
+    return result;
+  }
+
+  /**
+   * Validate string type with constraints
+   */
+  static validateString(
+    value: any,
+    options: SchemaOptions,
+    constraints: any
+  ): SchemaValidationResult {
+    const result = this.createResult(true, value);
+
+    if (typeof value !== "string") {
+      this.addError(result, `Expected string, got ${typeof value}`);
+      return result;
+    }
+
+    this.validateStringConstraints(result, value, constraints);
     return result;
   }
 
@@ -74,41 +223,27 @@ export class TypeValidators {
     constraints: any,
     type: "number" | "float" = "number"
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
     if (typeof value === "string" && options.loose) {
-      if (!isNaN(Number(value))) {
-        const num = parseFloat(value);
-        result.data = num;
-        result.warnings.push("String converted to number (loose mode)");
-        value = num;
-      } else {
-        result.success = false;
-        result.errors.push("Expected number");
+      if (
+        !this.handleLooseStringToNumber(
+          result,
+          value,
+          this.tryParseNumber,
+          "String converted to number (loose mode)"
+        )
+      ) {
+        this.addError(result, "Expected number");
         return result;
       }
-    } else if (typeof value !== "number" || !isFinite(value)) {
-      result.success = false;
-      result.errors.push(`Expected number, got ${typeof value}`);
+      value = result.data;
+    } else if (!this.isValidNumber(value)) {
+      this.addError(result, `Expected number, got ${typeof value}`);
       return result;
     }
 
-    // Apply number constraints
-    if (constraints.min !== undefined && value < constraints.min) {
-      result.success = false;
-      result.errors.push(`Number must be at least ${constraints.min}`);
-    }
-
-    if (constraints.max !== undefined && value > constraints.max) {
-      result.success = false;
-      result.errors.push(`Number must be at most ${constraints.max}`);
-    }
-
+    this.validateNumberConstraints(result, value, constraints);
     return result;
   }
 
@@ -121,55 +256,34 @@ export class TypeValidators {
     constraints: any,
     type: "int" | "integer" | "positive" | "negative"
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
     if (typeof value === "string" && options.loose) {
-      if (!isNaN(Number(value))) {
-        const num = parseInt(value, 10);
-        result.data = num;
-        result.warnings.push("String converted to integer (loose mode)");
-        value = num;
-      } else {
-        result.success = false;
-        result.errors.push("Expected integer");
+      if (
+        !this.handleLooseStringToNumber(
+          result,
+          value,
+          this.tryParseInteger,
+          "String converted to integer (loose mode)"
+        )
+      ) {
+        this.addError(result, "Expected integer");
         return result;
       }
-    } else if (
-      typeof value !== "number" ||
-      !isFinite(value) ||
-      value % 1 !== 0
-    ) {
-      result.success = false;
-      result.errors.push(`Expected integer, got ${typeof value}`);
+      value = result.data;
+    } else if (!this.isValidInteger(value)) {
+      this.addError(result, `Expected integer, got ${typeof value}`);
       return result;
     }
 
+    // Type-specific validation
     if (type === "positive" && value <= 0) {
-      result.success = false;
-      result.errors.push("Expected positive number");
+      this.addError(result, "Expected positive number");
+    } else if (type === "negative" && value >= 0) {
+      this.addError(result, "Expected negative number");
     }
 
-    if (type === "negative" && value >= 0) {
-      result.success = false;
-      result.errors.push("Expected negative number");
-    }
-
-    // Apply number constraints
-    if (constraints.min !== undefined && value < constraints.min) {
-      result.success = false;
-      result.errors.push(`Integer must be at least ${constraints.min}`);
-    }
-
-    if (constraints.max !== undefined && value > constraints.max) {
-      result.success = false;
-      result.errors.push(`Integer must be at most ${constraints.max}`);
-    }
-
+    this.validateNumberConstraints(result, value, constraints, "Integer");
     return result;
   }
 
@@ -182,41 +296,27 @@ export class TypeValidators {
     constraints: any,
     type: "float" | "double"
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
     if (typeof value === "string" && options.loose) {
-      if (!isNaN(Number(value))) {
-        const num = parseFloat(value);
-        result.data = num;
-        result.warnings.push("String converted to float (loose mode)");
-        value = num;
-      } else {
-        result.success = false;
-        result.errors.push("Expected float");
+      if (
+        !this.handleLooseStringToNumber(
+          result,
+          value,
+          this.tryParseNumber,
+          "String converted to float (loose mode)"
+        )
+      ) {
+        this.addError(result, "Expected float");
         return result;
       }
-    } else if (typeof value !== "number" || !isFinite(value)) {
-      result.success = false;
-      result.errors.push(`Expected float, got ${typeof value}`);
+      value = result.data;
+    } else if (!this.isValidNumber(value)) {
+      this.addError(result, `Expected float, got ${typeof value}`);
       return result;
     }
 
-    // Apply number constraints
-    if (constraints.min !== undefined && value < constraints.min) {
-      result.success = false;
-      result.errors.push(`Float must be at least ${constraints.min}`);
-    }
-
-    if (constraints.max !== undefined && value > constraints.max) {
-      result.success = false;
-      result.errors.push(`Float must be at most ${constraints.max}`);
-    }
-
+    this.validateNumberConstraints(result, value, constraints, "Float");
     return result;
   }
 
@@ -228,38 +328,16 @@ export class TypeValidators {
     options: SchemaOptions,
     constraints: any
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
     if (typeof value === "boolean") {
       result.data = value;
     } else if (options.loose) {
-      if (typeof value === "string") {
-        const lower = value.toLowerCase();
-        if (["true", "1", "yes", "on"].includes(lower)) {
-          result.data = true;
-          result.warnings.push("String converted to boolean (loose mode)");
-        } else if (["false", "0", "no", "off"].includes(lower)) {
-          result.data = false;
-          result.warnings.push("String converted to boolean (loose mode)");
-        } else {
-          result.success = false;
-          result.errors.push("Expected boolean");
-        }
-      } else if (typeof value === "number") {
-        result.data = Boolean(value);
-        result.warnings.push("Number converted to boolean (loose mode)");
-      } else {
-        result.success = false;
-        result.errors.push(`Expected boolean, got ${typeof value}`);
+      if (!this.handleLooseBooleanConversion(result, value)) {
+        this.addError(result, "Expected boolean");
       }
     } else {
-      result.success = false;
-      result.errors.push(`Expected boolean, got ${typeof value}`);
+      this.addError(result, `Expected boolean, got ${typeof value}`);
     }
 
     return result;
@@ -274,39 +352,23 @@ export class TypeValidators {
     constraints: any,
     type: "date" | "datetime" | "timestamp"
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
-    if (!(value instanceof Date)) {
-      if (options.loose && typeof value === "string") {
-        const parsedDate = new Date(value);
-        if (!isNaN(parsedDate.getTime())) {
-          result.data = parsedDate;
-          result.warnings.push("String converted to Date (loose mode)");
-        } else {
-          result.success = false;
-          result.errors.push("Invalid date string");
-        }
-      } else if (options.loose && typeof value === "number") {
-        const parsedDate = new Date(value);
-        if (!isNaN(parsedDate.getTime())) {
-          result.data = parsedDate;
-          result.warnings.push("Number converted to Date (loose mode)");
-        } else {
-          result.success = false;
-          result.errors.push("Invalid timestamp");
-        }
-      } else {
-        result.success = false;
-        result.errors.push(`Expected Date object, got ${typeof value}`);
+    if (value instanceof Date) {
+      if (isNaN(value.getTime())) {
+        this.addError(result, "Invalid date");
       }
-    } else if (isNaN(value.getTime())) {
-      result.success = false;
-      result.errors.push("Invalid date");
+    } else if (options.loose) {
+      if (!this.handleLooseDateConversion(result, value)) {
+        this.addError(
+          result,
+          typeof value === "string"
+            ? "Invalid date string"
+            : "Invalid timestamp"
+        );
+      }
+    } else {
+      this.addError(result, `Expected Date object, got ${typeof value}`);
     }
 
     return result;
@@ -329,6 +391,7 @@ export class TypeValidators {
   ): SchemaValidationResult {
     return UrlValidation(...args);
   }
+
   /**
    * Validate UUID/GUID format
    */
@@ -336,47 +399,21 @@ export class TypeValidators {
     value: any,
     type: "uuid" | "guid" = "uuid"
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push(`Expected string for ${type.toUpperCase()}`);
-    } else if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        value
-      )
-    ) {
-      result.success = false;
-      result.errors.push(`Invalid ${type.toUpperCase()} format`);
-    }
-
-    return result;
+    return this.validatePattern(value, this.UUID_PATTERN, type.toUpperCase());
   }
 
   /**
    * Validate phone format
    */
   static validatePhone(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
     if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for phone");
+      this.addError(result, "Expected string for phone");
     } else {
       const cleanPhone = value.replace(/[\s\-\(\)\.+]/g, "");
-      if (!/^[1-9]\d{6,14}$/.test(cleanPhone)) {
-        result.success = false;
-        result.errors.push("Invalid phone format");
+      if (!this.PHONE_PATTERN.test(cleanPhone)) {
+        this.addError(result, "Invalid phone format");
       }
     }
 
@@ -387,48 +424,22 @@ export class TypeValidators {
    * Validate slug format
    */
   static validateSlug(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for slug");
-    } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
-      result.success = false;
-      result.errors.push(
-        "Invalid slug format (use lowercase letters, numbers, and hyphens)"
-      );
-    }
-
-    return result;
+    return this.validatePattern(
+      value,
+      this.SLUG_PATTERN,
+      "slug (use lowercase letters, numbers, and hyphens)"
+    );
   }
 
   /**
    * Validate username format
    */
   static validateUsername(value: any): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
-
-    if (typeof value !== "string") {
-      result.success = false;
-      result.errors.push("Expected string for username");
-    } else if (!/^[a-zA-Z0-9_-]{3,20}$/.test(value)) {
-      result.success = false;
-      result.errors.push(
-        "Invalid username format (3-20 chars, letters, numbers, underscore, hyphen)"
-      );
-    }
-
-    return result;
+    return this.validatePattern(
+      value,
+      this.USERNAME_PATTERN,
+      "username (3-20 chars, letters, numbers, underscore, hyphen)"
+    );
   }
 
   /**
@@ -480,12 +491,7 @@ export class TypeValidators {
     value: any,
     type: "unknown" | "void" | "null" | "undefined" | "any"
   ): SchemaValidationResult {
-    const result: SchemaValidationResult = {
-      success: true,
-      errors: [],
-      warnings: [],
-      data: value,
-    };
+    const result = this.createResult(true, value);
 
     switch (type) {
       case "unknown":
@@ -494,20 +500,17 @@ export class TypeValidators {
         break;
       case "void":
         if (value !== undefined) {
-          result.success = false;
-          result.errors.push("Expected undefined for void type");
+          this.addError(result, "Expected undefined for void type");
         }
         break;
       case "null":
         if (value !== null) {
-          result.success = false;
-          result.errors.push("Expected null");
+          this.addError(result, "Expected null");
         }
         break;
       case "undefined":
         if (value !== undefined) {
-          result.success = false;
-          result.errors.push("Expected undefined");
+          this.addError(result, "Expected undefined");
         }
         break;
     }

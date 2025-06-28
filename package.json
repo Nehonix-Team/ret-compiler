@@ -1,6 +1,6 @@
 {
   "name": "fortify-schema",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "The Future of TypeScript Validation. 20+ operators, perfect type inference, and enterprise-grade performance.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",

@@ -199,6 +199,10 @@ export class InterfaceSchema<T = any> {
           if (this.isConditionalSyntax(value)) {
             return true;
           }
+          // TEMPORARY FIX: Also disable precompilation for double types
+          if (value.includes("double")) {
+            return true;
+          }
         } else if (
           typeof value === "object" &&
           value !== null &&

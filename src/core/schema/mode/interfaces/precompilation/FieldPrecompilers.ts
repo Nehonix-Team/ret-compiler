@@ -117,6 +117,66 @@ export class FieldPrecompilers {
   }
 
   /**
+   *  Precompile float field validators (for float and double types)
+   */
+  static precompileFloat(
+    constraints: { min?: number; max?: number } = {}
+  ): CompiledFieldValidator {
+    const { min, max } = constraints;
+
+    const validator = (value: any): SchemaValidationResult => {
+      // DEBUG: Add logging to see what's happening
+      console.log("🔍 precompileFloat validator executing:");
+      console.log("  - value:", value, "type:", typeof value);
+      console.log("  - constraints: min =", min, ", max =", max);
+
+      if (typeof value !== "number" || isNaN(value) || !isFinite(value)) {
+        console.log("  - FAIL: not a valid number");
+        return {
+          success: false,
+          errors: [`Expected float, got ${typeof value}`],
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      const errors: string[] = [];
+
+      if (min !== undefined && value < min) {
+        console.log("  - FAIL: value", value, "< min", min);
+        errors.push(`Float must be at least ${min}`);
+      }
+
+      if (max !== undefined && value > max) {
+        console.log("  - FAIL: value", value, "> max", max);
+        errors.push(`Float must be at most ${max}`);
+      }
+
+      if (errors.length > 0) {
+        console.log("  - FINAL RESULT: FAIL with errors:", errors);
+        return {
+          success: false,
+          errors,
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      console.log("  - FINAL RESULT: PASS");
+      return {
+        success: true,
+        errors: [],
+        warnings: [],
+        data: value,
+      };
+    };
+
+    (validator as any)._fieldType = `float(${min || ""},${max || ""})`;
+    (validator as any)._isCompiled = true;
+    return validator as CompiledFieldValidator;
+  }
+
+  /**
    *  Precompile number field validators
    */
   static precompileNumber(
@@ -331,8 +391,18 @@ export class FieldPrecompilers {
    */
   static precompileSpecialType(type: string): CompiledFieldValidator {
     const validator = (value: any): SchemaValidationResult => {
-      // Use the imported ValidationHelpers for proper validation
-      return ValidationHelpers.routeTypeValidation(type, value, {}, {});
+      // CRITICAL FIX: Parse constraints from the type string for proper validation
+      const ConstraintParser =
+        require("../validators/ConstraintParser").ConstraintParser;
+      const parsed = ConstraintParser.parseConstraints(type);
+
+      // Use the imported ValidationHelpers with proper constraints
+      return ValidationHelpers.routeTypeValidation(
+        parsed.type,
+        value,
+        { ...parsed.constraints },
+        parsed.constraints
+      );
     };
 
     (validator as any)._fieldType = type;
@@ -387,6 +457,7 @@ export class FieldPrecompilers {
         case "integer":
         case "positive":
         case "negative":
+        case "float":
           const numberConstraints = this.parseNumberConstraints(
             constraintsStr,
             type
@@ -395,6 +466,15 @@ export class FieldPrecompilers {
           return isOptional
             ? this.precompileOptional(numberValidator)
             : numberValidator;
+
+        case "double":
+          // Handle double with special type to force unoptimized path
+          const doubleValidator = this.precompileSpecialType(
+            constraintsStr ? `double(${constraintsStr})` : "double"
+          );
+          return isOptional
+            ? this.precompileOptional(doubleValidator)
+            : doubleValidator;
 
         case "boolean":
         case "bool":
