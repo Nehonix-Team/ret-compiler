@@ -76,7 +76,6 @@ Multi-layered conditional validation with three syntax formats and full TypeScri
 - **SyntaxParser.ts**: Runtime parsing of conditional syntax
 
 #### Syntax Formats:
-1. **Revolutionary**: `"when role=admin *? string[] : string[]?"`
 2. **Parentheses**: `"when(role=admin) then(string[]) else(string[]?)"`
 3. **Legacy**: `"when:role=admin:string[]:string[]?"`
 
@@ -84,21 +83,13 @@ Multi-layered conditional validation with three syntax formats and full TypeScri
 
 ### Base Types (50 types)
 
-#### Implemented ✅ (13 types)
+#### Implemented ✅ (13+ types)
 - **Primitives**: `string`, `number`, `int`, `positive`, `boolean`
 - **Formats**: `email`, `url`, `uuid`, `phone`, `slug`, `username`
 - **Objects**: `date`, `any`
 
-#### Missing ❌ (37 types)
-- **Numeric**: `integer`, `float`, `double`, `negative`
-- **Boolean**: `bool`
-- **Temporal**: `datetime`, `timestamp`
-- **Identifiers**: `uri`, `guid`
-- **Text**: `password`, `text`
-- **Data**: `json`, `object`
-- **Special**: `unknown`, `void`, `null`, `undefined`
 
-### Operators (16 operators)
+### Operators (16+ operators)
 
 #### Implemented ✅ (11 operators)
 - **Comparison**: `=`, `!=`, `>`, `>=`, `<`, `<=`
@@ -106,10 +97,6 @@ Multi-layered conditional validation with three syntax formats and full TypeScri
 - **Array**: `in`, `!in`
 - **Existence**: `exists`, `!exists`
 
-#### Missing ❌ (5 operators)
-- **Pattern**: `!~` (not regex)
-- **State**: `empty`, `!empty`, `null`, `!null`
-- **String**: `startsWith`, `endsWith`, `contains`, `!contains`
 
 ## Validation Flow
 
@@ -172,24 +159,6 @@ if (result.success) {
 - Optimized union parsing
 - Reduced recursion depth in type inference
 
-## Integration Points
-
-### 1. Express.js Integration
-```typescript
-import { validateBody } from 'fortify-schema/express';
-
-app.post('/users', validateBody(userSchema), (req, res) => {
-  // req.body is fully typed
-});
-```
-
-### 2. Database Integration
-```typescript
-const dbSchema = userSchema.withOptions({ 
-  allowUnknown: true,
-  loose: true 
-});
-```
 
 ### 3. API Documentation
 Schemas can be introspected to generate OpenAPI/Swagger documentation.
