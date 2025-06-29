@@ -5,6 +5,7 @@
  */
 
 import { SchemaValidationResult } from "../../../../types/types";
+import { ConstraintParser } from "../validators";
 import { UnionCache } from "../validators/UnionCache";
 import { ValidationHelpers } from "../validators/ValidationHelpers";
 
@@ -392,8 +393,7 @@ export class FieldPrecompilers {
   static precompileSpecialType(type: string): CompiledFieldValidator {
     const validator = (value: any): SchemaValidationResult => {
       // CRITICAL FIX: Parse constraints from the type string for proper validation
-      const ConstraintParser =
-        require("../validators/ConstraintParser").ConstraintParser;
+
       const parsed = ConstraintParser.parseConstraints(type);
 
       // Use the imported ValidationHelpers with proper constraints

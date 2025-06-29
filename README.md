@@ -51,13 +51,11 @@ if (result.success) {
 } else {
   console.log("Validation errors:", result.errors);
 }
-```
-
-_Note: For nested objects, we recommend limiting depth to 100 levels for performance and safety. Test by running  ```bash 
+_Note: For nested objects, we recommend limiting depth to 50-100 or no more than 300 levels for performance and safety. Test by running  ```bash
 # note: you may have bun installed if using this command. "npm i -g bun" (recommanded because it's faster than node)
-bun src\__tests__\test_nested_obj.ts  
-```  or ```bash 
-# note: you may have tsx installed if using this command. "npm i -g tsx" 
+bun src\__tests__\test_nested_obj.ts
+``` or ```bash
+# note: you may have tsx installed if using this command. "npm i -g tsx"
 npm run benchmark:nestedObject
 ```.
 Default depth limit is 500._
@@ -634,6 +632,108 @@ const ExtendedUserSchema = Mod.extend(UserSchema, {
 ```typescript
 const CombinedSchema = Mod.merge(UserSchema, ProfileSchema);
 // Combines two schemas into one
+```
+
+### Advanced Extensions
+
+Fortify Schema provides powerful extensions for enhanced functionality:
+
+```typescript
+// Import extensions for advanced features
+export {
+  Smart,        // Smart schema inference from samples and TypeScript types
+  When,         // Advanced conditional validation builder
+  Live,         // Real-time validation for forms and streaming data
+  Docs,         // Auto-documentation generation (OpenAPI, TypeScript, etc.)
+  Extensions,   // Extension utilities and helpers
+  Quick,        // Quick access utilities for common operations
+  TypeScriptGenerator, // TypeScript code generation from schemas
+} from "fortify-schema";
+```
+
+#### Smart Inference
+
+```typescript
+import { Smart } from "fortify-schema";
+
+// Infer schema from sample data
+const sampleUser = {
+  id: 1,
+  email: "user@example.com",
+  name: "John Doe",
+  tags: ["developer", "typescript"]
+};
+
+const UserSchema = Smart.fromSample(sampleUser);
+// Generates: { id: "positive", email: "email", name: "string", tags: "string[]" }
+```
+
+#### Conditional Builder
+
+```typescript
+import { When } from "fortify-schema";
+
+const OrderSchema = Interface({
+  orderType: "pickup|delivery",
+  address: "string?",
+
+  // Advanced conditional validation
+  deliveryFee: When.field("orderType")
+    .is("delivery")
+    .then("number(0,)")
+    .default("number?")
+});
+```
+
+#### Real-time Validation
+
+```typescript
+import { Live } from "fortify-schema";
+
+// Form validation
+const formValidator = Live.form(UserSchema);
+formValidator.bindField('email', emailInput);
+formValidator.enableAutoValidation();
+
+// Stream validation
+const streamValidator = Live.stream(DataSchema);
+streamValidator.onValid(data => processData(data));
+streamValidator.onInvalid((data, errors) => logErrors(errors));
+```
+
+#### Documentation Generation
+
+```typescript
+import { Docs } from "fortify-schema"; //in beta
+
+// Generate OpenAPI specification
+const openApiSpec = Docs.openapi(UserSchema, {
+  title: "User API",
+  version: "1.0.0",
+  servers: ["https://api.example.com"]
+});
+
+// Generate TypeScript definitions
+const typeDefinitions = Docs.typescript(UserSchema, {
+  exportName: "User",
+  namespace: "API"
+});
+```
+
+#### Quick Utilities
+
+```typescript
+import { Quick } from "fortify-schema";
+
+// Quick schema inference
+const schema = Quick.fromSample(sampleData);
+
+// Quick conditional validation
+const conditionalField = Quick.when("status").is("active").then("string");
+
+// Quick documentation
+const docs = Quick.docs(schema);
+const typescript = Quick.typescript(schema);
 ```
 
 ### Validation Configuration

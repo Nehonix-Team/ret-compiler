@@ -1,4 +1,6 @@
-const UrlArg = [
+import { createEnumFromArray } from "./createEnumFArray";
+
+export const UrlArg = [
   "url.https",
   "url.http",
   "url.web",
@@ -7,6 +9,8 @@ const UrlArg = [
 ] as const;
 
 export type UrlArgType = (typeof UrlArg)[number];
+
+export const UrlArgsEnum = createEnumFromArray(UrlArg);
 
 export interface UrlValidationOptions {
   match: {

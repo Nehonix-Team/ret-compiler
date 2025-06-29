@@ -6,7 +6,12 @@
  */
 
 import { SchemaValidationResult } from "../../../../types/types";
-import { UrlArgs, UrlArgType } from "../../../../utils/UrlArgs";
+import {
+  UrlArg,
+  UrlArgs,
+  UrlArgsEnum,
+  UrlArgType,
+} from "../../../../utils/UrlArgs";
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
 import { OptimizedUnionValidator as OUV } from "./UnionCache";
@@ -592,23 +597,16 @@ export class ValidationHelpers {
 
     if (urlType) {
       // For basic "url" type, use "url.web" as default
-      const urlArgType = type === "url" ? "url.web" : type;
+      const urlArgType = type === "url" ? UrlArgsEnum.web : type;
 
       // Validate URL arg before proceeding
-      if (urlArgType !== "url.web") {
+      if (urlArgType !== UrlArgsEnum.web) {
         // Check if it's a valid URL arg
-        const validUrlArgs = [
-          "url.https",
-          "url.http",
-          "url.web",
-          "url.dev",
-          "url.ftp",
-        ];
-        if (!validUrlArgs.includes(urlArgType)) {
+        if (!UrlArg.includes(urlArgType as any)) {
           return {
             success: false,
             errors: [
-              `Invalid URL argument: ${urlArgType}. Valid arguments are: ${validUrlArgs.join(", ")}`,
+              `Invalid URL argument: ${urlArgType}. Valid arguments are: ${UrlArg.join(", ")}`,
             ],
             warnings: [],
             data: value,
