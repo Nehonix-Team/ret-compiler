@@ -51,6 +51,9 @@ if (result.success) {
 } else {
   console.log("Validation errors:", result.errors);
 }
+
+```
+
 _Note: For nested objects, we recommend limiting depth to 50-100 or no more than 300 levels for performance and safety. Test by running  ```bash
 # note: you may have bun installed if using this command. "npm i -g bun" (recommanded because it's faster than node)
 bun src\__tests__\test_nested_obj.ts
