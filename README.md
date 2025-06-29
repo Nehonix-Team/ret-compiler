@@ -54,15 +54,17 @@ if (result.success) {
 
 ```
 
-_Note: For nested objects, we recommend limiting depth to 50-100 or no more than 300 levels for performance and safety. Test by running:
+_Note: For nested objects, we recommend limiting depth to 50-100 or no more than 300 levels for performance and safety. Default depth limit is 500._
+
+Test by running:
 
 - bun src\__tests__\test_nested_obj.ts   note: you may have bun installed if using this command. "npm i -g bun" (recommanded because it's faster than node)
 
 - npm run benchmark:nestedObject
 
-# note: you may have tsx installed if using this command. "npm i -g tsx".
+_Note: you may have tsx installed if using this command. "npm i -g tsx"._
 
-Default depth limit is 500._
+
 
 ## Table of Contents
 
