@@ -1,4 +1,5 @@
 import { createEnum } from "../utils/arrayToEnum";
+import { UrlArgArray } from "../utils/UrlArgs";
 
 export const SUPPORTED_VALIDATOR_TYPES = [
   // String types
@@ -51,8 +52,7 @@ export const SUPPORTED_VALIDATOR_TYPES = [
   "base64",
   "jwt",
   "semver",
-] as const
-
+] as const;
 
 export const VALIDATOR_TYPES = createEnum(SUPPORTED_VALIDATOR_TYPES);
 
@@ -84,7 +84,7 @@ export const validatorTypeCategories = {
   extended: ["hexcolor", "base64", "jwt", "semver"],
 };
 
-export const VALID_CONDITIONNAL_TYPES = [
+export const BASE_TYPES = [
   "string",
   "number",
   "boolean",
@@ -92,9 +92,6 @@ export const VALID_CONDITIONNAL_TYPES = [
   "uuid",
   "email",
   "url",
-  "url.https",
-  "url.http",
-  "url.dev",
   "phone",
   "string[]",
   "number[]",
@@ -105,3 +102,5 @@ export const VALID_CONDITIONNAL_TYPES = [
   "url[]",
   "phone[]",
 ];
+
+export const VALID_CONDITIONNAL_TYPES = BASE_TYPES.concat(UrlArgArray);

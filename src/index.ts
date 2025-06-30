@@ -96,18 +96,6 @@ export {
   TypeScriptGenerator,
 } from "./core/schema/extensions";
 
-// Traditional Fluent API
-export { Schema } from "./core/schema/mode/general/Schema";
-
-// Base classes for extending
-export { BaseSchema } from "./core/schema/mode/general/BaseSchema";
-
-// Individual schema types
-export { StringSchema } from "./core/schema/mode/general/StringSchema";
-export { NumberSchema } from "./core/schema/mode/general/NumberSchema";
-export { BooleanSchema } from "./core/schema/mode/general/BooleanSchema";
-export { ArraySchema } from "./core/schema/mode/general/ArraySchema";
-export { ObjectSchema } from "./core/schema/mode/general/ObjectSchema";
 export {
   InterfaceSchema,
   SchemaValidationError,

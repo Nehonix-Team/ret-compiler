@@ -215,7 +215,8 @@ class FortifyCompletionProvider {
      * Check if we should show conditional completions
      */
     shouldShowConditionalCompletions(text) {
-        return text.includes("when ") || text.endsWith("when");
+        return (text.normalize().trim().includes("when") ||
+            text.normalize().trim().endsWith("when"));
     }
     /**
      * Get all type completions from centralized definitions

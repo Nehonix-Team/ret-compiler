@@ -1,6 +1,6 @@
 import { createUrlArgsEnumFromArray as createEnumFromArray } from "./createUrlArgsEnumFArray";
 
-export const UrlArg = [
+export const UrlArgArray = [
   "url.https",
   "url.http",
   "url.web",
@@ -8,9 +8,9 @@ export const UrlArg = [
   "url.ftp",
 ] as const;
 
-export type UrlArgType = (typeof UrlArg)[number];
+export type UrlArgType = (typeof UrlArgArray)[number];
 
-export const UrlArgsEnum = createEnumFromArray(UrlArg);
+export const UrlArgsEnum = createEnumFromArray(UrlArgArray);
 
 export interface UrlValidationOptions {
   match: {
@@ -26,7 +26,7 @@ export interface UrlValidationOptions {
 
 export type UrlArgsValidation = Record<UrlArgType, UrlValidationOptions>;
 
-export type UrlArg = (typeof UrlArg)[number];
+export type UrlArg = (typeof UrlArgArray)[number];
 
 export class UrlArgs {
   private static args: UrlArgsValidation = {

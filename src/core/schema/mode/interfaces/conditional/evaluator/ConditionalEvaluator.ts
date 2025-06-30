@@ -219,6 +219,11 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
   /**
    * Get field value from runtime data without schema validation
    * Used for runtime methods (starting with $) - with performance caching and parent context support
+   *
+   * FIXED: Path resolution follows user specification:
+   * 1. Simple paths (e.g., "p1") resolve from ROOT context first
+   * 2. Nested paths (e.g., "nested.p1") resolve as absolute paths from ROOT
+   * 3. Only .$exists() method can bypass path validation errors
    */
   private getRuntimeFieldValue(path: string[]): any {
     const pathKey = path.join(".");
@@ -231,7 +236,34 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
       return ConditionalEvaluator.fieldValueCache.get(pathKey);
     }
 
-    // CRITICAL FIX: Try to resolve field in local context first
+    // FIXED: Try ROOT context first (parent context = main object)
+    if (this.context.parentContext) {
+      let rootCurrent = this.context.parentContext;
+      let foundInRoot = true;
+
+      for (const segment of path) {
+        if (rootCurrent === null || rootCurrent === undefined) {
+          foundInRoot = false;
+          break;
+        }
+        if (!(segment in rootCurrent)) {
+          foundInRoot = false;
+          break;
+        }
+        rootCurrent = rootCurrent[segment];
+      }
+
+      if (foundInRoot) {
+        // Cache the result if caching is enabled
+        if (this.context.options?.enableCaching) {
+          ConditionalEvaluator.fieldValueCache.set(pathKey, rootCurrent);
+        }
+        return rootCurrent;
+      }
+    }
+
+    // FALLBACK: If not found in root context, try local context
+    // This should only happen for paths that don't exist in root
     let current = this.context.data;
     let foundInLocal = true;
 
@@ -253,33 +285,6 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
         ConditionalEvaluator.fieldValueCache.set(pathKey, current);
       }
       return current;
-    }
-
-    // CRITICAL FIX: If not found in local context and we have a parent context,
-    // try to resolve the field in the parent context
-    if (this.context.parentContext) {
-      let parentCurrent = this.context.parentContext;
-      let foundInParent = true;
-
-      for (const segment of path) {
-        if (parentCurrent === null || parentCurrent === undefined) {
-          foundInParent = false;
-          break;
-        }
-        if (!(segment in parentCurrent)) {
-          foundInParent = false;
-          break;
-        }
-        parentCurrent = parentCurrent[segment];
-      }
-
-      if (foundInParent) {
-        // Cache the result if caching is enabled
-        if (this.context.options?.enableCaching) {
-          ConditionalEvaluator.fieldValueCache.set(pathKey, parentCurrent);
-        }
-        return parentCurrent;
-      }
     }
 
     // Field not found in either context
@@ -312,7 +317,30 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
       }
     }
 
-    // CRITICAL FIX: Try to resolve field in local context first
+    // FIXED: Try ROOT context first (parent context = main object)
+    if (this.context.parentContext) {
+      let rootCurrent = this.context.parentContext;
+      let foundInRoot = true;
+
+      for (const segment of path) {
+        if (rootCurrent === null || rootCurrent === undefined) {
+          foundInRoot = false;
+          break;
+        }
+        if (!(segment in rootCurrent)) {
+          foundInRoot = false;
+          break;
+        }
+        rootCurrent = rootCurrent[segment];
+      }
+
+      if (foundInRoot) {
+        return rootCurrent;
+      }
+    }
+
+    // FALLBACK: If not found in root context, try local context
+    // This should only happen for paths that don't exist in root
     let current = this.context.data;
     let foundInLocal = true;
 
@@ -331,29 +359,6 @@ class ConditionalEvaluationVisitor implements ASTVisitor<any> {
     // If found in local context, return the value
     if (foundInLocal) {
       return current;
-    }
-
-    // CRITICAL FIX: If not found in local context and we have a parent context,
-    // try to resolve the field in the parent context
-    if (this.context.parentContext) {
-      let parentCurrent = this.context.parentContext;
-      let foundInParent = true;
-
-      for (const segment of path) {
-        if (parentCurrent === null || parentCurrent === undefined) {
-          foundInParent = false;
-          break;
-        }
-        if (!(segment in parentCurrent)) {
-          foundInParent = false;
-          break;
-        }
-        parentCurrent = parentCurrent[segment];
-      }
-
-      if (foundInParent) {
-        return parentCurrent;
-      }
     }
 
     // If path validation is enabled and we couldn't find the field anywhere, throw error

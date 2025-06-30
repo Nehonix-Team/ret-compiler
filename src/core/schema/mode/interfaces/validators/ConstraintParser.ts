@@ -296,7 +296,7 @@ export class ConstraintParser {
       constraints.max !== undefined &&
       constraints.min > constraints.max
     ) {
-      throw new Error(
+      throw new Error( 
         `Minimum value (${constraints.min}) cannot be greater than maximum value (${constraints.max})`
       );
     }

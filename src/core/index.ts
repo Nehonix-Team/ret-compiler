@@ -52,19 +52,6 @@ export type {
   SchemaFieldType,
 } from "./schema/mode/interfaces/Interface";
 
-// Traditional fluent API Schema
-export { Schema } from "./schema/mode/general/Schema";
-
-// Base classes for extending
-export { BaseSchema } from "./schema/mode/general/BaseSchema";
-
-// Individual schema types
-export { StringSchema } from "./schema/mode/general/StringSchema";
-export { NumberSchema } from "./schema/mode/general/NumberSchema";
-export { BooleanSchema } from "./schema/mode/general/BooleanSchema";
-export { ArraySchema } from "./schema/mode/general/ArraySchema";
-export { ObjectSchema } from "./schema/mode/general/ObjectSchema";
-
 // Type definitions
 export type {
   SchemaValidationResult,

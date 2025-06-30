@@ -954,7 +954,6 @@ export class SecurityValidators {
       allowedDomains?: string[];
       blockedDomains?: string[];
       requireMX?: boolean;
-      allowPlusAddressing?: boolean;
       strict?: boolean;
     } = {}
   ): SchemaValidationResult {
@@ -970,8 +969,7 @@ export class SecurityValidators {
       maxLength = 254,
       allowedDomains = [],
       blockedDomains = [],
-      allowPlusAddressing = true,
-      strict = false,
+      strict = true,
     } = options;
 
     if (typeof value !== "string") {
@@ -991,39 +989,100 @@ export class SecurityValidators {
       return result;
     }
 
-    // Basic format validation
-    // CRITICAL FIX: Use practical email regex that excludes problematic characters like #
-    const emailRegex = strict
-      ? /^[a-zA-Z0-9.!$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-      : /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-    if (!emailRegex.test(email)) {
+    // Basic format check - must contain exactly one @
+    const atSymbolCount = (email.match(/@/g) || []).length;
+    if (atSymbolCount !== 1) {
       result.success = false;
-      result.errors.push("Invalid email format");
+      result.errors.push("Email must contain exactly one @ symbol");
       return result;
     }
 
     const [localPart, domain] = email.split("@");
 
-    // Local part validation
+    // Check for empty parts
+    if (!localPart || !domain) {
+      result.success = false;
+      result.errors.push("Email local part and domain cannot be empty");
+      return result;
+    }
+
+    // Local part length validation
     if (localPart.length > 64) {
       result.success = false;
       result.errors.push("Email local part exceeds 64 characters");
     }
-
-    if (
-      localPart.startsWith(".") ||
-      localPart.endsWith(".") ||
-      localPart.includes("..")
-    ) {
+    // Plus addressing check - FIXED LOGIC
+    if (localPart.includes("+")) {
       result.success = false;
-      result.errors.push("Invalid email local part format");
+      result.errors.push("Plus addressing (+ symbols) is not allowed");
     }
 
-    // Plus addressing check
-    if (!allowPlusAddressing && localPart.includes("+")) {
+    // Local part character validation - FIXED TO PROPERLY HANDLE INVALID CHARACTERS
+    if (strict) {
+      // Practical validation - common characters only (excludes # and other problematic chars)
+      const validLocalPartRegex = /^[a-zA-Z0-9._+-]+$/;
+      if (!validLocalPartRegex.test(localPart)) {
+        result.success = false;
+        result.errors.push("Email local part contains invalid characters. ");
+      }
+    } else {
+      // RFC 5322 compliant - more permissive but excludes problematic chars like #
+      const validLocalPartRegex =
+        /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*$/;
+      if (!validLocalPartRegex.test(localPart)) {
+        result.success = false;
+        result.errors.push("Email local part contains invalid characters");
+      }
+    }
+
+    // Check for consecutive dots
+    if (localPart.includes("..")) {
       result.success = false;
-      result.errors.push("Plus addressing is not allowed");
+      result.errors.push("Email local part cannot contain consecutive dots");
+    }
+
+    // Check for dots at start or end
+    if (localPart.startsWith(".") || localPart.endsWith(".")) {
+      result.success = false;
+      result.errors.push("Email local part cannot start or end with a dot");
+    }
+
+    // Domain validation
+    if (domain.length > 255) {
+      result.success = false;
+      result.errors.push("Email domain exceeds 255 characters");
+    }
+
+    // Domain format validation
+    if (strict) {
+      // Basic domain validation - must have at least one dot and valid TLD
+      const validDomainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!validDomainRegex.test(domain)) {
+        result.success = false;
+        result.errors.push(
+          "Invalid domain format - must contain at least one dot and valid TLD"
+        );
+      }
+    } else {
+      // More strict domain validation
+      const validDomainRegex =
+        /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+      if (!validDomainRegex.test(domain)) {
+        result.success = false;
+        result.errors.push("Invalid domain format");
+      }
+    }
+
+    // Check for consecutive dots in domain
+    if (domain.includes("..")) {
+      result.success = false;
+      result.errors.push("Domain cannot contain consecutive dots");
+    }
+
+    // Check for dots at start or end of domain
+    if (domain.startsWith(".") || domain.endsWith(".")) {
+      result.success = false;
+      result.errors.push("Domain cannot start or end with a dot");
     }
 
     // International domain validation
@@ -1043,10 +1102,22 @@ export class SecurityValidators {
       result.errors.push(`Email domain '${domain}' is blocked`);
     }
 
+    // Additional validation for common invalid patterns
+    const invalidCharsRegex = /[<>()[\]\\,;:\s@"]/;
+    if (invalidCharsRegex.test(localPart)) {
+      result.success = false;
+      result.errors.push(
+        "Email local part contains prohibited characters (spaces, quotes, brackets, etc.)"
+      );
+    }
+
     // Suspicious patterns
     if (/test|temp|fake|spam|noreply/i.test(email)) {
       result.warnings.push("Email appears to be temporary or test address");
     }
+
+    // Set the cleaned data
+    result.data = email;
 
     return result;
   }

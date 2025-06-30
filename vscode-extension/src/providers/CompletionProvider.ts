@@ -295,7 +295,10 @@ export class FortifyCompletionProvider
    * Check if we should show conditional completions
    */
   private shouldShowConditionalCompletions(text: string): boolean {
-    return text.includes("when ") || text.endsWith("when");
+    return (
+      text.normalize().trim().includes("when") ||
+      text.normalize().trim().endsWith("when")
+    );
   }
 
   /**

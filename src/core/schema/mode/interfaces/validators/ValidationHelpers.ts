@@ -9,7 +9,7 @@ import { SchemaValidationResult } from "../../../../types/types";
 import { VALIDATOR_TYPES } from "../../../../types/ValidatorTypes";
 import {
   UrlArg,
-  UrlArgs,
+  UrlArgArray,
   UrlArgsEnum,
   UrlArgType,
 } from "../../../../utils/UrlArgs";
@@ -602,17 +602,17 @@ export class ValidationHelpers {
       // Validate URL arg before proceeding
       if (urlArgType !== UrlArgsEnum.web) {
         // Check if it's a valid URL arg
-        if (!UrlArg.includes(urlArgType as any)) {
+        if (!UrlArgArray.includes(urlArgType as any)) {
           return {
             success: false,
             errors: [
-              `Invalid URL argument: ${urlArgType}. Valid arguments are: ${UrlArg.join(", ")}`,
+              `Invalid URL argument: ${urlArgType}. Valid arguments are: ${UrlArgArray.join(", ")}`,
             ],
             warnings: [],
             data: value,
           };
         }
-      }
+      } 
 
       return TypeValidators.validateUrl(value, urlArgType as UrlArgType);
     }
