@@ -236,16 +236,15 @@ exports.FORTIFY_TYPES = [
         supportsOptional: true,
         supportsArrays: true,
     },
-    // {
-    //   name: "json.secure",
-    //   description:
-    //     "Validates JSON string format with proper syntax checking (secure mode).",
-    //   category: "format",
-    //   examples: ['"json.secure"', '"json.secure?"', '"json.secure[]"'],
-    //   supportsConstraints: false,
-    //   supportsOptional: true,
-    //   supportsArrays: true,
-    // },
+    {
+        name: "json.secure",
+        description: "Validates JSON string format with proper syntax checking (secure mode).",
+        category: "format",
+        examples: ['"json.secure"', '"json.secure?"', '"json.secure[]"'],
+        supportsConstraints: false,
+        supportsOptional: true,
+        supportsArrays: true,
+    },
     {
         name: "hexcolor",
         description: "Validates hex color codes in #RGB, #RRGGBB, or #RRGGBBAA format.",

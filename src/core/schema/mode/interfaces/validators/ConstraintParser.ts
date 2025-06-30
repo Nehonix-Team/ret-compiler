@@ -5,6 +5,8 @@
  * Uses caching and pre-compiled patterns for better performance.
  */
 
+import { VALID_CONDITIONNAL_TYPES } from "../../../../types/ValidatorTypes";
+
 export interface ParsedConstraints {
   type: string;
   constraints: any;
@@ -355,30 +357,10 @@ export class ConstraintParser {
     }
 
     // Allow basic types and array types
-    const validTypes = [
-      "string",
-      "number",
-      "boolean",
-      "date",
-      "uuid",
-      "email",
-      "url",
-      "url.https",
-      "url.dev",
-      "phone",
-      "string[]",
-      "number[]",
-      "boolean[]",
-      "date[]",
-      "uuid[]",
-      "email[]",
-      "url[]",
-      "phone[]",
-    ];
 
     // Check if it's a valid basic type or union type
     if (
-      validTypes.includes(type) ||
+      VALID_CONDITIONNAL_TYPES.includes(type) ||
       type.includes("|") ||
       type.startsWith("=")
     ) {

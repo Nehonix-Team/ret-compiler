@@ -1,4 +1,4 @@
-import { createEnumFromArray } from "./createEnumFArray";
+import { createUrlArgsEnumFromArray as createEnumFromArray } from "./createUrlArgsEnumFArray";
 
 export const UrlArg = [
   "url.https",

@@ -252,16 +252,16 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     supportsOptional: true,
     supportsArrays: true,
   },
-  // {
-  //   name: "json.secure",
-  //   description:
-  //     "Validates JSON string format with proper syntax checking (secure mode).",
-  //   category: "format",
-  //   examples: ['"json.secure"', '"json.secure?"', '"json.secure[]"'],
-  //   supportsConstraints: false,
-  //   supportsOptional: true,
-  //   supportsArrays: true,
-  // },
+  {
+    name: "json.secure",
+    description:
+      "Validates JSON string format with proper syntax checking (secure mode).",
+    category: "format",
+    examples: ['"json.secure"', '"json.secure?"', '"json.secure[]"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
   {
     name: "hexcolor",
     description:

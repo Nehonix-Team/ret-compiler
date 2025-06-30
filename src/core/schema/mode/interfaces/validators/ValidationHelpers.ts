@@ -6,6 +6,7 @@
  */
 
 import { SchemaValidationResult } from "../../../../types/types";
+import { VALIDATOR_TYPES } from "../../../../types/ValidatorTypes";
 import {
   UrlArg,
   UrlArgs,
@@ -617,12 +618,13 @@ export class ValidationHelpers {
     }
 
     // switch with new types and better grouping
+    // switch with new types and better grouping using VALIDATOR_TYPES enum
     switch (type.toLowerCase()) {
-      case "string":
+      case VALIDATOR_TYPES.STRING:
         return TypeValidators.validateString(value, options, constraints);
 
-      case "number":
-      case "float":
+      case VALIDATOR_TYPES.NUMBER:
+      case VALIDATOR_TYPES.FLOAT:
         return TypeValidators.validateNumber(
           value,
           options,
@@ -630,8 +632,8 @@ export class ValidationHelpers {
           type as "number" | "float"
         );
 
-      case "int":
-      case "integer":
+      case VALIDATOR_TYPES.INT:
+      case VALIDATOR_TYPES.INTEGER:
         console.log("Got int value");
         return TypeValidators.validateInteger(
           value,
@@ -640,8 +642,8 @@ export class ValidationHelpers {
           type as "int" | "integer"
         );
 
-      case "positive":
-      case "negative":
+      case VALIDATOR_TYPES.POSITIVE:
+      case VALIDATOR_TYPES.NEGATIVE:
         console.log("Got positive/negative value");
         return TypeValidators.validateNumber(
           value,
@@ -650,7 +652,7 @@ export class ValidationHelpers {
           "number"
         );
 
-      case "double":
+      case VALIDATOR_TYPES.DOUBLE:
         return TypeValidators.validateFloat(
           value,
           options,
@@ -658,13 +660,13 @@ export class ValidationHelpers {
           "double"
         );
 
-      case "boolean":
-      case "bool":
+      case VALIDATOR_TYPES.BOOLEAN:
+      case VALIDATOR_TYPES.BOOL:
         return TypeValidators.validateBoolean(value, options, constraints);
 
-      case "date":
-      case "datetime":
-      case "timestamp":
+      case VALIDATOR_TYPES.DATE:
+      case VALIDATOR_TYPES.DATETIME:
+      case VALIDATOR_TYPES.TIMESTAMP:
         return TypeValidators.validateDate(
           value,
           options,
@@ -672,32 +674,32 @@ export class ValidationHelpers {
           type as "date" | "datetime" | "timestamp"
         );
 
-      case "email":
+      case VALIDATOR_TYPES.EMAIL:
         return TypeValidators.validateEmail(value);
 
-      case "uuid":
-      case "guid":
+      case VALIDATOR_TYPES.UUID:
+      case VALIDATOR_TYPES.GUID:
         return TypeValidators.validateUuid(value, type as "uuid" | "guid");
 
-      case "phone":
+      case VALIDATOR_TYPES.PHONE:
         return TypeValidators.validatePhone(value);
 
-      case "slug":
+      case VALIDATOR_TYPES.SLUG:
         return TypeValidators.validateSlug(value);
 
-      case "username":
+      case VALIDATOR_TYPES.USERNAME:
         return TypeValidators.validateUsername(value);
 
-      case "ip":
+      case VALIDATOR_TYPES.IP:
         return TypeValidators.validateIp(value);
 
-      case "password":
+      case VALIDATOR_TYPES.PASSWORD:
         return TypeValidators.validatePassword(value);
 
-      case "text":
+      case VALIDATOR_TYPES.TEXT:
         return TypeValidators.validateText(value, {});
 
-      case "json":
+      case VALIDATOR_TYPES.JSON:
         return TypeValidators.validateJson(value, { securityMode: "fast" }); // Default to fast
 
       case "json.fast":
@@ -706,30 +708,30 @@ export class ValidationHelpers {
       case "json.secure":
         return TypeValidators.validateJson(value, { securityMode: "secure" });
 
-      case "object":
+      case VALIDATOR_TYPES.OBJECT:
         return TypeValidators.validateObject(value);
 
-      case "unknown":
-      case "void":
-      case "null":
-      case "undefined":
-      case "any":
+      case VALIDATOR_TYPES.UNKNOWN:
+      case VALIDATOR_TYPES.VOID:
+      case VALIDATOR_TYPES.NULL:
+      case VALIDATOR_TYPES.UNDEFINED:
+      case VALIDATOR_TYPES.ANY:
         return TypeValidators.validateSpecialType(
           value,
           type as "unknown" | "void" | "null" | "undefined" | "any"
         );
 
       // NEW TYPE CASES
-      case "hexcolor":
+      case VALIDATOR_TYPES.HEXCOLOR:
         return this.validateHexColor(value);
 
-      case "base64":
+      case VALIDATOR_TYPES.BASE64:
         return this.validateBase64(value);
 
-      case "jwt":
+      case VALIDATOR_TYPES.JWT:
         return this.validateJWT(value);
 
-      case "semver":
+      case VALIDATOR_TYPES.SEMVER:
         return this.validateSemVer(value);
 
       default:
