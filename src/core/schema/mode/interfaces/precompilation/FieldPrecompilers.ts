@@ -127,12 +127,12 @@ export class FieldPrecompilers {
 
     const validator = (value: any): SchemaValidationResult => {
       // DEBUG: Add logging to see what's happening
-      console.log("🔍 precompileFloat validator executing:");
-      console.log("  - value:", value, "type:", typeof value);
-      console.log("  - constraints: min =", min, ", max =", max);
+      // console.log("🔍 precompileFloat validator executing:");
+      // console.log("  - value:", value, "type:", typeof value);
+      // console.log("  - constraints: min =", min, ", max =", max);
 
       if (typeof value !== "number" || isNaN(value) || !isFinite(value)) {
-        console.log("  - FAIL: not a valid number");
+        // console.log("  - FAIL: not a valid number");
         return {
           success: false,
           errors: [`Expected float, got ${typeof value}`],
@@ -144,17 +144,17 @@ export class FieldPrecompilers {
       const errors: string[] = [];
 
       if (min !== undefined && value < min) {
-        console.log("  - FAIL: value", value, "< min", min);
+        // console.log("  - FAIL: value", value, "< min", min);
         errors.push(`Float must be at least ${min}`);
       }
 
       if (max !== undefined && value > max) {
-        console.log("  - FAIL: value", value, "> max", max);
+        // console.log("  - FAIL: value", value, "> max", max);
         errors.push(`Float must be at most ${max}`);
       }
 
       if (errors.length > 0) {
-        console.log("  - FINAL RESULT: FAIL with errors:", errors);
+        // console.log("  - FINAL RESULT: FAIL with errors:", errors);
         return {
           success: false,
           errors,
@@ -163,7 +163,7 @@ export class FieldPrecompilers {
         };
       }
 
-      console.log("  - FINAL RESULT: PASS");
+      // console.log("  - FINAL RESULT: PASS");
       return {
         success: true,
         errors: [],
@@ -304,17 +304,17 @@ export class FieldPrecompilers {
 
     const validator = (value: any): SchemaValidationResult => {
       // DEBUG: Add logging to see if validator is being called
-      console.log("🔍 precompileNumber validator executing:");
-      console.log("  - value:", value, "type:", typeof value);
-      console.log(
-        "  - constraints: strictlyPositive =",
-        strictlyPositive,
-        ", strictlyNegative =",
-        strictlyNegative
-      );
+      // // console.log("🔍 precompileNumber validator executing:");
+      // // console.log("  - value:", value, "type:", typeof value);
+      // // console.log(
+      //   "  - constraints: strictlyPositive =",
+      //   strictlyPositive,
+      //   ", strictlyNegative =",
+      //   strictlyNegative
+      // );
 
       if (typeof value !== "number" || isNaN(value)) {
-        console.log("  - FAIL: not a number");
+        // // console.log("  - FAIL: not a number");
         return {
           success: false,
           errors: [`Expected number, got ${typeof value}`],
@@ -326,33 +326,33 @@ export class FieldPrecompilers {
       const errors: string[] = [];
 
       if (integer && !Number.isInteger(value)) {
-        console.log("  - FAIL: not an integer");
+        // // console.log("  - FAIL: not an integer");
         errors.push("Expected integer");
       }
 
       // CRITICAL FIX: Handle strict positive/negative validation
       if (strictlyPositive && value <= 0) {
-        console.log("  - FAIL: not strictly positive (value <= 0)");
+        // console.log("  - FAIL: not strictly positive (value <= 0)");
         errors.push("Expected positive number");
       }
 
       if (strictlyNegative && value >= 0) {
-        console.log("  - FAIL: not strictly negative (value >= 0)");
+        // console.log("  - FAIL: not strictly negative (value >= 0)");
         errors.push("Expected negative number");
       }
 
       if (min !== undefined && value < min) {
-        console.log("  - FAIL: value < min");
+        // console.log("  - FAIL: value < min");
         errors.push(`Number must be at least ${min}`);
       }
 
       if (max !== undefined && value > max) {
-        console.log("  - FAIL: value > max");
+        // console.log("  - FAIL: value > max");
         errors.push(`Number must be at most ${max}`);
       }
 
       if (errors.length > 0) {
-        console.log("  - FINAL RESULT: FAIL with errors:", errors);
+        // console.log("  - FINAL RESULT: FAIL with errors:", errors);
         return {
           success: false,
           errors,
@@ -361,7 +361,7 @@ export class FieldPrecompilers {
         };
       }
 
-      console.log("  - FINAL RESULT: PASS");
+      // console.log("  - FINAL RESULT: PASS");
       return {
         success: true,
         errors: [],
