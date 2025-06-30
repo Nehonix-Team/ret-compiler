@@ -580,7 +580,6 @@ export class ValidationHelpers {
     if (!type || typeof type !== "string") {
       return this.createErrorResult("Invalid type definition", value);
     }
-
     // Handle array types first (e.g., "string[]", "number[]", etc.)
     if (type.endsWith("[]")) {
       const elementType = type.slice(0, -2);
@@ -633,13 +632,22 @@ export class ValidationHelpers {
 
       case "int":
       case "integer":
-      case "positive":
-      case "negative":
+        console.log("Got int value");
         return TypeValidators.validateInteger(
           value,
           options,
           constraints,
-          type as "int" | "integer" | "positive" | "negative"
+          type as "int" | "integer"
+        );
+
+      case "positive":
+      case "negative":
+        console.log("Got positive/negative value");
+        return TypeValidators.validateNumber(
+          value,
+          options,
+          { ...constraints, type },
+          "number"
         );
 
       case "double":

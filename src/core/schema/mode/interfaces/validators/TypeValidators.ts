@@ -12,7 +12,7 @@ import { Security } from "./mods/securityValidator";
 import { UrlValidation } from "./mods/urlValidation";
 
 /**
- * Validates basic types with enhanced constraints 
+ * Validates basic types with enhanced constraints
  */
 export class TypeValidators {
   // Private constants for validation patterns
@@ -243,6 +243,13 @@ export class TypeValidators {
       return result;
     }
 
+    // CRITICAL FIX: Handle positive/negative validation for number types
+    if (constraints.type === "positive" && value <= 0) {
+      this.addError(result, "Expected positive number");
+    } else if (constraints.type === "negative" && value >= 0) {
+      this.addError(result, "Expected negative number");
+    }
+
     this.validateNumberConstraints(result, value, constraints);
     return result;
   }
@@ -257,8 +264,11 @@ export class TypeValidators {
     type: "int" | "integer" | "positive" | "negative"
   ): SchemaValidationResult {
     const result = this.createResult(true, value);
+    console.log("test1");
 
     if (typeof value === "string" && options.loose) {
+      console.log("test2");
+
       if (
         !this.handleLooseStringToNumber(
           result,
@@ -278,6 +288,7 @@ export class TypeValidators {
 
     // Type-specific validation
     if (type === "positive" && value <= 0) {
+      console.log("test");
       this.addError(result, "Expected positive number");
     } else if (type === "negative" && value >= 0) {
       this.addError(result, "Expected negative number");

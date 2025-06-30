@@ -4,164 +4,166 @@
   "injectionSelector": "L:source.ts -comment -string, L:source.tsx -comment -string",
   "patterns": [
     {
-      "include": "#fortify-schema-strings"
+      "include": "#fortify-interface-blocks"
     }
   ],
   "repository": {
-    "fortify-schema-strings": {
+    "fortify-interface-blocks": {
       "patterns": [
         {
-          "name": "string.quoted.double.fortify",
-          "begin": "\"(?=.*(?:text|password|string|number|boolean|bool|date|any|unknown|email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)).*\")",
-          "end": "\"",
+          "name": "meta.interface-block.fortify",
+          "begin": "\\b(Interface)\\s*\\(\\s*\\{",
+          "end": "\\}\\s*\\)",
           "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.fortify"
-            }
-          },
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.fortify"
+            "1": {
+              "name": "support.function.fortify.interface"
             }
           },
           "patterns": [
             {
-              "include": "#fortify-conditional-syntax"
+              "include": "#fortify-object-properties"
+            }
+          ]
+        }
+      ]
+    },
+    "fortify-object-properties": {
+      "patterns": [
+        {
+          "name": "meta.property.fortify",
+          "begin": "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*(\")",
+          "end": "(\"),?",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.tag.fortify.property"
             },
+            "2": {
+              "name": "punctuation.definition.string.begin.fortify"
+            }
+          },
+          "endCaptures": {
+            "1": {
+              "name": "punctuation.definition.string.end.fortify"
+            }
+          },
+          "contentName": "string.quoted.double.fortify.schema",
+          "patterns": [
             {
-              "include": "#fortify-basic-types"
-            },
-            {
-              "include": "#fortify-format-types"
-            },
-            {
-              "include": "#fortify-numeric-types"
-            },
-            {
-              "include": "#fortify-constraints"
-            },
-            {
-              "include": "#fortify-arrays"
-            },
-            {
-              "include": "#fortify-optional"
-            },
-            {
-              "include": "#fortify-unions"
-            },
-            {
-              "include": "#fortify-constants"
-            },
-            {
-              "include": "#fortify-methods"
-            },
-            {
-              "include": "#fortify-operators"
+              "include": "#fortify-schema-content"
             }
           ]
         },
         {
-          "name": "string.quoted.single.fortify",
-          "begin": "'(?=.*(?:text|password|string|number|boolean|bool|date|any|unknown|email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)).*')",
-          "end": "'",
+          "name": "meta.property.fortify",
+          "begin": "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*(')",
+          "end": "('),?",
           "beginCaptures": {
-            "0": {
+            "1": {
+              "name": "entity.name.tag.fortify.property"
+            },
+            "2": {
               "name": "punctuation.definition.string.begin.fortify"
             }
           },
           "endCaptures": {
-            "0": {
+            "1": {
               "name": "punctuation.definition.string.end.fortify"
             }
           },
+          "contentName": "string.quoted.single.fortify.schema",
           "patterns": [
             {
-              "include": "#fortify-conditional-syntax"
-            },
-            {
-              "include": "#fortify-basic-types"
-            },
-            {
-              "include": "#fortify-format-types"
-            },
-            {
-              "include": "#fortify-numeric-types"
-            },
-            {
-              "include": "#fortify-constraints"
-            },
-            {
-              "include": "#fortify-arrays"
-            },
-            {
-              "include": "#fortify-optional"
-            },
-            {
-              "include": "#fortify-unions"
-            },
-            {
-              "include": "#fortify-constants"
-            },
-            {
-              "include": "#fortify-methods"
-            },
-            {
-              "include": "#fortify-operators"
+              "include": "#fortify-schema-content"
             }
           ]
         },
         {
-          "name": "string.template.fortify",
-          "begin": "`(?=.*(?:text|password|string|number|boolean|bool|date|any|unknown|email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver|int|positive|negative|float|object|when|\\*\\?|\\||=\\w+|\\.\\$in|\\.\\$contains|\\.\\$startsWith|\\.\\$endsWith|\\.\\$between|\\.\\$exists|\\.\\$empty|\\.\\$null|\\[\\]|\\(\\d+,?\\d*\\)|\\(\\/.*?\\/[gimsuy]*\\)|\\$\\{[^}]*\\}).*`)",
-          "end": "`",
+          "name": "meta.property.fortify",
+          "begin": "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*(`)",
+          "end": "(`),?",
           "beginCaptures": {
-            "0": {
+            "1": {
+              "name": "entity.name.tag.fortify.property"
+            },
+            "2": {
               "name": "punctuation.definition.string.begin.fortify"
             }
           },
           "endCaptures": {
-            "0": {
+            "1": {
               "name": "punctuation.definition.string.end.fortify"
             }
           },
+          "contentName": "string.template.fortify.schema",
           "patterns": [
             {
-              "include": "#fortify-conditional-syntax"
-            },
-            {
-              "include": "#fortify-basic-types"
-            },
-            {
-              "include": "#fortify-format-types"
-            },
-            {
-              "include": "#fortify-numeric-types"
-            },
-            {
-              "include": "#fortify-constraints"
-            },
-            {
-              "include": "#fortify-arrays"
-            },
-            {
-              "include": "#fortify-optional"
-            },
-            {
-              "include": "#fortify-unions"
-            },
-            {
-              "include": "#fortify-constants"
-            },
-            {
-              "include": "#fortify-methods"
-            },
-            {
-              "include": "#fortify-operators"
+              "include": "#fortify-schema-content"
             },
             {
               "include": "#fortify-template-expressions"
             }
           ]
+        },
+        {
+          "name": "meta.nested-object.fortify",
+          "begin": "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*\\{",
+          "end": "\\},?",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.tag.fortify.property"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-object-properties"
+            }
+          ]
+        },
+        {
+          "name": "comment.line.double-slash.fortify",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.fortify",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "fortify-schema-content": {
+      "patterns": [
+        {
+          "include": "#fortify-conditional-syntax"
+        },
+        {
+          "include": "#fortify-basic-types"
+        },
+        {
+          "include": "#fortify-format-types"
+        },
+        {
+          "include": "#fortify-numeric-types"
+        },
+        {
+          "include": "#fortify-constraints"
+        },
+        {
+          "include": "#fortify-arrays"
+        },
+        {
+          "include": "#fortify-optional"
+        },
+        {
+          "include": "#fortify-unions"
+        },
+        {
+          "include": "#fortify-constants"
+        },
+        {
+          "include": "#fortify-methods"
+        },
+        {
+          "include": "#fortify-operators"
         }
       ]
     },
@@ -169,8 +171,8 @@
       "patterns": [
         {
           "name": "meta.conditional.fortify.complete",
-          "begin": "\\b(when)\\b",
-          "end": "(?=\\s*[,}\\]]|$)",
+          "begin": "\\b(when)\\s+",
+          "end": "(?=\\s*[,}\\]\"'`]|$)",
           "beginCaptures": {
             "1": {
               "name": "keyword.control.fortify.when"
@@ -178,97 +180,151 @@
           },
           "patterns": [
             {
+              "name": "meta.conditional.condition.fortify",
+              "begin": "(?<=when\\s)",
+              "end": "(?=\\s*\\*\\?)",
+              "patterns": [
+                {
+                  "include": "#fortify-conditional-condition"
+                }
+              ]
+            },
+            {
               "name": "keyword.operator.fortify.conditional-then",
               "match": "\\*\\?"
+            },
+            {
+              "name": "meta.conditional.then-branch.fortify",
+              "begin": "(?<=\\*\\?)\\s*",
+              "end": "(?=\\s*:|$)",
+              "patterns": [
+                {
+                  "name": "meta.conditional.nested.fortify",
+                  "begin": "\\b(when)\\s+",
+                  "end": "(?=\\s*:)",
+                  "beginCaptures": {
+                    "1": {
+                      "name": "keyword.control.fortify.when.nested"
+                    }
+                  },
+                  "patterns": [
+                    {
+                      "name": "meta.conditional.condition.nested.fortify",
+                      "begin": "(?<=when\\s)",
+                      "end": "(?=\\s*\\*\\?)",
+                      "patterns": [
+                        {
+                          "include": "#fortify-conditional-condition"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "keyword.operator.fortify.conditional-then.nested",
+                      "match": "\\*\\?"
+                    },
+                    {
+                      "name": "meta.conditional.then-type.nested.fortify",
+                      "begin": "(?<=\\*\\?)\\s*",
+                      "end": "(?=\\s*:|$)",
+                      "patterns": [
+                        {
+                          "include": "#fortify-type-reference"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "include": "#fortify-type-reference"
+                }
+              ]
             },
             {
               "name": "punctuation.separator.fortify.conditional-else",
               "match": ":"
             },
             {
-              "include": "#fortify-conditional-condition"
-            },
-            {
-              "include": "#fortify-basic-types"
-            },
-            {
-              "include": "#fortify-format-types"
-            },
-            {
-              "include": "#fortify-numeric-types"
-            },
-            {
-              "include": "#fortify-constraints"
-            },
-            {
-              "include": "#fortify-arrays"
-            },
-            {
-              "include": "#fortify-unions"
-            },
-            {
-              "include": "#fortify-constants"
+              "name": "meta.conditional.else-branch.fortify",
+              "begin": "(?<=:)\\s*",
+              "end": "(?=\\s*[,}\\]\"'`]|$)",
+              "patterns": [
+                {
+                  "name": "meta.conditional.nested-else.fortify",
+                  "begin": "\\b(when)\\s+",
+                  "end": "(?=\\s*[,}\\]\"'`]|$)",
+                  "beginCaptures": {
+                    "1": {
+                      "name": "keyword.control.fortify.when.nested-else"
+                    }
+                  },
+                  "patterns": [
+                    {
+                      "include": "#fortify-conditional-syntax"
+                    }
+                  ]
+                },
+                {
+                  "include": "#fortify-type-reference"
+                }
+              ]
             }
           ]
-        },
-        {
-          "name": "keyword.operator.fortify.conditional-then",
-          "match": "\\*\\?"
-        },
-        {
-          "name": "punctuation.separator.fortify.conditional-else",
-          "match": ":"
         }
       ]
     },
     "fortify-conditional-condition": {
       "patterns": [
         {
-          "name": "meta.method-call.fortify.conditional",
-          "match": "\\$([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
-          "captures": {
+          "name": "meta.method-call.complex.fortify.conditional",
+          "begin": "([a-zA-Z_$][a-zA-Z0-9_$.]*)(\\.(\\$[a-zA-Z_$][a-zA-Z0-9_$]*))\\s*\\(",
+          "end": "\\)",
+          "beginCaptures": {
             "1": {
-              "name": "support.function.fortify.method"
-            }
-          }
-        },
-        {
-          "name": "meta.property-access.fortify.conditional",
-          "match": "([a-zA-Z_$][a-zA-Z0-9_$]*(?:\\.[a-zA-Z_$][a-zA-Z0-9_$]*)*(?:\\[(?:[\"'][^\"']*[\"']|\\d+)\\])*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
-          "captures": {
-            "1": {
-              "name": "variable.other.property.fortify"
+              "name": "variable.other.property.fortify.chain"
             },
             "2": {
-              "name": "support.function.fortify.method"
+              "name": "punctuation.accessor.fortify"
             },
             "3": {
-              "name": "meta.function-call.arguments.fortify"
+              "name": "support.function.fortify.method"
             }
-          }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-method-arguments"
+            }
+          ]
         },
         {
-          "name": "meta.property-access.fortify.conditional",
-          "match": "([a-zA-Z_$][a-zA-Z0-9_$.]*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
-          "captures": {
+          "name": "meta.method-call.standalone.fortify.conditional",
+          "begin": "(\\$[a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+          "end": "\\)",
+          "beginCaptures": {
             "1": {
-              "name": "variable.other.property.fortify"
-            },
-            "2": {
               "name": "support.function.fortify.method"
-            },
-            "3": {
-              "name": "meta.function-call.arguments.fortify"
             }
-          }
+          },
+          "patterns": [
+            {
+              "include": "#fortify-method-arguments"
+            }
+          ]
         },
         {
-          "name": "variable.other.property.fortify",
-          "match": "\\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[.\\[=!<>~])"
+          "name": "variable.other.property.fortify.deep-chain",
+          "match": "\\b([a-zA-Z_$][a-zA-Z0-9_$]*(?:\\.[a-zA-Z_$][a-zA-Z0-9_$]*){2,})(?=\\s*[=!<>~$]|\\s*&&|\\s*\\|\\||$)"
+        },
+        {
+          "name": "variable.other.property.fortify.chain",
+          "match": "\\b([a-zA-Z_$][a-zA-Z0-9_$]*\\.[a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[=!<>~$]|\\s*&&|\\s*\\|\\||$)"
+        },
+        {
+          "name": "variable.other.property.fortify.simple",
+          "match": "\\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[=!<>~]|\\s*&&|\\s*\\|\\||\\s*\\.|$)"
         },
         {
           "name": "keyword.operator.fortify.comparison",
-          "match": "(!=|>=|<=|!~|=|>|<|~)"
+          "match": "(!=|>=|<=|!~|==|=|>|<|~)"
         },
         {
           "name": "keyword.operator.fortify.logical",
@@ -279,60 +335,137 @@
           "match": "\\."
         },
         {
-          "name": "punctuation.definition.bracket.fortify",
-          "match": "[\\[\\]]"
-        },
-        {
-          "name": "punctuation.definition.parameters.fortify",
-          "match": "[\\(\\)]"
-        },
-        {
           "name": "string.quoted.single.fortify.condition",
-          "match": "'[^']*'"
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fortify",
+              "match": "\\\\."
+            }
+          ]
         },
         {
           "name": "string.quoted.double.fortify.condition",
-          "match": "\"[^\"]*\""
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fortify",
+              "match": "\\\\."
+            }
+          ]
         },
         {
           "name": "constant.numeric.fortify.condition",
           "match": "\\b\\d+(?:\\.\\d+)?\\b"
+        },
+        {
+          "name": "constant.language.boolean.fortify.condition",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "fortify-method-arguments": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.fortify.argument",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fortify",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.fortify.argument",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.fortify",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "constant.numeric.fortify.argument",
+          "match": "\\b\\d+(?:\\.\\d+)?\\b"
+        },
+        {
+          "name": "constant.language.boolean.fortify.argument",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "variable.other.property.fortify.argument",
+          "match": "\\b[a-zA-Z_$][a-zA-Z0-9_$]*\\b"
+        },
+        {
+          "name": "punctuation.separator.fortify.argument",
+          "match": ","
+        }
+      ]
+    },
+    "fortify-type-reference": {
+      "patterns": [
+        {
+          "include": "#fortify-basic-types"
+        },
+        {
+          "include": "#fortify-format-types"
+        },
+        {
+          "include": "#fortify-numeric-types"
+        },
+        {
+          "include": "#fortify-constraints"
+        },
+        {
+          "include": "#fortify-arrays"
+        },
+        {
+          "include": "#fortify-unions"
+        },
+        {
+          "include": "#fortify-constants"
         }
       ]
     },
     "fortify-basic-types": {
       "patterns": [
         {
-          "name": "string.quoted.double.fortify.basic-type",
-          "match": "\\b(text|password|string|number|boolean|bool|date|any|unknown)\\b"
+          "name": "support.type.fortify.basic",
+          "match": "\\b(string|number|boolean|date|any)\\b"
         }
       ]
     },
     "fortify-format-types": {
       "patterns": [
         {
-          "name": "string.quoted.double.fortify.format-type",
-          "match": "\\b(email|url|url.https|url.http|url.web|url.dev|url.ftp|uuid|phone|slug|username|ip|json|json.fast|hexcolor|base64|jwt|semver)\\b"
+          "name": "support.type.fortify.format",
+          "match": "\\b(email|url|url\\.https|url\\.dev|phone|uuid)\\b"
         }
       ]
     },
     "fortify-numeric-types": {
       "patterns": [
         {
-          "name": "string.quoted.double.fortify.numeric-type",
-          "match": "\\b(int|positive|negative|float)\\b"
+          "name": "support.type.fortify.numeric",
+          "match": "\\b(positive|negative|double)\\b"
         }
       ]
     },
     "fortify-constraints": {
       "patterns": [
         {
-          "name": "punctuation.definition.fortify.constraint",
+          "name": "meta.constraint.regex.fortify",
           "begin": "\\(",
           "end": "\\)",
           "patterns": [
             {
-              "name": "string.regexp.fortify.constraint",
+              "name": "string.regexp.fortify",
               "begin": "/",
               "end": "/([gimsuy]*)",
               "beginCaptures": {
@@ -378,8 +511,23 @@
     "fortify-arrays": {
       "patterns": [
         {
+          "name": "meta.array.constrained.fortify",
+          "begin": "\\[\\]\\(",
+          "end": "\\)",
+          "patterns": [
+            {
+              "name": "constant.numeric.fortify.array-constraint",
+              "match": "\\d+"
+            },
+            {
+              "name": "punctuation.separator.fortify.array-constraint",
+              "match": ","
+            }
+          ]
+        },
+        {
           "name": "punctuation.definition.fortify.array",
-          "match": "\\[\\](\\([^)]*\\))?"
+          "match": "\\[\\]"
         }
       ]
     },
@@ -394,7 +542,7 @@
     "fortify-unions": {
       "patterns": [
         {
-          "name": "constant.other.fortify.union-separator",
+          "name": "keyword.operator.fortify.union",
           "match": "\\|"
         }
       ]
@@ -402,8 +550,131 @@
     "fortify-constants": {
       "patterns": [
         {
-          "name": "constant.other.fortify.constant-value",
-          "match": "=\\w+"
+          "name": "meta.constant.array.fortify",
+          "begin": "=\\[",
+          "end": "\\]",
+          "beginCaptures": {
+            "0": {
+              "name": "constant.other.fortify.literal.equals"
+            }
+          },
+          "patterns": [
+            {
+              "name": "string.quoted.double.fortify.literal",
+              "begin": "\"",
+              "end": "\"",
+              "patterns": [
+                {
+                  "name": "constant.character.escape.fortify",
+                  "match": "\\\\."
+                }
+              ]
+            },
+            {
+              "name": "string.quoted.single.fortify.literal",
+              "begin": "'",
+              "end": "'",
+              "patterns": [
+                {
+                  "name": "constant.character.escape.fortify",
+                  "match": "\\\\."
+                }
+              ]
+            },
+            {
+              "name": "constant.numeric.fortify.literal",
+              "match": "\\d+(?:\\.\\d+)?"
+            },
+            {
+              "name": "constant.language.boolean.fortify.literal",
+              "match": "\\b(true|false)\\b"
+            },
+            {
+              "name": "punctuation.separator.fortify.literal",
+              "match": ","
+            }
+          ]
+        },
+        {
+          "name": "meta.constant.object.fortify",
+          "begin": "=\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": {
+              "name": "constant.other.fortify.literal.equals"
+            }
+          },
+          "patterns": [
+            {
+              "name": "string.quoted.double.fortify.literal.key",
+              "begin": "\"",
+              "end": "\"(?=\\s*:)",
+              "patterns": [
+                {
+                  "name": "constant.character.escape.fortify",
+                  "match": "\\\\."
+                }
+              ]
+            },
+            {
+              "name": "string.quoted.single.fortify.literal.key",
+              "begin": "'",
+              "end": "'(?=\\s*:)",
+              "patterns": [
+                {
+                  "name": "constant.character.escape.fortify",
+                  "match": "\\\\."
+                }
+              ]
+            },
+            {
+              "name": "string.quoted.double.fortify.literal.value",
+              "begin": "(?<=:)\\s*\"",
+              "end": "\"",
+              "patterns": [
+                {
+                  "name": "constant.character.escape.fortify",
+                  "match": "\\\\."
+                }
+              ]
+            },
+            {
+              "name": "string.quoted.single.fortify.literal.value",
+              "begin": "(?<=:)\\s*'",
+              "end": "'",
+              "patterns": [
+                {
+                  "name": "constant.character.escape.fortify",
+                  "match": "\\\\."
+                }
+              ]
+            },
+            {
+              "name": "constant.numeric.fortify.literal",
+              "match": "\\b\\d+(?:\\.\\d+)?\\b"
+            },
+            {
+              "name": "constant.language.boolean.fortify.literal",
+              "match": "\\b(true|false)\\b"
+            },
+            {
+              "name": "punctuation.separator.fortify.literal.colon",
+              "match": ":"
+            },
+            {
+              "name": "punctuation.separator.fortify.literal.comma",
+              "match": ","
+            }
+          ]
+        },
+        {
+          "name": "constant.other.fortify.literal.simple",
+          "match": "=(\\w+(?:\\.\\w+)?|true|false|\\d+(?:\\.\\d+)?)",
+          "captures": {
+            "1": {
+              "name": "constant.other.fortify.literal.value"
+            }
+          }
         }
       ]
     },
@@ -411,22 +682,7 @@
       "patterns": [
         {
           "name": "support.function.fortify.method",
-          "match": "(\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b|\\[\"[^\"]*\"\\]\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b|\\['[^']*'\\]\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b|\\[\\d+\\]\\.\\$(in|contains|startsWith|endsWith|between|exists|empty|null)\\b)"
-        },
-        {
-          "name": "punctuation.definition.fortify.method-call",
-          "begin": "\\(",
-          "end": "\\)",
-          "patterns": [
-            {
-              "name": "string.unquoted.fortify.method-argument",
-              "match": "[^,)]+"
-            },
-            {
-              "name": "punctuation.separator.fortify.method-argument",
-              "match": ","
-            }
-          ]
+          "match": "\\$[a-zA-Z_][a-zA-Z0-9_]*"
         }
       ]
     },

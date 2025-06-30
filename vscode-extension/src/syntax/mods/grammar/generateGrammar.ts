@@ -6,7 +6,7 @@ import {
 } from "./generateSchemaStringBeginPattern";
 
 /**
- * Generate complete TextMate grammar for Fortify Schema
+ * Generate complete TextMate grammar for Fortify Schema with improved conditional parsing
  */
 export function generateFortifyGrammar(): any {
   return {
@@ -16,359 +16,511 @@ export function generateFortifyGrammar(): any {
       "L:source.ts -comment -string, L:source.tsx -comment -string",
     patterns: [
       {
-        include: "#fortify-schema-strings",
+        include: "#fortify-interface-blocks",
       },
     ],
     repository: {
-      "fortify-schema-strings": {
+      "fortify-interface-blocks": {
         patterns: [
-          // ENHANCED: Support double quotes
           {
-            name: "string.quoted.double.fortify",
-            begin: generateSchemaStringBeginPattern(),
-            end: '"',
+            name: "meta.interface-block.fortify",
+            begin: "\\b(Interface)\\s*\\(\\s*\\{",
+            end: "\\}\\s*\\)",
             beginCaptures: {
-              "0": {
-                name: "punctuation.definition.string.begin.fortify",
-              },
-            },
-            endCaptures: {
-              "0": {
-                name: "punctuation.definition.string.end.fortify",
+              "1": {
+                name: "support.function.fortify.interface",
               },
             },
             patterns: [
               {
-                include: "#fortify-conditional-syntax",
-              },
-              {
-                include: "#fortify-basic-types",
-              },
-              {
-                include: "#fortify-format-types",
-              },
-              {
-                include: "#fortify-numeric-types",
-              },
-              {
-                include: "#fortify-constraints",
-              },
-              {
-                include: "#fortify-arrays",
-              },
-              {
-                include: "#fortify-optional",
-              },
-              {
-                include: "#fortify-unions",
-              },
-              {
-                include: "#fortify-constants",
-              },
-              {
-                include: "#fortify-methods",
-              },
-              {
-                include: "#fortify-operators",
+                include: "#fortify-object-properties",
               },
             ],
           },
-          // ENHANCED: Support single quotes
+        ],
+      },
+      "fortify-object-properties": {
+        patterns: [
+          // Property with schema string value (double quotes)
           {
-            name: "string.quoted.single.fortify",
-            begin: generateSchemaSingleQuoteBeginPattern(),
-            end: "'",
+            name: "meta.property.fortify",
+            begin: '([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*(")',
+            end: '("),?',
             beginCaptures: {
-              "0": {
+              "1": {
+                name: "entity.name.tag.fortify.property",
+              },
+              "2": {
                 name: "punctuation.definition.string.begin.fortify",
               },
             },
             endCaptures: {
-              "0": {
+              "1": {
                 name: "punctuation.definition.string.end.fortify",
               },
             },
+            contentName: "string.quoted.double.fortify.schema",
             patterns: [
               {
-                include: "#fortify-conditional-syntax",
-              },
-              {
-                include: "#fortify-basic-types",
-              },
-              {
-                include: "#fortify-format-types",
-              },
-              {
-                include: "#fortify-numeric-types",
-              },
-              {
-                include: "#fortify-constraints",
-              },
-              {
-                include: "#fortify-arrays",
-              },
-              {
-                include: "#fortify-optional",
-              },
-              {
-                include: "#fortify-unions",
-              },
-              {
-                include: "#fortify-constants",
-              },
-              {
-                include: "#fortify-methods",
-              },
-              {
-                include: "#fortify-operators",
+                include: "#fortify-schema-content",
               },
             ],
           },
-          // ENHANCED: Support backticks (template literals)
+          // Property with schema string value (single quotes)
           {
-            name: "string.template.fortify",
-            begin: generateSchemaTemplateBeginPattern(),
-            end: "`",
+            name: "meta.property.fortify",
+            begin: "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*(')",
+            end: "('),?",
             beginCaptures: {
-              "0": {
+              "1": {
+                name: "entity.name.tag.fortify.property",
+              },
+              "2": {
                 name: "punctuation.definition.string.begin.fortify",
               },
             },
             endCaptures: {
-              "0": {
+              "1": {
                 name: "punctuation.definition.string.end.fortify",
               },
             },
+            contentName: "string.quoted.single.fortify.schema",
             patterns: [
               {
-                include: "#fortify-conditional-syntax",
+                include: "#fortify-schema-content",
               },
-              {
-                include: "#fortify-basic-types",
+            ],
+          },
+          // Property with schema string value (template literals)
+          {
+            name: "meta.property.fortify",
+            begin: "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*(`)",
+            end: "(`),?",
+            beginCaptures: {
+              "1": {
+                name: "entity.name.tag.fortify.property",
               },
-              {
-                include: "#fortify-format-types",
+              "2": {
+                name: "punctuation.definition.string.begin.fortify",
               },
-              {
-                include: "#fortify-numeric-types",
+            },
+            endCaptures: {
+              "1": {
+                name: "punctuation.definition.string.end.fortify",
               },
+            },
+            contentName: "string.template.fortify.schema",
+            patterns: [
               {
-                include: "#fortify-constraints",
-              },
-              {
-                include: "#fortify-arrays",
-              },
-              {
-                include: "#fortify-optional",
-              },
-              {
-                include: "#fortify-unions",
-              },
-              {
-                include: "#fortify-constants",
-              },
-              {
-                include: "#fortify-methods",
-              },
-              {
-                include: "#fortify-operators",
+                include: "#fortify-schema-content",
               },
               {
                 include: "#fortify-template-expressions",
               },
             ],
           },
+          // Nested objects
+          {
+            name: "meta.nested-object.fortify",
+            begin: "([a-zA-Z_$][a-zA-Z0-9_$]*)\\s*:\\s*\\{",
+            end: "\\},?",
+            beginCaptures: {
+              "1": {
+                name: "entity.name.tag.fortify.property",
+              },
+            },
+            patterns: [
+              {
+                include: "#fortify-object-properties",
+              },
+            ],
+          },
+          // Comments
+          {
+            name: "comment.line.double-slash.fortify",
+            match: "//.*$",
+          },
+          {
+            name: "comment.block.fortify",
+            begin: "/\\*",
+            end: "\\*/",
+          },
         ],
       },
+      "fortify-schema-content": {
+        patterns: [
+          // CRITICAL: Conditional syntax MUST be first and most specific
+          {
+            include: "#fortify-conditional-syntax",
+          },
+          {
+            include: "#fortify-basic-types",
+          },
+          {
+            include: "#fortify-format-types",
+          },
+          {
+            include: "#fortify-numeric-types",
+          },
+          {
+            include: "#fortify-constraints",
+          },
+          {
+            include: "#fortify-arrays",
+          },
+          {
+            include: "#fortify-optional",
+          },
+          {
+            include: "#fortify-unions",
+          },
+          {
+            include: "#fortify-constants",
+          },
+          {
+            include: "#fortify-methods",
+          },
+          {
+            include: "#fortify-operators",
+          },
+        ],
+      },
+      // FIXED CONDITIONAL SYNTAX SECTION
       "fortify-conditional-syntax": {
         patterns: [
-          // ENHANCED: Complete conditional expression pattern (multi-line support)
+          // Main conditional pattern - handles nested conditionals properly
           {
             name: "meta.conditional.fortify.complete",
-            begin: "\\b(when)\\b",
-            end: "(?=\\s*[,}\\]]|$)",
+            begin: "\\b(when)\\s+",
+            end: "(?=\\s*[,}\\]\"'`]|$)",
             beginCaptures: {
               "1": {
                 name: "keyword.control.fortify.when",
               },
             },
             patterns: [
-              // Conditional then operator (*?)
+              // Condition part - everything before *? (non-greedy match)
+              {
+                name: "meta.conditional.condition.fortify",
+                begin: "(?<=when\\s)",
+                end: "(?=\\s*\\*\\?)",
+                patterns: [
+                  {
+                    include: "#fortify-conditional-condition",
+                  },
+                ],
+              },
+              // Conditional operator (*?)
               {
                 name: "keyword.operator.fortify.conditional-then",
                 match: "\\*\\?",
               },
-              // Conditional else separator (:)
+              // Then-branch - can be a nested conditional or regular type
+              {
+                name: "meta.conditional.then-branch.fortify",
+                begin: "(?<=\\*\\?)\\s*",
+                end: "(?=\\s*:|$)",
+                patterns: [
+                  // IMPORTANT: Check for nested 'when' first
+                  {
+                    name: "meta.conditional.nested.fortify",
+                    begin: "\\b(when)\\s+",
+                    end: "(?=\\s*:)",
+                    beginCaptures: {
+                      "1": {
+                        name: "keyword.control.fortify.when.nested",
+                      },
+                    },
+                    patterns: [
+                      // Nested condition
+                      {
+                        name: "meta.conditional.condition.nested.fortify",
+                        begin: "(?<=when\\s)",
+                        end: "(?=\\s*\\*\\?)",
+                        patterns: [
+                          {
+                            include: "#fortify-conditional-condition",
+                          },
+                        ],
+                      },
+                      // Nested operator
+                      {
+                        name: "keyword.operator.fortify.conditional-then.nested",
+                        match: "\\*\\?",
+                      },
+                      // Nested then-type
+                      {
+                        name: "meta.conditional.then-type.nested.fortify",
+                        begin: "(?<=\\*\\?)\\s*",
+                        end: "(?=\\s*:|$)",
+                        patterns: [
+                          {
+                            include: "#fortify-type-reference",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  // Regular type reference if not nested conditional
+                  {
+                    include: "#fortify-type-reference",
+                  },
+                ],
+              },
+              // Else separator (:)
               {
                 name: "punctuation.separator.fortify.conditional-else",
                 match: ":",
               },
-              // Include condition patterns
+              // Else-branch - can also be nested conditional or regular type
               {
-                include: "#fortify-conditional-condition",
-              },
-              // Include basic types for then/else parts
-              {
-                include: "#fortify-basic-types",
-              },
-              {
-                include: "#fortify-format-types",
-              },
-              {
-                include: "#fortify-numeric-types",
-              },
-              {
-                include: "#fortify-constraints",
-              },
-              {
-                include: "#fortify-arrays",
-              },
-              {
-                include: "#fortify-unions",
-              },
-              {
-                include: "#fortify-constants",
+                name: "meta.conditional.else-branch.fortify",
+                begin: "(?<=:)\\s*",
+                end: "(?=\\s*[,}\\]\"'`]|$)",
+                patterns: [
+                  // Check for nested 'when' in else branch
+                  {
+                    name: "meta.conditional.nested-else.fortify",
+                    begin: "\\b(when)\\s+",
+                    end: "(?=\\s*[,}\\]\"'`]|$)",
+                    beginCaptures: {
+                      "1": {
+                        name: "keyword.control.fortify.when.nested-else",
+                      },
+                    },
+                    patterns: [
+                      // Recursive include for full conditional parsing
+                      {
+                        include: "#fortify-conditional-syntax",
+                      },
+                    ],
+                  },
+                  // Regular type reference if not nested conditional
+                  {
+                    include: "#fortify-type-reference",
+                  },
+                ],
               },
             ],
           },
-          // Standalone conditional operators (for better highlighting)
-          {
-            name: "keyword.operator.fortify.conditional-then",
-            match: "\\*\\?",
-          },
-          {
-            name: "punctuation.separator.fortify.conditional-else",
-            match: ":",
-          },
         ],
       },
-      // ENHANCED: Conditional condition patterns
+      // Enhanced conditional condition parsing
       "fortify-conditional-condition": {
         patterns: [
-          // ENHANCED: Method calls with $ prefix (most specific first)
+          // Method calls with complex property chains (user.role.$contains(admin))
           {
-            name: "meta.method-call.fortify.conditional",
-            match: "\\$([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
-            captures: {
+            name: "meta.method-call.complex.fortify.conditional",
+            begin:
+              "([a-zA-Z_$][a-zA-Z0-9_$.]*)(\\.(\\$[a-zA-Z_$][a-zA-Z0-9_$]*))\\s*\\(",
+            end: "\\)",
+            beginCaptures: {
               "1": {
-                name: "support.function.fortify.method",
-              },
-            },
-          },
-          // ENHANCED: Property access with bracket notation and methods
-          {
-            name: "meta.property-access.fortify.conditional",
-            match:
-              "([a-zA-Z_$][a-zA-Z0-9_$]*(?:\\.[a-zA-Z_$][a-zA-Z0-9_$]*)*(?:\\[(?:[\"'][^\"']*[\"']|\\d+)\\])*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
-            captures: {
-              "1": {
-                name: "variable.other.property.fortify",
+                name: "variable.other.property.fortify.chain",
               },
               "2": {
-                name: "support.function.fortify.method",
+                name: "punctuation.accessor.fortify",
               },
               "3": {
-                name: "meta.function-call.arguments.fortify",
+                name: "support.function.fortify.method",
               },
             },
+            patterns: [
+              {
+                include: "#fortify-method-arguments",
+              },
+            ],
           },
-          // ENHANCED: Simple property access with methods
+          // Standalone method calls ($exists(), $empty(), etc.)
           {
-            name: "meta.property-access.fortify.conditional",
-            match:
-              "([a-zA-Z_$][a-zA-Z0-9_$.]*)\\.\\$([a-zA-Z_$][a-zA-Z0-9_$]*)\\(([^)]*)\\)",
-            captures: {
+            name: "meta.method-call.standalone.fortify.conditional",
+            begin: "(\\$[a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+            end: "\\)",
+            beginCaptures: {
               "1": {
-                name: "variable.other.property.fortify",
-              },
-              "2": {
                 name: "support.function.fortify.method",
               },
-              "3": {
-                name: "meta.function-call.arguments.fortify",
-              },
             },
+            patterns: [
+              {
+                include: "#fortify-method-arguments",
+              },
+            ],
           },
-          // ENHANCED: Property names in conditions
+          // Deep property chains (config.permissions, user.profile.settings.advanced)
           {
-            name: "variable.other.property.fortify",
-            match: "\\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[.\\[=!<>~])",
+            name: "variable.other.property.fortify.deep-chain",
+            match:
+              "\\b([a-zA-Z_$][a-zA-Z0-9_$]*(?:\\.[a-zA-Z_$][a-zA-Z0-9_$]*){2,})(?=\\s*[=!<>~$]|\\s*&&|\\s*\\|\\||$)",
           },
-          // ENHANCED: Comparison operators
+          // Medium property chains (user.email, config.theme)
+          {
+            name: "variable.other.property.fortify.chain",
+            match:
+              "\\b([a-zA-Z_$][a-zA-Z0-9_$]*\\.[a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[=!<>~$]|\\s*&&|\\s*\\|\\||$)",
+          },
+          // Simple property names
+          {
+            name: "variable.other.property.fortify.simple",
+            match:
+              "\\b([a-zA-Z_$][a-zA-Z0-9_$]*)(?=\\s*[=!<>~]|\\s*&&|\\s*\\|\\||\\s*\\.|$)",
+          },
+          // Comparison operators (order matters - longer first)
           {
             name: "keyword.operator.fortify.comparison",
-            match: "(!=|>=|<=|!~|=|>|<|~)",
+            match: "(!=|>=|<=|!~|==|=|>|<|~)",
           },
-          // ENHANCED: Logical operators
+          // Logical operators
           {
             name: "keyword.operator.fortify.logical",
             match: "(&&|\\|\\|)",
           },
-          // ENHANCED: Property access dots
+          // Property access dots
           {
             name: "keyword.operator.fortify.field-access",
             match: "\\.",
           },
-          // ENHANCED: Bracket notation
-          {
-            name: "punctuation.definition.bracket.fortify",
-            match: "[\\[\\]]",
-          },
-          // ENHANCED: Parentheses for method calls
-          {
-            name: "punctuation.definition.parameters.fortify",
-            match: "[\\(\\)]",
-          },
-          // ENHANCED: String literals in conditions
+          // String literals with escaping
           {
             name: "string.quoted.single.fortify.condition",
-            match: "'[^']*'",
+            begin: "'",
+            end: "'",
+            patterns: [
+              {
+                name: "constant.character.escape.fortify",
+                match: "\\\\.",
+              },
+            ],
           },
           {
             name: "string.quoted.double.fortify.condition",
-            match: '"[^"]*"',
+            begin: '"',
+            end: '"',
+            patterns: [
+              {
+                name: "constant.character.escape.fortify",
+                match: "\\\\.",
+              },
+            ],
           },
-          // ENHANCED: Numbers in conditions
+          // Numeric literals
           {
             name: "constant.numeric.fortify.condition",
             match: "\\b\\d+(?:\\.\\d+)?\\b",
+          },
+          // Boolean literals
+          {
+            name: "constant.language.boolean.fortify.condition",
+            match: "\\b(true|false)\\b",
+          },
+        ],
+      },
+      "fortify-method-arguments": {
+        patterns: [
+          // String arguments
+          {
+            name: "string.quoted.single.fortify.argument",
+            begin: "'",
+            end: "'",
+            patterns: [
+              {
+                name: "constant.character.escape.fortify",
+                match: "\\\\.",
+              },
+            ],
+          },
+          {
+            name: "string.quoted.double.fortify.argument",
+            begin: '"',
+            end: '"',
+            patterns: [
+              {
+                name: "constant.character.escape.fortify",
+                match: "\\\\.",
+              },
+            ],
+          },
+          // Numeric arguments
+          {
+            name: "constant.numeric.fortify.argument",
+            match: "\\b\\d+(?:\\.\\d+)?\\b",
+          },
+          // Boolean arguments
+          {
+            name: "constant.language.boolean.fortify.argument",
+            match: "\\b(true|false)\\b",
+          },
+          // Variable arguments
+          {
+            name: "variable.other.property.fortify.argument",
+            match: "\\b[a-zA-Z_$][a-zA-Z0-9_$]*\\b",
+          },
+          // Argument separators
+          {
+            name: "punctuation.separator.fortify.argument",
+            match: ",",
+          },
+        ],
+      },
+      "fortify-type-reference": {
+        patterns: [
+          {
+            include: "#fortify-basic-types",
+          },
+          {
+            include: "#fortify-format-types",
+          },
+          {
+            include: "#fortify-numeric-types",
+          },
+          {
+            include: "#fortify-constraints",
+          },
+          {
+            include: "#fortify-arrays",
+          },
+          {
+            include: "#fortify-unions",
+          },
+          {
+            include: "#fortify-constants",
           },
         ],
       },
       "fortify-basic-types": {
         patterns: [
           {
-            name: "string.quoted.double.fortify.basic-type",
-            match: FortifyPatterns.getBasicTypePattern().source,
+            name: "support.type.fortify.basic",
+            match: "\\b(string|number|boolean|date|any)\\b",
           },
         ],
       },
       "fortify-format-types": {
         patterns: [
           {
-            name: "string.quoted.double.fortify.format-type",
-            match: FortifyPatterns.getFormatTypePattern().source,
+            name: "support.type.fortify.format",
+            match: "\\b(email|url|url\\.https|url\\.dev|phone|uuid)\\b",
           },
         ],
       },
       "fortify-numeric-types": {
         patterns: [
           {
-            name: "string.quoted.double.fortify.numeric-type",
-            match: FortifyPatterns.getNumericTypePattern().source,
+            name: "support.type.fortify.numeric",
+            match: "\\b(positive|negative|double)\\b",
           },
         ],
       },
       "fortify-constraints": {
         patterns: [
+          // Regex patterns like (/^v\\d+\\.\\d+$/)
           {
-            name: "punctuation.definition.fortify.constraint",
+            name: "meta.constraint.regex.fortify",
             begin: "\\(",
             end: "\\)",
             patterns: [
-              // ENHANCED: Regex patterns like (/^v\\d+\\.\\d+$/)
               {
-                name: "string.regexp.fortify.constraint",
+                name: "string.regexp.fortify",
                 begin: "/",
                 end: "/([gimsuy]*)",
                 beginCaptures: {
@@ -414,9 +566,26 @@ export function generateFortifyGrammar(): any {
       },
       "fortify-arrays": {
         patterns: [
+          // Array with constraints like string[](1,5)
+          {
+            name: "meta.array.constrained.fortify",
+            begin: "\\[\\]\\(",
+            end: "\\)",
+            patterns: [
+              {
+                name: "constant.numeric.fortify.array-constraint",
+                match: "\\d+",
+              },
+              {
+                name: "punctuation.separator.fortify.array-constraint",
+                match: ",",
+              },
+            ],
+          },
+          // Simple array notation
           {
             name: "punctuation.definition.fortify.array",
-            match: FortifyPatterns.getArrayPattern().source.replace(/g$/, ""),
+            match: "\\[\\]",
           },
         ],
       },
@@ -424,29 +593,149 @@ export function generateFortifyGrammar(): any {
         patterns: [
           {
             name: "punctuation.definition.fortify.optional",
-            match: FortifyPatterns.getOptionalPattern().source.replace(
-              /g$/,
-              ""
-            ),
+            match: "\\?",
           },
         ],
       },
       "fortify-unions": {
         patterns: [
           {
-            name: "constant.other.fortify.union-separator",
-            match: FortifyPatterns.getUnionPattern().source.replace(/g$/, ""),
+            name: "keyword.operator.fortify.union",
+            match: "\\|",
           },
         ],
       },
       "fortify-constants": {
         patterns: [
+          // Complex array constants like =["default","user"]
           {
-            name: "constant.other.fortify.constant-value",
-            match: FortifyPatterns.getConstantPattern().source.replace(
-              /g$/,
-              ""
-            ),
+            name: "meta.constant.array.fortify",
+            begin: "=\\[",
+            end: "\\]",
+            beginCaptures: {
+              "0": {
+                name: "constant.other.fortify.literal.equals",
+              },
+            },
+            patterns: [
+              {
+                name: "string.quoted.double.fortify.literal",
+                begin: '"',
+                end: '"',
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "string.quoted.single.fortify.literal",
+                begin: "'",
+                end: "'",
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "constant.numeric.fortify.literal",
+                match: "\\d+(?:\\.\\d+)?",
+              },
+              {
+                name: "constant.language.boolean.fortify.literal",
+                match: "\\b(true|false)\\b",
+              },
+              {
+                name: "punctuation.separator.fortify.literal",
+                match: ",",
+              },
+            ],
+          },
+          // Complex object constants like ={"mode":"light","lang":"en"}
+          {
+            name: "meta.constant.object.fortify",
+            begin: "=\\{",
+            end: "\\}",
+            beginCaptures: {
+              "0": {
+                name: "constant.other.fortify.literal.equals",
+              },
+            },
+            patterns: [
+              {
+                name: "string.quoted.double.fortify.literal.key",
+                begin: '"',
+                end: '"(?=\\s*:)',
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "string.quoted.single.fortify.literal.key",
+                begin: "'",
+                end: "'(?=\\s*:)",
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "string.quoted.double.fortify.literal.value",
+                begin: '(?<=:)\\s*"',
+                end: '"',
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "string.quoted.single.fortify.literal.value",
+                begin: "(?<=:)\\s*'",
+                end: "'",
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "constant.numeric.fortify.literal",
+                match: "\\b\\d+(?:\\.\\d+)?\\b",
+              },
+              {
+                name: "constant.language.boolean.fortify.literal",
+                match: "\\b(true|false)\\b",
+              },
+              {
+                name: "punctuation.separator.fortify.literal.colon",
+                match: ":",
+              },
+              {
+                name: "punctuation.separator.fortify.literal.comma",
+                match: ",",
+              },
+            ],
+          },
+          // Simple literal constants like =2.0, =user, =true, =false
+          {
+            name: "constant.other.fortify.literal.simple",
+            match: "=(\\w+(?:\\.\\w+)?|true|false|\\d+(?:\\.\\d+)?)",
+            captures: {
+              "1": {
+                name: "constant.other.fortify.literal.value",
+              },
+            },
           },
         ],
       },
@@ -454,22 +743,7 @@ export function generateFortifyGrammar(): any {
         patterns: [
           {
             name: "support.function.fortify.method",
-            match: FortifyPatterns.getMethodPattern().source,
-          },
-          {
-            name: "punctuation.definition.fortify.method-call",
-            begin: "\\(",
-            end: "\\)",
-            patterns: [
-              {
-                name: "string.unquoted.fortify.method-argument",
-                match: "[^,)]+",
-              },
-              {
-                name: "punctuation.separator.fortify.method-argument",
-                match: ",",
-              },
-            ],
+            match: "\\$[a-zA-Z_][a-zA-Z0-9_]*",
           },
         ],
       },

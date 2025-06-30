@@ -485,6 +485,9 @@ export class SchemaPrecompiler {
       "boolean",
       "int",
       "float",
+      "positive",
+      "negative",
+      "double",
       "date",
       "any",
       // Format types

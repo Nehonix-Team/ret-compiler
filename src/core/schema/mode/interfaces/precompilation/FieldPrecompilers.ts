@@ -178,15 +178,15 @@ export class FieldPrecompilers {
   }
 
   /**
-   *  Precompile number field validators
+   *  Precompile positive number field validators
    */
-  static precompileNumber(
-    constraints: { min?: number; max?: number; integer?: boolean } = {}
+  static precompilePositiveNumber(
+    constraints: { min?: number; max?: number } = {}
   ): CompiledFieldValidator {
-    const { min, max, integer } = constraints;
+    const { min, max } = constraints;
 
     const validator = (value: any): SchemaValidationResult => {
-      if (typeof value !== "number" || isNaN(value)) {
+      if (typeof value !== "number" || isNaN(value) || !isFinite(value)) {
         return {
           success: false,
           errors: [`Expected number, got ${typeof value}`],
@@ -197,8 +197,9 @@ export class FieldPrecompilers {
 
       const errors: string[] = [];
 
-      if (integer && !Number.isInteger(value)) {
-        errors.push("Expected integer");
+      // CRITICAL: Positive validation - must be > 0
+      if (value <= 0) {
+        errors.push("Expected positive number");
       }
 
       if (min !== undefined && value < min) {
@@ -218,6 +219,149 @@ export class FieldPrecompilers {
         };
       }
 
+      return {
+        success: true,
+        errors: [],
+        warnings: [],
+        data: value,
+      };
+    };
+
+    (validator as any)._fieldType = `positive(${min || ""},${max || ""})`;
+    (validator as any)._isCompiled = true;
+    return validator as CompiledFieldValidator;
+  }
+
+  /**
+   *  Precompile negative number field validators
+   */
+  static precompileNegativeNumber(
+    constraints: { min?: number; max?: number } = {}
+  ): CompiledFieldValidator {
+    const { min, max } = constraints;
+
+    const validator = (value: any): SchemaValidationResult => {
+      if (typeof value !== "number" || isNaN(value) || !isFinite(value)) {
+        return {
+          success: false,
+          errors: [`Expected number, got ${typeof value}`],
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      const errors: string[] = [];
+
+      // CRITICAL: Negative validation - must be < 0
+      if (value >= 0) {
+        errors.push("Expected negative number");
+      }
+
+      if (min !== undefined && value < min) {
+        errors.push(`Number must be at least ${min}`);
+      }
+
+      if (max !== undefined && value > max) {
+        errors.push(`Number must be at most ${max}`);
+      }
+
+      if (errors.length > 0) {
+        return {
+          success: false,
+          errors,
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      return {
+        success: true,
+        errors: [],
+        warnings: [],
+        data: value,
+      };
+    };
+
+    (validator as any)._fieldType = `negative(${min || ""},${max || ""})`;
+    (validator as any)._isCompiled = true;
+    return validator as CompiledFieldValidator;
+  }
+
+  /**
+   *  Precompile number field validators
+   */
+  static precompileNumber(
+    constraints: {
+      min?: number;
+      max?: number;
+      integer?: boolean;
+      strictlyPositive?: boolean;
+      strictlyNegative?: boolean;
+    } = {}
+  ): CompiledFieldValidator {
+    const { min, max, integer, strictlyPositive, strictlyNegative } =
+      constraints;
+
+    const validator = (value: any): SchemaValidationResult => {
+      // DEBUG: Add logging to see if validator is being called
+      console.log("🔍 precompileNumber validator executing:");
+      console.log("  - value:", value, "type:", typeof value);
+      console.log(
+        "  - constraints: strictlyPositive =",
+        strictlyPositive,
+        ", strictlyNegative =",
+        strictlyNegative
+      );
+
+      if (typeof value !== "number" || isNaN(value)) {
+        console.log("  - FAIL: not a number");
+        return {
+          success: false,
+          errors: [`Expected number, got ${typeof value}`],
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      const errors: string[] = [];
+
+      if (integer && !Number.isInteger(value)) {
+        console.log("  - FAIL: not an integer");
+        errors.push("Expected integer");
+      }
+
+      // CRITICAL FIX: Handle strict positive/negative validation
+      if (strictlyPositive && value <= 0) {
+        console.log("  - FAIL: not strictly positive (value <= 0)");
+        errors.push("Expected positive number");
+      }
+
+      if (strictlyNegative && value >= 0) {
+        console.log("  - FAIL: not strictly negative (value >= 0)");
+        errors.push("Expected negative number");
+      }
+
+      if (min !== undefined && value < min) {
+        console.log("  - FAIL: value < min");
+        errors.push(`Number must be at least ${min}`);
+      }
+
+      if (max !== undefined && value > max) {
+        console.log("  - FAIL: value > max");
+        errors.push(`Number must be at most ${max}`);
+      }
+
+      if (errors.length > 0) {
+        console.log("  - FINAL RESULT: FAIL with errors:", errors);
+        return {
+          success: false,
+          errors,
+          warnings: [],
+          data: undefined,
+        };
+      }
+
+      console.log("  - FINAL RESULT: PASS");
       return {
         success: true,
         errors: [],
@@ -455,8 +599,6 @@ export class FieldPrecompilers {
         case "number":
         case "int":
         case "integer":
-        case "positive":
-        case "negative":
         case "float":
           const numberConstraints = this.parseNumberConstraints(
             constraintsStr,
@@ -467,11 +609,37 @@ export class FieldPrecompilers {
             ? this.precompileOptional(numberValidator)
             : numberValidator;
 
-        case "double":
-          // Handle double with special type to force unoptimized path
-          const doubleValidator = this.precompileSpecialType(
-            constraintsStr ? `double(${constraintsStr})` : "double"
+        case "positive":
+          // CRITICAL FIX: Handle positive numbers with proper validation
+          const positiveConstraints = this.parseNumberConstraints(
+            constraintsStr,
+            type
           );
+          const positiveValidator =
+            this.precompilePositiveNumber(positiveConstraints);
+          return isOptional
+            ? this.precompileOptional(positiveValidator)
+            : positiveValidator;
+
+        case "negative":
+          // CRITICAL FIX: Handle negative numbers with proper validation
+          const negativeConstraints = this.parseNumberConstraints(
+            constraintsStr,
+            type
+          );
+          const negativeValidator =
+            this.precompileNegativeNumber(negativeConstraints);
+          return isOptional
+            ? this.precompileOptional(negativeValidator)
+            : negativeValidator;
+
+        case "double":
+          // CRITICAL FIX: Handle double with float constraints to match ValidationHelpers routing
+          const doubleConstraints = this.parseNumberConstraints(
+            constraintsStr,
+            type
+          );
+          const doubleValidator = this.precompileFloat(doubleConstraints);
           return isOptional
             ? this.precompileOptional(doubleValidator)
             : doubleValidator;
@@ -530,17 +698,43 @@ export class FieldPrecompilers {
   } {
     if (!constraintsStr) return {};
 
-    const parts = constraintsStr.split(",");
-    const constraints: any = {};
+    // CRITICAL FIX: Use ConstraintParser to properly handle regex patterns
+    const ConstraintParser =
+      require("../validators/ConstraintParser").ConstraintParser;
 
-    if (parts[0] && parts[0].trim()) {
-      constraints.minLength = parseInt(parts[0].trim());
-    }
-    if (parts[1] && parts[1].trim()) {
-      constraints.maxLength = parseInt(parts[1].trim());
-    }
+    try {
+      // Parse the full constraint string using the proper parser
+      const fullType = `string(${constraintsStr})`;
+      const parsed = ConstraintParser.parseConstraints(fullType);
 
-    return constraints;
+      // Extract the constraints we need
+      const constraints: any = {};
+
+      if (parsed.constraints.minLength !== undefined) {
+        constraints.minLength = parsed.constraints.minLength;
+      }
+      if (parsed.constraints.maxLength !== undefined) {
+        constraints.maxLength = parsed.constraints.maxLength;
+      }
+      if (parsed.constraints.pattern) {
+        constraints.pattern = parsed.constraints.pattern;
+      }
+
+      return constraints;
+    } catch (error) {
+      // Fallback to simple parsing for backward compatibility
+      const parts = constraintsStr.split(",");
+      const constraints: any = {};
+
+      if (parts[0] && parts[0].trim()) {
+        constraints.minLength = parseInt(parts[0].trim());
+      }
+      if (parts[1] && parts[1].trim()) {
+        constraints.maxLength = parseInt(parts[1].trim());
+      }
+
+      return constraints;
+    }
   }
 
   private static parseNumberConstraints(
@@ -552,14 +746,8 @@ export class FieldPrecompilers {
     if (type === "int" || type === "integer") {
       constraints.integer = true;
     }
-    if (type === "positive") {
-      constraints.min = 0;
-      constraints.integer = true;
-    }
-    if (type === "negative") {
-      constraints.max = 0;
-      constraints.integer = true;
-    }
+    // NOTE: positive and negative types are now handled by separate precompilers
+    // No need to set special constraints here
 
     if (constraintsStr) {
       const parts = constraintsStr.split(",");
@@ -570,7 +758,6 @@ export class FieldPrecompilers {
         constraints.max = parseFloat(parts[1].trim());
       }
     }
-
     return constraints;
   }
 
