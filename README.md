@@ -18,7 +18,6 @@
 
 A modern TypeScript validation library designed around familiar interface syntax and powerful conditional validation. Experience schema validation that feels natural to TypeScript developers while unlocking advanced runtime validation capabilities.
 
-
 ## Quick Start
 
 ```bash
@@ -277,19 +276,19 @@ const RuntimeMethodsSchema = Interface({
 });
 ```
 
-## Live Utility - Real-time Validation
+## Live Utility - Real-time Validation (still in progress so not recommended for production use yet)
 
 The Live utility transforms Fortify Schema into a powerful real-time validation system with EventEmitter-like interface, data transformation pipelines, and stream control methods. Perfect for modern applications requiring reactive validation.
 
 ### Key Features
 
-- **🔄 Real-time Field Validation** - Validate form fields as users type
-- **📡 EventEmitter Interface** - Full `.on()`, `.emit()`, `.off()`, `.once()` support
-- **🔧 Data Transformation Pipeline** - Chain `.transform()`, `.filter()`, `.map()` operations
-- **⏸️ Stream Control** - `.pause()`, `.resume()`, `.destroy()` for flow control
-- **🔗 Stream Piping** - Connect validators with `.pipe()` for complex workflows
-- **📊 Performance Monitoring** - Built-in statistics and performance tracking
-- **🔄 InterfaceSchema Sync** - Perfect synchronization with Interface validation
+- **Real-time Field Validation** - Validate form fields as users type
+- **EventEmitter Interface** - Full `.on()`, `.emit()`, `.off()`, `.once()` support
+- **Data Transformation Pipeline** - Chain `.transform()`, `.filter()`, `.map()` operations
+- **Stream Control** - `.pause()`, `.resume()`, `.destroy()` for flow control
+- **Stream Piping** - Connect validators with `.pipe()` for complex workflows
+- **Performance Monitoring** - Built-in statistics and performance tracking
+- **InterfaceSchema Sync** - Perfect synchronization with Interface validation
 
 ### Quick Example
 
@@ -1089,7 +1088,9 @@ const FlexibleSchema = UserSchema.loose() // Enable automatic type coercion
 ```
 
 ## Contributing
+
 By contributing to Fortify Schema, you help fortify-schema to:
+
 - Improve the quality of TypeScript validation
 - Expand the reach of TypeScript in the JavaScript ecosystem
 - Provide a robust and reliable validation solution for developers
