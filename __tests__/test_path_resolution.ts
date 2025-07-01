@@ -7,7 +7,7 @@
  * - Should NOT reference local nested object properties incorrectly
  */
 
-import { Interface } from "./src/core/schema/mode/interfaces/Interface";
+import { Interface } from "../src/core/schema/mode/interfaces/Interface";
 
 console.log("🧪 Testing Path Resolution Fix...\n");
 

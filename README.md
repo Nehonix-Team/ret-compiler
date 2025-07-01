@@ -18,9 +18,6 @@
 
 A modern TypeScript validation library designed around familiar interface syntax and powerful conditional validation. Experience schema validation that feels natural to TypeScript developers while unlocking advanced runtime validation capabilities.
 
-## Our Vision
-
-**Interface-Native Validation**: We believe schema validation should feel as intuitive as writing TypeScript interfaces. Fortify Schema bridges the gap between type definitions and runtime validation.
 
 ## Quick Start
 
@@ -51,26 +48,24 @@ if (result.success) {
 } else {
   console.log("Validation errors:", result.errors);
 }
-
 ```
 
 _Note: For nested objects, we recommend limiting depth to 50-100 or no more than 300 levels for performance and safety. Default depth limit is 500._
 
 Test by running:
 
-- bun src\__tests__\test_nested_obj.ts   note: you may have bun installed if using this command. "npm i -g bun" (recommanded because it's faster than node)
+- bun src\_\_tests\_\_\test_nested_obj.ts note: you may have bun installed if using this command. "npm i -g bun" (recommanded because it's faster than node)
 
 - npm run benchmark:nestedObject
 
 _Note: you may have tsx installed if using this command. "npm i -g tsx"._
-
-
 
 ## Table of Contents
 
 - [Installation & Setup](#installation--setup)
 - [Core Features](#core-features)
 - [Conditional Validation](#conditional-validation)
+- [Live Utility - Real-time Validation](#live-utility---real-time-validation)
 - [Real-World Applications](#real-world-applications)
 - [Performance Excellence](#performance-excellence)
 - [Advanced Capabilities](#advanced-capabilities)
@@ -279,6 +274,94 @@ const RuntimeMethodsSchema = Interface({
     "when data.status.$in(active,pending,inactive) *? boolean : =false",
 });
 ```
+
+## Live Utility - Real-time Validation
+
+The Live utility transforms Fortify Schema into a powerful real-time validation system with EventEmitter-like interface, data transformation pipelines, and stream control methods. Perfect for modern applications requiring reactive validation.
+
+### Key Features
+
+- **🔄 Real-time Field Validation** - Validate form fields as users type
+- **📡 EventEmitter Interface** - Full `.on()`, `.emit()`, `.off()`, `.once()` support
+- **🔧 Data Transformation Pipeline** - Chain `.transform()`, `.filter()`, `.map()` operations
+- **⏸️ Stream Control** - `.pause()`, `.resume()`, `.destroy()` for flow control
+- **🔗 Stream Piping** - Connect validators with `.pipe()` for complex workflows
+- **📊 Performance Monitoring** - Built-in statistics and performance tracking
+- **🔄 InterfaceSchema Sync** - Perfect synchronization with Interface validation
+
+### Quick Example
+
+```typescript
+import { Live, Interface } from "fortify-schema";
+
+const UserSchema = Interface({
+  name: "string(2,50)",
+  email: "email",
+  age: "number(18,120)",
+});
+
+// Create stream validator with transformation pipeline
+const validator = Live.stream(UserSchema)
+  .transform((data) => ({ ...data, timestamp: Date.now() }))
+  .filter((data) => data.age >= 21)
+  .map((data) => ({ ...data, name: data.name.toUpperCase() }));
+
+// Listen for results
+validator.on("valid", (data) => console.log("✅ Valid:", data));
+validator.on("invalid", (data, errors) => console.log("❌ Invalid:", errors));
+validator.on("filtered", (data) => console.log("🚫 Filtered:", data));
+
+// Process data
+validator.validate({ name: "john", email: "john@example.com", age: 25 });
+// Output: ✅ Valid: { name: "JOHN", email: "john@example.com", age: 25, timestamp: 1703123456789 }
+```
+
+### Stream Control Example
+
+```typescript
+const streamValidator = Live.stream(UserSchema);
+
+// Pause stream (queues data)
+streamValidator.pause();
+streamValidator.validate(userData1); // Queued
+streamValidator.validate(userData2); // Queued
+
+console.log("Queue length:", streamValidator.queueLength); // 2
+
+// Resume and process queue
+streamValidator.resume(); // Processes both queued items
+
+// Stream piping
+const sourceValidator = Live.stream(InputSchema);
+const destinationValidator = Live.stream(OutputSchema);
+
+sourceValidator.pipe(destinationValidator);
+// Valid data flows: source → destination
+```
+
+### Form Integration Example
+
+```typescript
+const formValidator = Live.form(UserSchema);
+
+// Bind form fields
+formValidator.bindField("email", emailInput);
+formValidator.bindField("name", nameInput);
+
+// Enable real-time validation
+formValidator.enableAutoValidation();
+
+// Handle form submission
+formValidator.onSubmit((isValid, data, errors) => {
+  if (isValid) {
+    submitToAPI(data);
+  } else {
+    displayErrors(errors);
+  }
+});
+```
+
+The Live utility provides **100% coverage** of standard stream methods while maintaining **perfect synchronization** with InterfaceSchema validation logic.
 
 ## Real-World Applications
 
@@ -640,19 +723,19 @@ const CombinedSchema = Mod.merge(UserSchema, ProfileSchema);
 // Combines two schemas into one
 ```
 
-### Advanced Extensions
+### Available Extensions
 
 Fortify Schema provides powerful extensions for enhanced functionality:
 
 ```typescript
 // Import extensions for advanced features
 export {
-  Smart,        // Smart schema inference from samples and TypeScript types
-  When,         // Advanced conditional validation builder
-  Live,         // Real-time validation for forms and streaming data
-  Docs,         // Auto-documentation generation (OpenAPI, TypeScript, etc.)
-  Extensions,   // Extension utilities and helpers
-  Quick,        // Quick access utilities for common operations
+  Smart, // Smart schema inference from samples and TypeScript types
+  When, // Advanced conditional validation builder
+  Live, // Real-time validation for forms and streaming data
+  Docs, // Auto-documentation generation (OpenAPI, TypeScript, etc.)
+  Extensions, // Extension utilities and helpers
+  Quick, // Quick access utilities for common operations
   TypeScriptGenerator, // TypeScript code generation from schemas
 } from "fortify-schema";
 ```
@@ -667,7 +750,7 @@ const sampleUser = {
   id: 1,
   email: "user@example.com",
   name: "John Doe",
-  tags: ["developer", "typescript"]
+  tags: ["developer", "typescript"],
 };
 
 const UserSchema = Smart.fromSample(sampleUser);
@@ -687,24 +770,271 @@ const OrderSchema = Interface({
   deliveryFee: When.field("orderType")
     .is("delivery")
     .then("number(0,)")
-    .default("number?")
+    .default("number?"),
 });
 ```
 
-#### Real-time Validation
+#### Real-time Validation with Live Utility
+
+The Live utility provides comprehensive real-time validation with full EventEmitter-like interface, data transformation pipelines, and stream control methods. Perfect for forms, streaming data, and reactive applications.
 
 ```typescript
 import { Live } from "fortify-schema";
 
-// Form validation
+const UserSchema = Interface({
+  id: "number",
+  name: "string(2,50)",
+  email: "email",
+  age: "number(18,120)",
+});
+```
+
+##### Live Validator - Real-time Field Validation
+
+```typescript
+// Create live validator for real-time field validation
+const liveValidator = Live.validator(UserSchema);
+
+// Listen for validation changes
+liveValidator.onValidation((result) => {
+  console.log("Validation result:", result.isValid);
+  console.log("Current errors:", result.errors);
+  updateUI(result);
+});
+
+// Validate fields in real-time
+liveValidator.validateField("email", "user@example.com");
+liveValidator.validateField("name", "John Doe");
+
+// Get current validation state
+console.log("Is valid:", liveValidator.isValid);
+console.log("All errors:", liveValidator.errors);
+
+// Validate entire object
+const fullResult = liveValidator.validateAll(userData);
+```
+
+##### Stream Validator - Advanced Stream Processing
+
+The StreamValidator provides a complete EventEmitter-like interface with all standard stream methods:
+
+```typescript
+// Create stream validator
+const streamValidator = Live.stream(UserSchema);
+
+// ===== EVENT EMITTER METHODS =====
+
+// Generic event listeners (.on, .once, .off, .emit)
+streamValidator.on("valid", (data) => {
+  console.log("Valid data received:", data);
+});
+
+streamValidator.once("invalid", (data, errors) => {
+  console.log("First invalid data:", errors);
+});
+
+streamValidator.on("error", (error) => {
+  console.error("Stream error:", error);
+});
+
+// Custom events
+streamValidator.on("custom-event", (message) => {
+  console.log("Custom event:", message);
+});
+
+streamValidator.emit("custom-event", "Hello from stream!");
+
+// Remove listeners
+streamValidator.off("valid", specificListener);
+streamValidator.off("invalid"); // Remove all listeners for event
+```
+
+##### Data Transformation Pipeline
+
+```typescript
+// Build comprehensive data transformation pipeline
+const transformValidator = Live.stream(UserSchema)
+  .transform((data) => {
+    // Add metadata
+    return { ...data, timestamp: Date.now(), source: "api" };
+  })
+  .filter((data) => {
+    // Filter by business rules
+    return data.age >= 21; // Only adults
+  })
+  .map((data) => {
+    // Transform data format
+    return {
+      ...data,
+      name: data.name.toUpperCase(),
+      email: data.email.toLowerCase(),
+    };
+  });
+
+// Listen for pipeline results
+transformValidator.on("valid", (data) => {
+  console.log("Processed data:", data); // Transformed and validated
+});
+
+transformValidator.on("filtered", (data) => {
+  console.log("Data filtered out:", data); // Failed filter conditions
+});
+
+transformValidator.on("invalid", (data, errors) => {
+  console.log("Validation failed after transformation:", errors);
+});
+
+// Process data through pipeline
+transformValidator.validate(rawUserData);
+```
+
+##### Stream Control Methods
+
+```typescript
+// Stream control with pause/resume/destroy
+const controlValidator = Live.stream(UserSchema);
+
+// Pause stream (queues incoming data)
+controlValidator.pause();
+console.log("Stream paused:", controlValidator.paused);
+
+// Data sent while paused gets queued
+controlValidator.validate(userData1); // Queued
+controlValidator.validate(userData2); // Queued
+
+console.log("Queue length:", controlValidator.queueLength);
+
+// Resume stream (processes queued data)
+controlValidator.resume();
+console.log("Stream resumed, queue processed");
+
+// Destroy stream (cleanup and prevent further use)
+controlValidator.on("destroy", () => {
+  console.log("Stream destroyed and cleaned up");
+});
+
+controlValidator.destroy();
+console.log("Stream destroyed:", controlValidator.destroyed);
+```
+
+##### Stream Piping
+
+```typescript
+// Pipe data between stream validators
+const sourceValidator = Live.stream(InputSchema);
+const destinationValidator = Live.stream(OutputSchema);
+
+// Pipe valid data from source to destination
+sourceValidator.pipe(destinationValidator);
+
+// Data flows: source → destination
+sourceValidator.validate(inputData);
+// If valid, automatically sent to destinationValidator
+
+// Chain multiple streams
+const pipeline = sourceValidator
+  .pipe(transformValidator)
+  .pipe(destinationValidator);
+```
+
+##### Form Validator - Advanced Form Integration
+
+```typescript
+// Create form validator with field binding
 const formValidator = Live.form(UserSchema);
-formValidator.bindField('email', emailInput);
+
+// Bind form fields to validator
+formValidator.bindField("email", emailInput);
+formValidator.bindField("name", nameInput);
+formValidator.bindField("age", ageInput);
+
+// Enable automatic validation on input changes
 formValidator.enableAutoValidation();
 
-// Stream validation
-const streamValidator = Live.stream(DataSchema);
-streamValidator.onValid(data => processData(data));
-streamValidator.onInvalid((data, errors) => logErrors(errors));
+// Handle form submission
+formValidator.onSubmit((isValid, data, errors) => {
+  if (isValid) {
+    console.log("Form is valid, submitting:", data);
+    submitToAPI(data);
+  } else {
+    console.log("Form has errors:", errors);
+    displayErrors(errors);
+  }
+});
+
+// Manual form validation
+const formResult = formValidator.validateForm();
+console.log("Form valid:", formResult.isValid);
+```
+
+##### Advanced Event Handling
+
+```typescript
+const streamValidator = Live.stream(UserSchema);
+
+// Listen for all validation events
+streamValidator.on("data", (data) => {
+  console.log("Data received for validation:", data);
+});
+
+streamValidator.on("validated", (data, result) => {
+  console.log("Validation completed:", result.isValid);
+});
+
+streamValidator.on("queued", (data) => {
+  console.log("Data queued (stream paused):", data);
+});
+
+streamValidator.on("pause", () => {
+  console.log("Stream paused");
+});
+
+streamValidator.on("resume", () => {
+  console.log("Stream resumed");
+});
+
+// Error handling
+streamValidator.on("error", (error) => {
+  console.error("Stream error:", error.message);
+  // Handle gracefully without crashing
+});
+```
+
+##### Performance and Statistics
+
+```typescript
+// Monitor stream performance
+streamValidator.onStats((stats) => {
+  console.log("Validation Statistics:");
+  console.log(`- Total validated: ${stats.totalValidated}`);
+  console.log(`- Valid count: ${stats.validCount}`);
+  console.log(`- Invalid count: ${stats.invalidCount}`);
+  console.log(`- Error rate: ${(stats.errorRate * 100).toFixed(2)}%`);
+  console.log(`- Running since: ${stats.startTime}`);
+});
+
+// Get current statistics
+const currentStats = streamValidator.getStats();
+console.log("Current performance:", currentStats);
+```
+
+##### Integration with InterfaceSchema
+
+The Live utility is fully synchronized with InterfaceSchema modules, ensuring consistent validation behavior:
+
+```typescript
+const schema = Interface({
+  email: "email",
+  age: "number(18,120)",
+  role: "admin|user|guest",
+});
+
+// Both produce identical validation results
+const interfaceResult = schema.safeParse(userData);
+const liveResult = Live.stream(schema).validate(userData);
+
+// Perfect synchronization guaranteed
+console.log("Results match:", interfaceResult.success === liveResult.isValid);
 ```
 
 #### Documentation Generation
@@ -716,13 +1046,13 @@ import { Docs } from "fortify-schema"; //in beta
 const openApiSpec = Docs.openapi(UserSchema, {
   title: "User API",
   version: "1.0.0",
-  servers: ["https://api.example.com"]
+  servers: ["https://api.example.com"],
 });
 
 // Generate TypeScript definitions
 const typeDefinitions = Docs.typescript(UserSchema, {
   exportName: "User",
-  namespace: "API"
+  namespace: "API",
 });
 ```
 
@@ -757,6 +1087,11 @@ const FlexibleSchema = UserSchema.loose() // Enable automatic type coercion
 ```
 
 ## Contributing
+By contributing to Fortify Schema, you help fortify-schema to:
+- Improve the quality of TypeScript validation
+- Expand the reach of TypeScript in the JavaScript ecosystem
+- Provide a robust and reliable validation solution for developers
+- Foster a community of developers who care about code quality and security
 
 ### Development Environment
 

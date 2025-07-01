@@ -13,6 +13,7 @@ Welcome to the comprehensive documentation for Fortify Schema - the TypeScript-f
 ### **Core Features**
 
 - **[Conditional Validation Guide](./CONDITIONAL-VALIDATION.md)** - V1 and V2 conditional validation
+- **[Live Utility - Real-time Validation](./LIVE-UTILITY.md)** - EventEmitter interface, stream processing, and form integration
 - **[V2 Migration Guide](./V2-MIGRATION.md)** - Migrating from V1 to V2 syntax
 - **[Advanced Features](./ADVANCED-FEATURES.md)** - Schema transformations and validation modes
 
@@ -59,6 +60,12 @@ Welcome to the comprehensive documentation for Fortify Schema - the TypeScript-f
 1. Install **[VS Code Extension](./VSCODE-EXTENSION.md)**
 2. Check **[Performance Guide](./PERFORMANCE.md)**
 3. Use **[Quick Reference](./QUICK-REFERENCE.md)** for syntax
+
+### **Building Real-time Applications?**
+
+1. Learn **[Live Utility](./LIVE-UTILITY.md)** for stream processing
+2. Implement real-time form validation
+3. Use EventEmitter interface for reactive validation
 
 ## 🎯 Key Concepts
 
@@ -188,9 +195,9 @@ Built-in performance tracking and optimization:
 
 Choose your path:
 
-**🚀 New Project**: Start with **[Getting Started](./GETTING-STARTED.md)**  
-**🔄 Existing Project**: Check **[V2 Migration Guide](./V2-MIGRATION.md)**  
-**🏢 Enterprise**: Review **[Production Deployment](./PRODUCTION-DEPLOYMENT.md)**  
+**🚀 New Project**: Start with **[Getting Started](./GETTING-STARTED.md)**
+**🔄 Existing Project**: Check **[V2 Migration Guide](./V2-MIGRATION.md)**
+**🏢 Enterprise**: Review **[Production Deployment](./PRODUCTION-DEPLOYMENT.md)**
 **🛠️ Development**: Install **[VS Code Extension](./VSCODE-EXTENSION.md)**
 
 ---
