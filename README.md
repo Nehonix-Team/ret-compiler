@@ -104,6 +104,8 @@ Enhance your development workflow with our dedicated VS Code extension featuring
 # Download and install
 curl https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
 code --install-extension fortify-schema.vsix
+
+# Or just search for "fortify-schema" in the vscode marketplace
 ```
 
 ## Core Features
