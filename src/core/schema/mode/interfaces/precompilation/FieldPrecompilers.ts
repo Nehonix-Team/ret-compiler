@@ -4,10 +4,15 @@
  * Each field type gets its own specialized precompiler for maximum performance
  */
 
-import { SchemaValidationResult } from "../../../../types/types";
+import {
+  SchemaValidationResult,
+  ValidationError,
+} from "../../../../types/types";
 import { ConstraintParser } from "../validators";
 import { UnionCache } from "../validators/UnionCache";
 import { ValidationHelpers } from "../validators/ValidationHelpers";
+import { ErrorHandler,  } from "../errors/ErrorHandler";
+import { ErrorCode } from "../errors/types/errors.type";
 
 export interface CompiledFieldValidator {
   (value: any): SchemaValidationResult;
@@ -58,7 +63,7 @@ export class FieldPrecompilers {
         }
         return {
           success: false,
-          errors: [`Expected string, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "string", value)],
           warnings: [],
           data: undefined,
         };
@@ -74,24 +79,45 @@ export class FieldPrecompilers {
       if (typeof value !== "string") {
         return {
           success: false,
-          errors: [`Expected string, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "string", value)],
           warnings: [],
           data: undefined,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       if (minLength !== undefined && value.length < minLength) {
-        errors.push(`String must be at least ${minLength} characters`);
+        errors.push({
+          code: "STRING_TOO_SHORT",
+          message: `String must be at least ${minLength} characters`,
+          path: [],
+          expected: `string(minLength: ${minLength})`,
+          received: value,
+          receivedType: "string",
+        });
       }
 
       if (maxLength !== undefined && value.length > maxLength) {
-        errors.push(`String must be at most ${maxLength} characters`);
+        errors.push({
+          code: "STRING_TOO_LONG",
+          message: `String must be at most ${maxLength} characters`,
+          path: [],
+          expected: `string(maxLength: ${maxLength})`,
+          received: value,
+          receivedType: "string",
+        });
       }
 
       if (pattern && !pattern.test(value)) {
-        errors.push(`String does not match required pattern`);
+        errors.push({
+          code: "STRING_PATTERN_MISMATCH",
+          message: `String does not match required pattern`,
+          path: [],
+          expected: `string(pattern: ${pattern})`,
+          received: value,
+          receivedType: "string",
+        });
       }
 
       if (errors.length > 0) {
@@ -135,22 +161,36 @@ export class FieldPrecompilers {
         // console.log("  - FAIL: not a valid number");
         return {
           success: false,
-          errors: [`Expected float, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "float", value)],
           warnings: [],
           data: undefined,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       if (min !== undefined && value < min) {
         // console.log("  - FAIL: value", value, "< min", min);
-        errors.push(`Float must be at least ${min}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_SMALL,
+          message: `Float must be at least ${min}`,
+          path: [],
+          expected: `float(min: ${min})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (max !== undefined && value > max) {
         // console.log("  - FAIL: value", value, "> max", max);
-        errors.push(`Float must be at most ${max}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_LARGE,
+          message: `Float must be at most ${max}`,
+          path: [],
+          expected: `float(max: ${max})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (errors.length > 0) {
@@ -189,25 +229,46 @@ export class FieldPrecompilers {
       if (typeof value !== "number" || isNaN(value) || !isFinite(value)) {
         return {
           success: false,
-          errors: [`Expected number, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "positive number", value)],
           warnings: [],
           data: undefined,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       // CRITICAL: Positive validation - must be > 0
       if (value <= 0) {
-        errors.push("Expected positive number");
+        errors.push({
+          code: "NUMBER_NOT_POSITIVE",
+          message: "Number must be positive",
+          path: [],
+          expected: "positive",
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (min !== undefined && value < min) {
-        errors.push(`Number must be at least ${min}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_SMALL,
+          message: `Number must be at least ${min}`,
+          path: [],
+          expected: `positive(min: ${min})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (max !== undefined && value > max) {
-        errors.push(`Number must be at most ${max}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_LARGE,
+          message: `Number must be at most ${max}`,
+          path: [],
+          expected: `positive(max: ${max})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (errors.length > 0) {
@@ -244,25 +305,46 @@ export class FieldPrecompilers {
       if (typeof value !== "number" || isNaN(value) || !isFinite(value)) {
         return {
           success: false,
-          errors: [`Expected number, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "negative number", value)],
           warnings: [],
           data: undefined,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       // CRITICAL: Negative validation - must be < 0
       if (value >= 0) {
-        errors.push("Expected negative number");
+        errors.push({
+          code: ErrorCode.NOT_NEGATIVE,
+          message: "Number must be negative",
+          path: [],
+          expected: "negative",
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (min !== undefined && value < min) {
-        errors.push(`Number must be at least ${min}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_SMALL,
+          message: `Number must be at least ${min}`,
+          path: [],
+          expected: `negative(min: ${min})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (max !== undefined && value > max) {
-        errors.push(`Number must be at most ${max}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_LARGE,
+          message: `Number must be at most ${max}`,
+          path: [],
+          expected: `negative(max: ${max})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (errors.length > 0) {
@@ -317,38 +399,73 @@ export class FieldPrecompilers {
         // // console.log("  - FAIL: not a number");
         return {
           success: false,
-          errors: [`Expected number, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "number", value)],
           warnings: [],
           data: undefined,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       if (integer && !Number.isInteger(value)) {
         // // console.log("  - FAIL: not an integer");
-        errors.push("Expected integer");
+        errors.push({
+          code: ErrorCode.NOT_INTEGER,
+          message: "Number must be an integer",
+          path: [],
+          expected: "integer",
+          received: value,
+          receivedType: "number",
+        });
       }
 
       // CRITICAL FIX: Handle strict positive/negative validation
       if (strictlyPositive && value <= 0) {
         // console.log("  - FAIL: not strictly positive (value <= 0)");
-        errors.push("Expected positive number");
+        errors.push({
+          code: ErrorCode.NOT_POSITIVE,
+          message: "Number must be positive",
+          path: [],
+          expected: "positive",
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (strictlyNegative && value >= 0) {
         // console.log("  - FAIL: not strictly negative (value >= 0)");
-        errors.push("Expected negative number");
+        errors.push({
+          code: ErrorCode.NOT_NEGATIVE,
+          message: "Number must be negative",
+          path: [],
+          expected: "negative",
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (min !== undefined && value < min) {
         // console.log("  - FAIL: value < min");
-        errors.push(`Number must be at least ${min}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_SMALL,
+          message: `Number must be at least ${min}`,
+          path: [],
+          expected: `number(min: ${min})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (max !== undefined && value > max) {
         // console.log("  - FAIL: value > max");
-        errors.push(`Number must be at most ${max}`);
+        errors.push({
+          code: ErrorCode.NUMBER_TOO_LARGE,
+          message: `Number must be at most ${max}`,
+          path: [],
+          expected: `number(max: ${max})`,
+          received: value,
+          receivedType: "number",
+        });
       }
 
       if (errors.length > 0) {
@@ -390,7 +507,7 @@ export class FieldPrecompilers {
       }
       return {
         success: false,
-        errors: [`Expected boolean, got ${typeof value}`],
+        errors: [ErrorHandler.createTypeError([], "boolean", value)],
         warnings: [],
         data: undefined,
       };
@@ -418,20 +535,34 @@ export class FieldPrecompilers {
       if (!Array.isArray(value)) {
         return {
           success: false,
-          errors: [`Expected array, got ${typeof value}`],
+          errors: [ErrorHandler.createTypeError([], "array", value)],
           warnings: [],
           data: undefined,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       if (minLength !== undefined && value.length < minLength) {
-        errors.push(`Array must have at least ${minLength} elements`);
+        errors.push({
+          code: ErrorCode.ARRAY_TOO_SHORT,
+          message: `Array must have at least ${minLength} elements`,
+          path: [],
+          expected: `array(minLength: ${minLength})`,
+          received: value,
+          receivedType: "array",
+        });
       }
 
       if (maxLength !== undefined && value.length > maxLength) {
-        errors.push(`Array must have at most ${maxLength} elements`);
+        errors.push({
+          code: ErrorCode.ARRAY_TOO_LONG,
+          message: `Array must have at most ${maxLength} elements`,
+          path: [],
+          expected: `array(maxLength: ${maxLength})`,
+          received: value,
+          receivedType: "array",
+        });
       }
 
       // Validate each element
@@ -439,7 +570,12 @@ export class FieldPrecompilers {
       for (let i = 0; i < value.length; i++) {
         const elementResult = elementValidator(value[i]);
         if (!elementResult.success) {
-          errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+          errors.push(
+            ...elementResult.errors.map((error) => ({
+              ...error,
+              path: [i.toString(), ...error.path],
+            }))
+          );
         } else {
           validatedArray.push(elementResult.data);
         }
@@ -451,7 +587,14 @@ export class FieldPrecompilers {
           validatedArray.map((v) => JSON.stringify(v))
         );
         if (uniqueValues.size !== validatedArray.length) {
-          errors.push("Array elements must be unique");
+          errors.push({
+            code: ErrorCode.ARRAY_VALUES_NOT_UNIQUE,
+            message: "Array elements must be unique",
+            path: [],
+            expected: "unique",
+            received: value,
+            receivedType: "array",
+          });
         }
       }
 
@@ -520,7 +663,14 @@ export class FieldPrecompilers {
 
       return {
         success: false,
-        errors: [`Expected constant value ${constantValue}, got ${value}`],
+        errors: [
+          ErrorHandler.createConstantError(
+            [],
+            "constant",
+            value,
+            constantValue
+          ),
+        ],
         warnings: [],
         data: undefined,
       };

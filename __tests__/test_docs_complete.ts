@@ -13,7 +13,7 @@ console.log("📚 Testing Documentation Examples\n");
 // Test Schema from documentation
 const UserSchema = Interface({
   id: "number",
-  name: "string(2,50)",
+  name: "string(2,50)", 
   email: "email",
   age: "number(18,120)",
 });
@@ -226,3 +226,4 @@ setTimeout(() => {
     console.log("\n⚠️ Some documentation examples need fixes.");
   }
 }, 100);
+ 

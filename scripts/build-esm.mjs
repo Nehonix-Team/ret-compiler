@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 
 // ES Module test to verify the build works
-import { Interface, Make} from '../dist/esm/index.js';
+import { ErrorCode } from "../dist/esm/core/schema/mode/interfaces/errors/types/errors.type.js";
+import { Interface, Make } from "../dist/esm/index.js";
 
-console.log('🧪 Testing ES Module build...');
+console.log("🧪 Testing ES Module build...");
 
 try {
   // Test basic interface
   const UserSchema = Interface({
     id: "number",
-    name: "string", 
+    name: "string",
     email: "email",
     status: Make.union("active", "inactive"),
-    role: Make.const("user")
+    role: Make.const("user"),
   });
 
   // Test strict validation (should pass)
@@ -21,13 +22,13 @@ try {
     name: "John Doe",
     email: "john@example.com",
     status: "active",
-    role: "user"
+    role: "user",
   });
 
   if (validResult.success) {
-    console.log('✅ Valid data test passed');
+    console.log("✅ Valid data test passed");
   } else {
-    console.log('❌ Valid data test failed:', validResult.errors);
+    console.log("❌ Valid data test failed:", validResult.errors);
     process.exit(1);
   }
 
@@ -37,20 +38,26 @@ try {
     name: "John Doe",
     email: "john@example.com",
     status: "active",
-    role: "user"
+    role: "user",
   });
 
-  if (!strictResult.success && strictResult.errors.some(e => e.includes('Expected number, got string'))) {
-    console.log('✅ Strict validation test passed - correctly rejected string for number');
+  if (
+    !strictResult.success &&
+    strictResult.errors.some((e) => e.code === ErrorCode.TYPE_ERROR)
+  ) {
+    console.log(
+      "✅ Strict validation test passed - correctly rejected string for number"
+    );
   } else {
-    console.log('❌ Strict validation test failed - should have rejected string for number');
-    console.log('Result:', strictResult);
+    console.log(
+      "❌ Strict validation test failed - should have rejected string for number"
+    );
+    console.log("Result:", strictResult);
     process.exit(1);
   }
 
-  console.log('🎉 ES Module tests passed!');
-
+  console.log("🎉 ES Module tests passed!");
 } catch (error) {
-  console.error('❌ ES Module test failed:', error.message);
+  console.error("❌ ES Module test failed:", error.message);
   process.exit(1);
 }

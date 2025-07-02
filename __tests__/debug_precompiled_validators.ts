@@ -1,4 +1,4 @@
-console.log("🔍 Debug Precompiled Validators");
+ console.log("🔍 Debug Precompiled Validators");
 console.log("===============================\n");
 
 // Patch the precompiled validators to add logging
@@ -95,6 +95,7 @@ console.log("Final result:", result1.success ? "PASS ❌" : "FAIL ✅");
 console.log("\n" + "=".repeat(50));
 console.log("Creating double schema...");
 const DoubleSchema = Interface({
+  // @fortify-ignore
   value: "double(0,100)"
 });
 

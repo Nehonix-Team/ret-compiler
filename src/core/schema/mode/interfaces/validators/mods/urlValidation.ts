@@ -1,5 +1,7 @@
 import { SchemaValidationResult } from "../../../../../types/types";
 import { UrlArgs, UrlArgType } from "../../../../../utils/UrlArgs";
+import {ErrorHandler } from "../../errors/ErrorHandler";
+import { ErrorCode } from "../../errors/types/errors.type";
 
 export function UrlValidation(
   value: any,
@@ -29,7 +31,13 @@ export function UrlValidation(
     const { isValid, error } = UrlArgs.isCorrectArg(urlArgs);
     if (!isValid) {
       result.success = false;
-      result.errors.push(error || "Invalid url arg");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          error || "Invalid url arg",
+          value
+        )
+      );
       return result;
     }
   }
@@ -48,7 +56,7 @@ export function UrlValidation(
   // Check if value is a string
   if (typeof value !== "string") {
     result.success = false;
-    result.errors.push(`Expected string for ${type.toUpperCase()}`);
+    result.errors.push(ErrorHandler.createTypeError([], "string", value));
     return result;
   }
 
@@ -56,7 +64,11 @@ export function UrlValidation(
   if (value.length > maxLength) {
     result.success = false;
     result.errors.push(
-      `${type.toUpperCase()} exceeds maximum length of ${maxLength} characters`
+      ErrorHandler.createValidationError(
+        [],
+        `${type.toUpperCase()} exceeds maximum length of ${maxLength} characters`,
+        ErrorCode.SECURITY_VIOLATION
+      )
     );
     return result;
   }
@@ -64,14 +76,26 @@ export function UrlValidation(
   // Check for empty string
   if (!value.trim()) {
     result.success = false;
-    result.errors.push(`${type.toUpperCase()} cannot be empty`);
+    result.errors.push(
+      ErrorHandler.createUrlCValidationErr(
+        [],
+        "Empty string",
+        ErrorCode.INVALID_URL_ARGS
+      )
+    );
     return result;
   }
 
   // Check for spaces in URL (should be encoded)
   if (value.includes(" ")) {
     result.success = false;
-    result.errors.push(`${type.toUpperCase()} cannot contain unencoded spaces`);
+    result.errors.push(
+      ErrorHandler.createUrlCValidationErr(
+        [],
+        `${type.toUpperCase()} cannot contain unencoded spaces`,
+        ErrorCode.INVALID_URL_ARGS
+      )
+    );
     return result;
   }
 
@@ -89,7 +113,11 @@ export function UrlValidation(
     if (pattern.test(value)) {
       result.success = false;
       result.errors.push(
-        `${type.toUpperCase()} contains potentially malicious content`
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          `${type.toUpperCase()} contains potentially malicious content`,
+          ErrorCode.INVALID_URL_ARGS
+        )
       );
       return result;
     }
@@ -102,7 +130,11 @@ export function UrlValidation(
   } catch (error) {
     result.success = false;
     result.errors.push(
-      `Invalid ${type.toUpperCase()} format: ${error instanceof Error ? error.message : "Unknown error"}`
+      ErrorHandler.createUrlCValidationErr(
+        [],
+        `Invalid ${type.toUpperCase()} format: ${error instanceof Error ? error.message : "Unknown error"}`,
+        ErrorCode.INVALID_URL_ARGS
+      )
     );
     return result;
   }
@@ -114,7 +146,13 @@ export function UrlValidation(
     // Basic data URL validation
     if (!/^data:[^;]+;base64,/.test(value) && !/^data:[^;]+,/.test(value)) {
       result.success = false;
-      result.errors.push("Invalid data URL format");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          "Invalid data URL format",
+          ErrorCode.INVALID_URL_ARGS
+        )
+      );
     }
     return result;
   }
@@ -122,7 +160,13 @@ export function UrlValidation(
   if (!allowedProtocols.includes(protocol)) {
     result.success = false;
     result.errors.push(
-      `Protocol '${protocol}' is not allowed. Allowed protocols: ${allowedProtocols.join(", ")}`
+      ErrorHandler.createUrlCValidationErr(
+        [],
+        `Protocol '${protocol}' is not allowed. Allowed protocols: ${allowedProtocols.join(
+          ", "
+        )}`,
+        ErrorCode.INVALID_URL_ARGS
+      )
     );
     return result;
   }
@@ -133,7 +177,13 @@ export function UrlValidation(
   // Check for empty hostname (except for file:// and mailto: URLs)
   if (!hostname && protocol !== "file" && protocol !== "mailto") {
     result.success = false;
-    result.errors.push("Hostname is required");
+    result.errors.push(
+      ErrorHandler.createUrlCValidationErr(
+        [],
+        "Hostname is required",
+        ErrorCode.INVALID_URL_ARGS
+      )
+    );
     return result;
   }
 
@@ -146,7 +196,13 @@ export function UrlValidation(
         hostname === "::1")
     ) {
       result.success = false;
-      result.errors.push("Localhost URLs are not allowed");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          "Localhost URLs are not allowed",
+          ErrorCode.INVALID_URL_ARGS
+        )
+      );
       return result;
     }
 
@@ -156,7 +212,13 @@ export function UrlValidation(
 
     if ((isIPv4 || isIPv6) && !allowIPAddresses) {
       result.success = false;
-      result.errors.push("IP addresses are not allowed");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          "IP addresses are not allowed",
+          ErrorCode.INVALID_URL_ARGS
+        )
+      );
       return result;
     }
 
@@ -171,7 +233,13 @@ export function UrlValidation(
 
       if (isPrivate) {
         result.success = false;
-        result.errors.push("Private IP addresses are not allowed");
+        result.errors.push(
+          ErrorHandler.createUrlCValidationErr(
+            [],
+            "Private IP addresses are not allowed",
+            ErrorCode.INVALID_URL_ARGS
+          )
+        );
         return result;
       }
     }
@@ -181,7 +249,13 @@ export function UrlValidation(
       const parts = hostname.split(".");
       if (parts.length < 2 || parts[parts.length - 1].length < 2) {
         result.success = false;
-        result.errors.push("Valid top-level domain (TLD) is required");
+        result.errors.push(
+          ErrorHandler.createUrlCValidationErr(
+            [],
+            "Valid top-level domain (TLD) is required",
+            ErrorCode.INVALID_URL_ARGS
+          )
+        );
         return result;
       }
     }
@@ -193,14 +267,26 @@ export function UrlValidation(
       hostname.endsWith(".")
     ) {
       result.success = false;
-      result.errors.push("Invalid hostname format");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          "Invalid hostname format",
+          ErrorCode.INVALID_URL_ARGS
+        )
+      );
       return result;
     }
 
     // Domain name character validation
     if (!isIPv4 && !isIPv6 && !/^[a-zA-Z0-9.-]+$/.test(hostname)) {
       result.success = false;
-      result.errors.push("Hostname contains invalid characters");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          "Hostname contains invalid characters",
+          ErrorCode.INVALID_URL_ARGS
+        )
+      );
       return result;
     }
   }
@@ -210,7 +296,13 @@ export function UrlValidation(
     const port = parseInt(parsedUrl.port, 10);
     if (port < 1 || port > 65535) {
       result.success = false;
-      result.errors.push("Port number must be between 1 and 65535");
+      result.errors.push(
+        ErrorHandler.createUrlCValidationErr(
+          [],
+          "Port number must be between 1 and 65535",
+          ErrorCode.INVALID_URL_ARGS
+        )
+      );
       return result;
     }
   }

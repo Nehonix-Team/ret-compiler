@@ -89,17 +89,14 @@ export {
 export {
   Smart,
   When,
-  Live, 
+  Live,
   Docs,
   Extensions,
   Quick,
   TypeScriptGenerator,
 } from "./core/schema/extensions";
 
-export {
-  InterfaceSchema,
-  SchemaValidationError,
-} from "./core/schema/mode/interfaces/InterfaceSchema";
+export { InterfaceSchema } from "./core/schema/mode/interfaces/InterfaceSchema";
 
 // Performance and optimization
 export { PerformanceMonitor } from "./core/schema/optimization/PerformanceMonitor";

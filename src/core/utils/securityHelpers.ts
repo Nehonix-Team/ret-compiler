@@ -1,3 +1,7 @@
+import { ErrorHandler } from "../schema/mode/interfaces/errors/ErrorHandler";
+import { ErrorCode } from "../schema/mode/interfaces/errors/types/errors.type";
+import { ValidationError } from "../types/types";
+
 // Helper export function for deep JSON validation
 export function validateJsonDeep(
   data: any,
@@ -11,16 +15,24 @@ export function validateJsonDeep(
     currentDepth: number;
     keyCount: number;
   }
-): { success: boolean; errors: string[]; warnings: string[] } {
+): { success: boolean; errors: ValidationError[]; warnings: string[] } {
   const result = {
     success: true,
-    errors: [] as string[],
+    errors: [] as ValidationError[],
     warnings: [] as string[],
   };
 
   if (options.currentDepth > options.maxDepth) {
     result.success = false;
-    result.errors.push(`Maximum depth of ${options.maxDepth} exceeded`);
+    result.errors.push(
+      ErrorHandler.createError(
+        [],
+        `Maximum depth of ${options.maxDepth} exceeded`,
+        ErrorCode.SECURITY_VIOLATION,
+        "valid depth",
+        options.currentDepth
+      )
+    );
     return result;
   }
 
@@ -32,14 +44,25 @@ export function validateJsonDeep(
 
   if (!options.allowedTypes.includes(dataType)) {
     result.success = false;
-    result.errors.push(`Type '${dataType}' is not allowed`);
+    result.errors.push(
+      ErrorHandler.createSimpleError(
+        `Type '${dataType}' is not allowed`,
+        ErrorCode.SECURITY_VIOLATION
+      )
+    );
     return result;
   }
 
   if (typeof data === "string" && data.length > options.maxStringLength) {
     result.success = false;
     result.errors.push(
-      `String length exceeds maximum of ${options.maxStringLength}`
+      ErrorHandler.createError(
+        [],
+        `String length exceeds maximum of ${options.maxStringLength}`,
+        ErrorCode.SECURITY_VIOLATION,
+        `string with length <= ${options.maxStringLength}`,
+        data.length
+      )
     );
   }
 
@@ -47,7 +70,13 @@ export function validateJsonDeep(
     if (data.length > options.maxArrayLength) {
       result.success = false;
       result.errors.push(
-        `Array length exceeds maximum of ${options.maxArrayLength}`
+        ErrorHandler.createError(
+          [],
+          `Array length exceeds maximum of ${options.maxArrayLength}`,
+          ErrorCode.SECURITY_VIOLATION,
+          `array with length <= ${options.maxArrayLength}`,
+          data.length
+        )
       );
     }
 
@@ -68,13 +97,29 @@ export function validateJsonDeep(
 
     if (options.keyCount > options.maxKeys) {
       result.success = false;
-      result.errors.push(`Maximum key count of ${options.maxKeys} exceeded`);
+      result.errors.push(
+        ErrorHandler.createError(
+          [],
+          `Maximum key count of ${options.maxKeys} exceeded`,
+          ErrorCode.SECURITY_VIOLATION,
+          `object with <= ${options.maxKeys} keys`,
+          options.keyCount
+        )
+      );
     }
 
     for (const key of keys) {
       if (options.forbiddenKeys.includes(key)) {
         result.success = false;
-        result.errors.push(`Forbidden key '${key}' found`);
+        result.errors.push(
+          ErrorHandler.createError(
+            [key],
+            `Forbidden key '${key}' found`,
+            ErrorCode.SECURITY_VIOLATION,
+            "allowed key",
+            key
+          )
+        );
       }
 
       const valueResult = validateJsonDeep(data[key], {
@@ -94,11 +139,11 @@ export function validateJsonDeep(
 export function validateJsonSchema(
   data: any,
   schema: any
-): { success: boolean; errors: string[]; warnings: string[] } {
+): { success: boolean; errors: ValidationError[]; warnings: string[] } {
   // Basic schema validation - you might want to use a proper JSON schema library like Ajv
   const result = {
     success: true,
-    errors: [] as string[],
+    errors: [] as ValidationError[],
     warnings: [] as string[],
   };
 
@@ -110,7 +155,15 @@ export function validateJsonSchema(
         : typeof data;
     if (dataType !== schema.type) {
       result.success = false;
-      result.errors.push(`Expected type '${schema.type}', got '${dataType}'`);
+      result.errors.push(
+        ErrorHandler.createError(
+          [],
+          `Expected type '${schema.type}', got '${dataType}'`,
+          ErrorCode.TYPE_MISMATCH,
+          schema.type,
+          data
+        )
+      );
     }
   }
 
@@ -209,16 +262,24 @@ export function validateObjectDeep(
   obj: any,
   maxDepth: number,
   currentDepth: number
-): { success: boolean; errors: string[]; warnings: string[] } {
+): { success: boolean; errors: ValidationError[]; warnings: string[] } {
   const result = {
     success: true,
-    errors: [] as string[],
+    errors: [] as ValidationError[],
     warnings: [] as string[],
   };
 
   if (currentDepth > maxDepth) {
     result.success = false;
-    result.errors.push(`Maximum object depth of ${maxDepth} exceeded`);
+    result.errors.push(
+      ErrorHandler.createError(
+        [],
+        `Maximum object depth of ${maxDepth} exceeded`,
+        ErrorCode.SECURITY_VIOLATION,
+        `object with depth <= ${maxDepth}`,
+        currentDepth
+      )
+    );
     return result;
   }
 
@@ -238,16 +299,24 @@ export function validateObjectDeep(
 export function validateObjectSchema(
   obj: any,
   schema: any
-): { success: boolean; errors: string[]; warnings: string[] } {
+): { success: boolean; errors: ValidationError[]; warnings: string[] } {
   const result = {
     success: true,
-    errors: [] as string[],
+    errors: [] as ValidationError[],
     warnings: [] as string[],
   };
 
   if (schema.type && schema.type !== "object") {
     result.success = false;
-    result.errors.push(`Expected object type in schema`);
+    result.errors.push(
+      ErrorHandler.createError(
+        [],
+        `Expected object type in schema`,
+        ErrorCode.TYPE_MISMATCH,
+        "object",
+        schema.type
+      )
+    );
     return result;
   }
 

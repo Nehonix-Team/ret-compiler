@@ -181,9 +181,10 @@ function generateFortifyGrammar() {
                 ],
             },
             // FIXED CONDITIONAL SYNTAX SECTION
+            // UPDATED CONDITIONAL SYNTAX SECTION - More flexible with whitespace
             "fortify-conditional-syntax": {
                 patterns: [
-                    // Main conditional pattern - handles nested conditionals properly
+                    // Main conditional pattern - handles nested conditionals properly with flexible spacing
                     {
                         name: "meta.conditional.fortify.complete",
                         begin: "\\b(when)\\s+",
@@ -194,29 +195,29 @@ function generateFortifyGrammar() {
                             },
                         },
                         patterns: [
-                            // Condition part - everything before *? (non-greedy match)
+                            // Condition part - everything before *? (non-greedy match, flexible spacing)
                             {
                                 name: "meta.conditional.condition.fortify",
                                 begin: "(?<=when\\s)",
-                                end: "(?=\\s*\\*\\?)",
+                                end: "(?=\\s*\\*\\?\\s*)",
                                 patterns: [
                                     {
                                         include: "#fortify-conditional-condition",
                                     },
                                 ],
                             },
-                            // Conditional operator (*?)
+                            // Conditional operator (*?) with flexible spacing
                             {
                                 name: "keyword.operator.fortify.conditional-then",
-                                match: "\\*\\?",
+                                match: "\\s*\\*\\?\\s*",
                             },
                             // Then-branch - can be a nested conditional or regular type
                             {
                                 name: "meta.conditional.then-branch.fortify",
-                                begin: "(?<=\\*\\?)\\s*",
+                                begin: "(?<=\\*\\?\\s*)\\s*",
                                 end: "(?=\\s*:|$)",
                                 patterns: [
-                                    // IMPORTANT: Check for nested 'when' first
+                                    // IMPORTANT: Check for nested 'when' first with flexible spacing
                                     {
                                         name: "meta.conditional.nested.fortify",
                                         begin: "\\b(when)\\s+",
@@ -227,26 +228,26 @@ function generateFortifyGrammar() {
                                             },
                                         },
                                         patterns: [
-                                            // Nested condition
+                                            // Nested condition with flexible spacing
                                             {
                                                 name: "meta.conditional.condition.nested.fortify",
                                                 begin: "(?<=when\\s)",
-                                                end: "(?=\\s*\\*\\?)",
+                                                end: "(?=\\s*\\*\\?\\s*)",
                                                 patterns: [
                                                     {
                                                         include: "#fortify-conditional-condition",
                                                     },
                                                 ],
                                             },
-                                            // Nested operator
+                                            // Nested operator with flexible spacing
                                             {
                                                 name: "keyword.operator.fortify.conditional-then.nested",
-                                                match: "\\*\\?",
+                                                match: "\\s*\\*\\?\\s*",
                                             },
                                             // Nested then-type
                                             {
                                                 name: "meta.conditional.then-type.nested.fortify",
-                                                begin: "(?<=\\*\\?)\\s*",
+                                                begin: "(?<=\\*\\?\\s*)\\s*",
                                                 end: "(?=\\s*:|$)",
                                                 patterns: [
                                                     {
@@ -262,18 +263,18 @@ function generateFortifyGrammar() {
                                     },
                                 ],
                             },
-                            // Else separator (:)
+                            // Else separator (:) with flexible spacing
                             {
                                 name: "punctuation.separator.fortify.conditional-else",
-                                match: ":",
+                                match: "\\s*:\\s*",
                             },
                             // Else-branch - can also be nested conditional or regular type
                             {
                                 name: "meta.conditional.else-branch.fortify",
-                                begin: "(?<=:)\\s*",
+                                begin: "(?<=:\\s*)\\s*",
                                 end: "(?=\\s*[,}\\]\"'`]|$)",
                                 patterns: [
-                                    // Check for nested 'when' in else branch
+                                    // Check for nested 'when' in else branch with flexible spacing
                                     {
                                         name: "meta.conditional.nested-else.fortify",
                                         begin: "\\b(when)\\s+",

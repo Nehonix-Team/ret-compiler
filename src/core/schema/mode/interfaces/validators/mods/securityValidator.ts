@@ -16,6 +16,8 @@ import {
   ValidationCache,
   ValidationMetrics,
 } from "../../../../../utils/securityValidatorHelpers";
+import { ErrorHandler } from "../../errors/ErrorHandler";
+import { ErrorCode } from "../../errors/types/errors.type";
 
 export class SecurityValidators {
   private static ajv: Ajv | null = null;
@@ -174,15 +176,15 @@ export class SecurityValidators {
       }
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       if (options.enableMetrics) {
         ValidationMetrics.record(operationName, Date.now() - startTime, true);
       }
-
+      const msg = `${error instanceof Error ? error.message : "Unknown error"}`;
       return {
         success: false,
         errors: [
-          `Validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+          ErrorHandler.createValidationError([], msg, ErrorCode.UNKNOWN_ERROR),
         ],
         warnings: [],
         data: value,
@@ -219,7 +221,7 @@ export class SecurityValidators {
 
     if (typeof value !== "string") {
       result.success = false;
-      result.errors.push("Expected string for text validation");
+      result.errors.push(ErrorHandler.createTypeError([], "string", value));
       return result;
     }
 
@@ -229,7 +231,12 @@ export class SecurityValidators {
     if (text.length > maxLength) {
       result.success = false;
       result.errors.push(
-        `Text exceeds maximum length of ${maxLength} characters`
+        ErrorHandler.createStringError(
+          [],
+          `Text exceeds maximum length of ${maxLength} characters`,
+          value,
+          ErrorCode.STRING_TOO_LONG
+        )
       );
       return result;
     }
@@ -261,14 +268,28 @@ export class SecurityValidators {
     // Empty string validation
     if (!allowEmpty && text.length === 0) {
       result.success = false;
-      result.errors.push("Text cannot be empty");
+      result.errors.push(
+        ErrorHandler.createStringError(
+          [],
+          "Text cannot be empty",
+          value,
+          ErrorCode.STRING_TOO_SHORT
+        )
+      );
       return result;
     }
 
     // Length validation
     if (text.length < minLength) {
       result.success = false;
-      result.errors.push(`Text must be at least ${minLength} characters long`);
+      result.errors.push(
+        ErrorHandler.createStringError(
+          [],
+          `Text must be at least ${minLength} characters long`,
+          value,
+          ErrorCode.STRING_TOO_SHORT
+        )
+      );
     }
 
     // Line count validation
@@ -276,35 +297,68 @@ export class SecurityValidators {
       const lineCount = text.split("\n").length;
       if (lineCount > maxLines) {
         result.success = false;
-        result.errors.push(`Text cannot exceed ${maxLines} lines`);
+        result.errors.push(
+          ErrorHandler.createStringError(
+            [],
+            `Text cannot exceed ${maxLines} lines`,
+            value,
+            ErrorCode.STRING_TOO_LONG
+          )
+        );
       }
     }
 
     // Character encoding validation
     if (encoding === "ascii" && !/^[\x00-\x7F]*$/.test(text)) {
       result.success = false;
-      result.errors.push("Text contains non-ASCII characters");
+      result.errors.push(
+        ErrorHandler.createStringError(
+          [],
+          "Text contains non-ASCII characters",
+          value,
+          ErrorCode.INVALID_STRING_FORMAT
+        )
+      );
     }
 
     // Alphanumeric requirement
     if (requireAlphanumeric && !/^[a-zA-Z0-9\s]*$/.test(text)) {
       result.success = false;
       result.errors.push(
-        "Text must contain only alphanumeric characters and spaces"
+        ErrorHandler.createStringError(
+          [],
+          "Text must contain only alphanumeric characters and spaces",
+          value,
+          ErrorCode.INVALID_STRING_FORMAT
+        )
       );
     }
 
     // Allowed characters validation
     if (allowedCharacters && !allowedCharacters.test(text)) {
       result.success = false;
-      result.errors.push("Text contains disallowed characters");
+      result.errors.push(
+        ErrorHandler.createStringError(
+          [],
+          "Text contains disallowed characters",
+          value,
+          ErrorCode.INVALID_STRING_FORMAT
+        )
+      );
     }
 
     // Forbidden patterns check
     for (const pattern of forbiddenPatterns) {
       if (pattern.test(text)) {
         result.success = false;
-        result.errors.push("Text contains forbidden pattern");
+        result.errors.push(
+          ErrorHandler.createStringError(
+            [],
+            "Text contains forbidden pattern",
+            value,
+            ErrorCode.PATTERN_MISMATCH
+          )
+        );
         break;
       }
     }
@@ -315,7 +369,12 @@ export class SecurityValidators {
         if (pattern.test(text)) {
           result.success = false;
           result.errors.push(
-            "Text contains potentially malicious content (XSS)"
+            ErrorHandler.createStringError(
+              [],
+              "Text contains potentially malicious content (XSS)",
+              value,
+              ErrorCode.INVALID_STRING_FORMAT
+            )
           );
           break;
         }
@@ -324,7 +383,14 @@ export class SecurityValidators {
       // Additional XSS checks
       if (text.includes("javascript:") || text.includes("data:text/html")) {
         result.success = false;
-        result.errors.push("Text contains dangerous URI schemes");
+        result.errors.push(
+          ErrorHandler.createStringError(
+            [],
+            "Text contains dangerous URI schemes",
+            value,
+            ErrorCode.INVALID_STRING_FORMAT
+          )
+        );
       }
     }
 
@@ -343,7 +409,14 @@ export class SecurityValidators {
       for (const pattern of SECURITY_CONSTANTS.LDAP_PATTERNS) {
         if (pattern.test(text)) {
           result.success = false;
-          result.errors.push("Text contains LDAP injection patterns");
+          result.errors.push(
+            ErrorHandler.createStringError(
+              [],
+              "Text contains LDAP injection patterns",
+              value,
+              ErrorCode.INVALID_STRING_FORMAT
+            )
+          );
           break;
         }
       }
@@ -354,7 +427,14 @@ export class SecurityValidators {
       for (const pattern of SECURITY_CONSTANTS.COMMAND_INJECTION_PATTERNS) {
         if (pattern.test(text)) {
           result.success = false;
-          result.errors.push("Text contains command injection patterns");
+          result.errors.push(
+            ErrorHandler.createStringError(
+              [],
+              "Text contains command injection patterns",
+              value,
+              ErrorCode.INVALID_STRING_FORMAT
+            )
+          );
           break;
         }
       }
@@ -368,7 +448,14 @@ export class SecurityValidators {
     // Null byte detection
     if (text.includes("\0")) {
       result.success = false;
-      result.errors.push("Text contains null bytes");
+      result.errors.push(
+        ErrorHandler.createStringError(
+          [],
+          "Text contains null bytes",
+          value,
+          ErrorCode.INVALID_STRING_FORMAT
+        )
+      );
     }
 
     return result;
@@ -428,16 +515,16 @@ export class SecurityValidators {
       }
 
       return result;
-    } catch (error) {
+    } catch (error: any) {
       if (options.enableMetrics) {
         ValidationMetrics.record(operationName, Date.now() - startTime, true);
       }
-
+      const msg = `${error instanceof Error ? error.message : "Unknown error"}`;
+      const code =
+        error instanceof Error ? error.name : ErrorCode.UNKNOWN_ERROR;
       return {
         success: false,
-        errors: [
-          `JSON validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        ],
+        errors: [ErrorHandler.createValidationError([], msg, code)],
         warnings: [],
         data: value,
       };
@@ -472,7 +559,12 @@ export class SecurityValidators {
       if (value.length > maxSize) {
         result.success = false;
         result.errors.push(
-          `JSON string exceeds maximum size of ${maxSize} characters`
+          ErrorHandler.createStringError(
+            [],
+            `JSON string exceeds maximum size of ${maxSize} characters`,
+            value,
+            ErrorCode.STRING_TOO_LONG
+          )
         );
         return result;
       }
@@ -482,7 +574,11 @@ export class SecurityValidators {
       } catch (error) {
         result.success = false;
         result.errors.push(
-          `Invalid JSON string: ${error instanceof Error ? error.message : "Parse error"}`
+          ErrorHandler.createValidationError(
+            [],
+            `Invalid JSON string: ${error instanceof Error ? error.message : "Parse error"}`,
+            ErrorCode.INVALID_JSON
+          )
         );
         return result;
       }
@@ -490,7 +586,9 @@ export class SecurityValidators {
       parsedData = value;
     } else {
       result.success = false;
-      result.errors.push("Expected JSON string or object");
+      result.errors.push(
+        ErrorHandler.createTypeError([], "string or object", value)
+      );
       return result;
     }
 
@@ -499,7 +597,11 @@ export class SecurityValidators {
       if (this.hasDangerousProperties(parsedData)) {
         result.success = false;
         result.errors.push(
-          "JSON contains dangerous properties (prototype pollution risk)"
+          ErrorHandler.createValidationError(
+            [],
+            "JSON contains dangerous properties (prototype pollution risk)",
+            ErrorCode.INVALID_JSON
+          )
         );
         return result;
       }
@@ -509,7 +611,13 @@ export class SecurityValidators {
         const validate = ajv.getSchema("secure-json-v2");
         if (validate && !validate(parsedData)) {
           result.success = false;
-          result.errors.push("JSON failed strict security validation");
+          result.errors.push(
+            ErrorHandler.createValidationError(
+              [],
+              "JSON failed strict security validation",
+              ErrorCode.INVALID_JSON
+            )
+          );
           if (validate.errors) {
             result.warnings.push(
               `AJV errors: ${JSON.stringify(validate.errors)}`
@@ -526,7 +634,13 @@ export class SecurityValidators {
         JSON.stringify(parsedData);
       } catch (error) {
         result.success = false;
-        result.errors.push("JSON contains circular references");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "JSON contains circular references",
+            ErrorCode.INVALID_JSON
+          )
+        );
         return result;
       }
     }
@@ -597,7 +711,13 @@ export class SecurityValidators {
 
     if (typeof value !== "string") {
       result.success = false;
-      result.errors.push("Expected string for IP address");
+      result.errors.push(
+        ErrorHandler.createSimpleError(
+          "Expected string for IP address",
+          [],
+          "string"
+        )
+      );
       return result;
     }
 
@@ -606,7 +726,13 @@ export class SecurityValidators {
     // Basic format validation
     if (!/^[\d\.:a-fA-F\/]+$/.test(ip)) {
       result.success = false;
-      result.errors.push("IP address contains invalid characters");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "IP address contains invalid characters",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
       return result;
     }
 
@@ -619,14 +745,26 @@ export class SecurityValidators {
     if (ip.includes("/")) {
       if (!allowCIDR) {
         result.success = false;
-        result.errors.push("CIDR notation not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "CIDR notation is not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
         return result;
       }
 
       const parts = ip.split("/");
       if (parts.length !== 2) {
         result.success = false;
-        result.errors.push("Invalid CIDR notation format");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Invalid CIDR notation format",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
         return result;
       }
 
@@ -635,7 +773,13 @@ export class SecurityValidators {
 
       if (!/^\d+$/.test(prefixStr)) {
         result.success = false;
-        result.errors.push("CIDR prefix must be numeric");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "CIDR prefix must be numeric",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
         return result;
       }
 
@@ -652,20 +796,36 @@ export class SecurityValidators {
     // Version validation
     if (version === "v4" && !isIPv4) {
       result.success = false;
-      result.errors.push("Invalid IPv4 address format");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Invalid IPv4 address format",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
       return result;
     }
 
     if (version === "v6" && !isIPv6) {
       result.success = false;
-      result.errors.push("Invalid IPv6 address format");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Invalid IPv6 address format",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
       return result;
     }
 
     if (version === "both" && !isIPv4 && !isIPv6) {
       result.success = false;
       result.errors.push(
-        "Invalid IP address format (must be valid IPv4 or IPv6)"
+        ErrorHandler.createValidationError(
+          [],
+          "Invalid IP address format (must be valid IPv4 or IPv6)",
+          ErrorCode.SECURITY_VIOLATION
+        )
       );
       return result;
     }
@@ -674,11 +834,23 @@ export class SecurityValidators {
     if (cidrPrefix !== null) {
       if (isIPv4 && (cidrPrefix < 0 || cidrPrefix > 32)) {
         result.success = false;
-        result.errors.push("Invalid IPv4 CIDR prefix (must be 0-32)");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Invalid IPv4 CIDR prefix (must be 0-32)",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
       if (isIPv6 && (cidrPrefix < 0 || cidrPrefix > 128)) {
         result.success = false;
-        result.errors.push("Invalid IPv6 CIDR prefix (must be 0-128)");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Invalid IPv6 CIDR prefix (must be 0-128)",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
     }
 
@@ -695,20 +867,38 @@ export class SecurityValidators {
           (octets[0] === 169 && octets[1] === 254) // Link-local
         ) {
           result.success = false;
-          result.errors.push("Private IPv4 addresses not allowed");
+          result.errors.push(
+            ErrorHandler.createValidationError(
+              [],
+              "Private IPv4 addresses not allowed",
+              ErrorCode.SECURITY_VIOLATION
+            )
+          );
         }
       }
 
       // Loopback validation
       if (!allowLoopback && octets[0] === 127) {
         result.success = false;
-        result.errors.push("Loopback addresses not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Loopback addresses not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Multicast validation
       if (!allowMulticast && octets[0] >= 224 && octets[0] <= 239) {
         result.success = false;
-        result.errors.push("Multicast addresses not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Multicast addresses not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Documentation addresses (RFC 5737)
@@ -719,7 +909,13 @@ export class SecurityValidators {
           (octets[0] === 203 && octets[1] === 0 && octets[2] === 113)
         ) {
           result.success = false;
-          result.errors.push("Documentation addresses not allowed");
+          result.errors.push(
+            ErrorHandler.createValidationError(
+              [],
+              "Documentation addresses not allowed",
+              ErrorCode.SECURITY_VIOLATION
+            )
+          );
         }
       }
 
@@ -731,7 +927,13 @@ export class SecurityValidators {
           (octets[0] >= 240 && octets[0] <= 255)
         ) {
           result.success = false;
-          result.errors.push("Bogon IP address detected");
+          result.errors.push(
+            ErrorHandler.createValidationError(
+              [],
+              "Bogon IP address detected",
+              ErrorCode.SECURITY_VIOLATION
+            )
+          );
         }
       }
 
@@ -739,7 +941,13 @@ export class SecurityValidators {
       if (!allowReserved) {
         if (octets[0] === 0 || octets[0] === 255) {
           result.success = false;
-          result.errors.push("Reserved IPv4 addresses not allowed");
+          result.errors.push(
+            ErrorHandler.createValidationError(
+              [],
+              "Reserved IPv4 addresses not allowed",
+              ErrorCode.SECURITY_VIOLATION
+            )
+          );
         }
       }
     }
@@ -753,7 +961,13 @@ export class SecurityValidators {
         normalized === "0000:0000:0000:0000:0000:0000:0000:0001"
       ) {
         result.success = false;
-        result.errors.push("IPv6 loopback address not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "IPv6 loopback address not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Unique local addresses (RFC 4193)
@@ -762,24 +976,48 @@ export class SecurityValidators {
         (normalized.startsWith("fc00:") || normalized.startsWith("fd00:"))
       ) {
         result.success = false;
-        result.errors.push("Private IPv6 addresses not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Private IPv6 addresses not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Link-local addresses
       if (!allowPrivate && normalized.startsWith("fe80:")) {
         result.success = false;
-        result.errors.push("Link-local IPv6 addresses not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Link-local IPv6 addresses not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       if (!allowMulticast && normalized.startsWith("ff00:")) {
         result.success = false;
-        result.errors.push("IPv6 multicast addresses not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "IPv6 multicast addresses not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Documentation prefix (RFC 3849)
       if (!allowDocumentation && normalized.startsWith("2001:0db8:")) {
         result.success = false;
-        result.errors.push("IPv6 documentation addresses not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Documentation IPv6 addresses not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
     }
 
@@ -832,7 +1070,13 @@ export class SecurityValidators {
     if (value === null) {
       if (!allowNull) {
         result.success = false;
-        result.errors.push("Null values not allowed");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Null values not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
       return result;
     }
@@ -841,7 +1085,13 @@ export class SecurityValidators {
     if (Array.isArray(value)) {
       if (!allowArray) {
         result.success = false;
-        result.errors.push("Expected object, got array");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Arrays not allowed",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
       return result;
     }
@@ -849,7 +1099,7 @@ export class SecurityValidators {
     // Type check
     if (typeof value !== "object") {
       result.success = false;
-      result.errors.push("Expected object");
+      result.errors.push(ErrorHandler.createTypeError([], "object", value));
       return result;
     }
 
@@ -857,7 +1107,11 @@ export class SecurityValidators {
     if (preventPrototypePollution && this.hasDangerousProperties(value)) {
       result.success = false;
       result.errors.push(
-        "Object contains dangerous properties that could lead to prototype pollution"
+        ErrorHandler.createValidationError(
+          [],
+          "Object contains dangerous properties that could lead to prototype pollution",
+          ErrorCode.SECURITY_VIOLATION
+        )
       );
       return result;
     }
@@ -868,7 +1122,11 @@ export class SecurityValidators {
     if (keys.length > maxKeys) {
       result.success = false;
       result.errors.push(
-        `Object has too many keys (${keys.length}), maximum allowed: ${maxKeys}`
+        ErrorHandler.createValidationError(
+          [],
+          `Object has too many keys (${keys.length}), maximum allowed: ${maxKeys}`,
+          ErrorCode.SECURITY_VIOLATION
+        )
       );
     }
 
@@ -876,7 +1134,13 @@ export class SecurityValidators {
     for (const requiredKey of requiredKeys) {
       if (!(requiredKey in value)) {
         result.success = false;
-        result.errors.push(`Missing required key: ${requiredKey}`);
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            `Missing required key: ${requiredKey}`,
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
     }
 
@@ -886,7 +1150,11 @@ export class SecurityValidators {
       if (key.length > maxPropertyNameLength) {
         result.success = false;
         result.errors.push(
-          `Property name '${key.substring(0, 20)}...' exceeds maximum length of ${maxPropertyNameLength}`
+          ErrorHandler.createValidationError(
+            [],
+            `Property name '${key.substring(0, 20)}...' exceeds maximum length of ${maxPropertyNameLength}`,
+            ErrorCode.SECURITY_VIOLATION
+          )
         );
         continue;
       }
@@ -894,7 +1162,13 @@ export class SecurityValidators {
       // Dangerous key detection
       if (SECURITY_CONSTANTS.DANGEROUS_PROPERTIES.has(key)) {
         result.success = false;
-        result.errors.push(`Dangerous property name detected: '${key}'`);
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            `Dangerous property name detected: '${key}'`,
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
         continue;
       }
 
@@ -902,7 +1176,13 @@ export class SecurityValidators {
       if (allowedKeys.length > 0 && !allowedKeys.includes(key)) {
         if (strict) {
           result.success = false;
-          result.errors.push(`Key '${key}' is not in allowed keys list`);
+          result.errors.push(
+            ErrorHandler.createValidationError(
+              [],
+              `Key '${key}' is not in allowed keys list`,
+              ErrorCode.SECURITY_VIOLATION
+            )
+          );
         } else {
           result.warnings.push(`Key '${key}' is not in allowed keys list`);
         }
@@ -911,13 +1191,25 @@ export class SecurityValidators {
       // Forbidden keys check
       if (forbiddenKeys.includes(key)) {
         result.success = false;
-        result.errors.push(`Key '${key}' is forbidden`);
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            `Key '${key}' is forbidden`,
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Key pattern validation
       if (keyPattern && !keyPattern.test(key)) {
         result.success = false;
-        result.errors.push(`Key '${key}' does not match required pattern`);
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            `Key '${key}' does not match required pattern`,
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
 
       // Check for suspicious patterns in key names
@@ -974,7 +1266,7 @@ export class SecurityValidators {
 
     if (typeof value !== "string") {
       result.success = false;
-      result.errors.push("Expected string for email address");
+      result.errors.push(ErrorHandler.createTypeError([], "string", value));
       return result;
     }
 
@@ -984,7 +1276,12 @@ export class SecurityValidators {
     if (email.length > maxLength) {
       result.success = false;
       result.errors.push(
-        `Email exceeds maximum length of ${maxLength} characters`
+        ErrorHandler.createStringError(
+          [],
+          `Email exceeds maximum length of ${maxLength} characters`,
+          value,
+          ErrorCode.STRING_TOO_LONG
+        )
       );
       return result;
     }
@@ -993,7 +1290,13 @@ export class SecurityValidators {
     const atSymbolCount = (email.match(/@/g) || []).length;
     if (atSymbolCount !== 1) {
       result.success = false;
-      result.errors.push("Email must contain exactly one @ symbol");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Email must contain exactly one @ symbol",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
       return result;
     }
 
@@ -1002,19 +1305,37 @@ export class SecurityValidators {
     // Check for empty parts
     if (!localPart || !domain) {
       result.success = false;
-      result.errors.push("Email local part and domain cannot be empty");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Email local part and domain cannot be empty",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
       return result;
     }
 
     // Local part length validation
     if (localPart.length > 64) {
       result.success = false;
-      result.errors.push("Email local part exceeds 64 characters");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Email local part exceeds 64 characters",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
     // Plus addressing check - FIXED LOGIC
     if (localPart.includes("+")) {
       result.success = false;
-      result.errors.push("Plus addressing (+ symbols) is not allowed");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Plus addressing (+ symbols) is not allowed",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Local part character validation - FIXED TO PROPERLY HANDLE INVALID CHARACTERS
@@ -1023,7 +1344,13 @@ export class SecurityValidators {
       const validLocalPartRegex = /^[a-zA-Z0-9._+-]+$/;
       if (!validLocalPartRegex.test(localPart)) {
         result.success = false;
-        result.errors.push("Email local part contains invalid characters. ");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Email local part contains invalid characters",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
     } else {
       // RFC 5322 compliant - more permissive but excludes problematic chars like #
@@ -1031,26 +1358,50 @@ export class SecurityValidators {
         /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*$/;
       if (!validLocalPartRegex.test(localPart)) {
         result.success = false;
-        result.errors.push("Email local part contains invalid characters");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Email local part contains invalid characters",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
     }
 
     // Check for consecutive dots
     if (localPart.includes("..")) {
       result.success = false;
-      result.errors.push("Email local part cannot contain consecutive dots");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Email local part cannot contain consecutive dots",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Check for dots at start or end
     if (localPart.startsWith(".") || localPart.endsWith(".")) {
       result.success = false;
-      result.errors.push("Email local part cannot start or end with a dot");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Email local part cannot start or end with a dot",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Domain validation
     if (domain.length > 255) {
       result.success = false;
-      result.errors.push("Email domain exceeds 255 characters");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Email domain exceeds 255 characters",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Domain format validation
@@ -1060,7 +1411,11 @@ export class SecurityValidators {
       if (!validDomainRegex.test(domain)) {
         result.success = false;
         result.errors.push(
-          "Invalid domain format - must contain at least one dot and valid TLD"
+          ErrorHandler.createValidationError(
+            [],
+            "Invalid domain format - must contain at least one dot and valid TLD",
+            ErrorCode.SECURITY_VIOLATION
+          )
         );
       }
     } else {
@@ -1069,37 +1424,73 @@ export class SecurityValidators {
         /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
       if (!validDomainRegex.test(domain)) {
         result.success = false;
-        result.errors.push("Invalid domain format");
+        result.errors.push(
+          ErrorHandler.createValidationError(
+            [],
+            "Invalid domain format",
+            ErrorCode.SECURITY_VIOLATION
+          )
+        );
       }
     }
 
     // Check for consecutive dots in domain
     if (domain.includes("..")) {
       result.success = false;
-      result.errors.push("Domain cannot contain consecutive dots");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Domain cannot contain consecutive dots",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Check for dots at start or end of domain
     if (domain.startsWith(".") || domain.endsWith(".")) {
       result.success = false;
-      result.errors.push("Domain cannot start or end with a dot");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "Domain cannot start or end with a dot",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // International domain validation
     if (!allowInternational && /[^\x00-\x7F]/.test(domain)) {
       result.success = false;
-      result.errors.push("International domain names are not allowed");
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          "International domain names are not allowed",
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Domain whitelist/blacklist
     if (allowedDomains.length > 0 && !allowedDomains.includes(domain)) {
       result.success = false;
-      result.errors.push(`Email domain '${domain}' is not allowed`);
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          `Email domain '${domain}' is not allowed`,
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     if (blockedDomains.includes(domain)) {
       result.success = false;
-      result.errors.push(`Email domain '${domain}' is blocked`);
+      result.errors.push(
+        ErrorHandler.createValidationError(
+          [],
+          `Email domain '${domain}' is blocked`,
+          ErrorCode.SECURITY_VIOLATION
+        )
+      );
     }
 
     // Additional validation for common invalid patterns
@@ -1107,7 +1498,11 @@ export class SecurityValidators {
     if (invalidCharsRegex.test(localPart)) {
       result.success = false;
       result.errors.push(
-        "Email local part contains prohibited characters (spaces, quotes, brackets, etc.)"
+        ErrorHandler.createValidationError(
+          [],
+          "Email local part contains prohibited characters (spaces, quotes, brackets, etc.)",
+          ErrorCode.SECURITY_VIOLATION
+        )
       );
     }
 
@@ -1184,7 +1579,11 @@ export class SecurityValidators {
               return {
                 success: false,
                 errors: [
-                  `Validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
+                  ErrorHandler.createValidationError(
+                    [],
+                    `Batch validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
+                    ErrorCode.UNKNOWN_ERROR
+                  ),
                 ],
                 warnings: [],
                 data: value,
@@ -1208,7 +1607,11 @@ export class SecurityValidators {
         results.push({
           success: false,
           errors: [
-            `Batch validation timeout: ${error instanceof Error ? error.message : "Unknown error"}`,
+            ErrorHandler.createValidationError(
+              [],
+              `Batch validation timeout: ${error instanceof Error ? error.message : "Unknown error"}`,
+              ErrorCode.UNKNOWN_ERROR
+            ),
           ],
           warnings: [],
           data: values[results.length + i],

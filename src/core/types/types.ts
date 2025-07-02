@@ -3,12 +3,36 @@
  */
 
 /**
- * Schema validation result
+ * Rich validation error with detailed information
+ */
+export interface ValidationError {
+  /** Field path where the error occurred (e.g., ['user', 'profile', 'email']) */
+  path: string[];
+  /** Human-readable error message */
+  message: string;
+  /** Error code for programmatic handling */
+  code: string;
+  /** Expected value or type */
+  expected: string;
+  /** Actual received value */
+  received: any; 
+  /** Type of the received value */
+  receivedType: string;
+  /** Additional context or suggestions */
+  context?: {
+    suggestion?: string;
+    allowedValues?: any[];
+    constraints?: Record<string, any>;
+  };
+}
+
+/**
+ * Schema validation result with rich error information
  */
 export interface SchemaValidationResult<T = any> {
   success: boolean;
   data?: T;
-  errors: string[];
+  errors: ValidationError[];
   warnings: string[];
 }
 

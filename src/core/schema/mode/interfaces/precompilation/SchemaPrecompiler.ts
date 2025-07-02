@@ -6,10 +6,15 @@
  *
  */
 
-import { SchemaValidationResult } from "../../../../types/types";
+import {
+  SchemaValidationResult,
+  ValidationError,
+} from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
 import { FieldPrecompilers, CompiledFieldValidator } from "./FieldPrecompilers";
 import { MAX_COMPILATION_DEPTH as IMPORTED_MAX_COMPILATION_DEPTH } from "../../../../../constants/VALIDATION_CONSTANTS";
+import {  ErrorHandler } from "../errors/ErrorHandler";
+import { ErrorCode } from "../errors/types/errors.type";
 
 // Precompiled validator function signature
 export interface PrecompiledValidator {
@@ -190,14 +195,14 @@ export class SchemaPrecompiler {
       if (typeof data !== "object" || data === null) {
         return {
           success: false,
-          errors: ["Expected object"],
+          errors: [ErrorHandler.createTypeError([], "object", data)],
           warnings: [],
           data: undefined,
         };
       }
 
       const validatedData: any = {};
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       // OPTIMIZED: Process simple fields first (fastest path)
       for (const field of simpleFields) {
@@ -205,7 +210,7 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(`${field.fieldName}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -217,7 +222,7 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(`${field.fieldName}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -229,7 +234,7 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(`${field.fieldName}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -241,7 +246,7 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(`${field.fieldName}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -368,7 +373,7 @@ export class SchemaPrecompiler {
         ) {
           return {
             success: false,
-            errors: ["Expected object"],
+            errors: [ErrorHandler.createTypeError([], "object", value)],
             warnings: [],
             data: undefined,
           };
@@ -376,7 +381,7 @@ export class SchemaPrecompiler {
 
         // Recursively validate nested object with depth tracking
         const validatedData: any = {};
-        const errors: string[] = [];
+        const errors: ValidationError[] = [];
         const warnings: string[] = [];
 
         for (const [key, nestedFieldType] of Object.entries(fieldType)) {
@@ -389,7 +394,7 @@ export class SchemaPrecompiler {
             const result = fieldValidator(nestedValue);
 
             if (!result.success) {
-              errors.push(`${key}: ${result.errors.join(", ")}`);
+              errors.push(...result.errors);
             } else {
               validatedData[key] = result.data;
               if (result.warnings) warnings.push(...result.warnings);
@@ -410,7 +415,7 @@ export class SchemaPrecompiler {
               const nestedResult = nestedField.validator(nestedValue);
 
               if (!nestedResult.success) {
-                errors.push(`${key}: ${nestedResult.errors.join(", ")}`);
+                errors.push(...nestedResult.errors);
               } else {
                 validatedData[key] = nestedResult.data;
                 if (nestedResult.warnings)
@@ -424,12 +429,19 @@ export class SchemaPrecompiler {
                   `${key}: Maximum nesting depth reached - basic validation only`
                 );
               } else {
-                errors.push(`${key}: Expected object`);
+                errors.push(
+                  ErrorHandler.createTypeError([], "object", nestedValue)
+                );
               }
             }
           } else {
             // Unknown field type
-            errors.push(`${key}: Unknown field type`);
+            errors.push(
+              ErrorHandler.createSimpleError(
+                `Unknown field type: ${nestedFieldType}`,
+                ErrorCode.TYPE_MISMATCH
+              )
+            );
           }
         }
 
@@ -535,14 +547,14 @@ export class SchemaPrecompiler {
       if (typeof data !== "object" || data === null || Array.isArray(data)) {
         return {
           success: false,
-          errors: ["Expected object"],
+          errors: [ErrorHandler.createTypeError([], "object", data)],
           warnings: [],
           data: undefined,
         };
       }
 
       const validatedData: any = {};
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
       const warnings: string[] = [];
 
       // Validate each field using compiled validators
@@ -552,7 +564,9 @@ export class SchemaPrecompiler {
         // Handle optional fields
         if (value === undefined) {
           if (!field.isOptional) {
-            errors.push(`${field.fieldName}: Required field is missing`);
+            errors.push(
+              ErrorHandler.createMissingFieldError([], field.fieldName)
+            );
           } else if (field.hasDefault) {
             validatedData[field.fieldName] = field.defaultValue;
           }
@@ -562,7 +576,7 @@ export class SchemaPrecompiler {
         // Use the compiled field validator
         const result = field.validator(value);
         if (!result.success) {
-          errors.push(`${field.fieldName}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else {
           validatedData[field.fieldName] = result.data;
         }

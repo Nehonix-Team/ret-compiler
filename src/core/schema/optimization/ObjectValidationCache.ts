@@ -1,38 +1,45 @@
 /**
  * Production Object Validation Cache System
- * 
+ *
  * High-performance caching for object validation with intelligent
  * hot-path optimization and memory management.
  */
 
-import { SchemaValidationResult } from "../../types/types";
-import type {CachedValidation, ValidationPath} from "../../types/objValidationCache"
+import { SchemaValidationResult, ValidationError } from "../../types/types";
+import type {
+  CachedValidation,
+  ValidationPath,
+} from "../../types/objValidationCache";
+import { ErrorHandler } from "../mode/interfaces/errors/ErrorHandler";
 // Fast hash function for objects
 function djb2Hash(str: string): string {
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = (hash << 5) + hash + str.charCodeAt(i);
   }
   return (hash >>> 0).toString(36);
 }
 
 // Optimized object key extractor
 function getObjectKeys(obj: any): string {
-  if (typeof obj !== 'object' || obj === null) return typeof obj;
-  
+  if (typeof obj !== "object" || obj === null) return typeof obj;
+
   const keys = [];
   for (const key in obj) {
     if (obj.hasOwnProperty(key)) keys.push(key);
   }
-  return keys.sort().join(',');
+  return keys.sort().join(",");
 }
 
 export class ObjectValidationCache {
   private static cache = new Map<string, CachedValidation>();
   private static pathCache = new Map<string, ValidationPath>();
-  private static structureCache = new Map<string, (value: any) => SchemaValidationResult>();
+  private static structureCache = new Map<
+    string,
+    (value: any) => SchemaValidationResult
+  >();
   private static hotPaths = new Set<string>();
-  
+
   private static readonly MAX_CACHE_SIZE = 5000;
   private static readonly HOT_PATH_THRESHOLD = 10;
   private static readonly CACHE_TTL = 300000; // 5 minutes
@@ -42,7 +49,7 @@ export class ObjectValidationCache {
     misses: 0,
     hotPathHits: 0,
     structureHits: 0,
-    evictions: 0 
+    evictions: 0,
   };
 
   /**
@@ -55,20 +62,20 @@ export class ObjectValidationCache {
   ): SchemaValidationResult {
     const cacheKey = this.generateCacheKey(value, path);
     const structureHash = this.generateStructureHash(value);
-    
+
     // Check cache
     const cached = this.cache.get(cacheKey);
     if (cached && this.isCacheValid(cached)) {
       cached.accessCount++;
       cached.lastAccessed = Date.now();
       this.stats.hits++;
-      
+
       // Mark as hot path if accessed frequently
       if (cached.accessCount >= this.HOT_PATH_THRESHOLD) {
         this.markAsHotPath(path);
         this.stats.hotPathHits++;
       }
-      
+
       return cached.result;
     }
 
@@ -85,7 +92,7 @@ export class ObjectValidationCache {
       structureHash,
       accessCount: 1,
       lastAccessed: Date.now(),
-      validationTime
+      validationTime,
     };
 
     this.cache.set(cacheKey, cacheEntry);
@@ -103,17 +110,17 @@ export class ObjectValidationCache {
     schema: Record<string, any>,
     path: string[] = []
   ): SchemaValidationResult {
-    if (typeof value !== 'object' || value === null) {
+    if (typeof value !== "object" || value === null) {
       return {
         success: false,
-        errors: ['Expected object'],
+        errors: [ErrorHandler.createTypeError([], "object", value)],
         warnings: [],
-        data: value
+        data: value,
       };
     }
 
     // Check if this is a hot path
-    const pathKey = path.join('.');
+    const pathKey = path.join(".");
     if (this.hotPaths.has(pathKey)) {
       return this.validateHotPath(value, schema, path);
     }
@@ -130,21 +137,21 @@ export class ObjectValidationCache {
     schema: Record<string, any>,
     path: string[]
   ): SchemaValidationResult {
-    const pathKey = path.join('.');
+    const pathKey = path.join(".");
     const cachedPath = this.pathCache.get(pathKey);
-    
+
     if (cachedPath) {
       return cachedPath.validator(value);
     }
 
     // Compile optimized validator for this hot path
     const optimizedValidator = this.compileHotPathValidator(schema);
-    
+
     this.pathCache.set(pathKey, {
       path,
       validator: optimizedValidator,
       isHotPath: true,
-      avgValidationTime: 0
+      avgValidationTime: 0,
     });
 
     return optimizedValidator(value);
@@ -159,7 +166,7 @@ export class ObjectValidationCache {
     path: string[]
   ): SchemaValidationResult {
     const structureKey = this.generateStructureKey(schema);
-    
+
     // Check if we have a cached structure validator
     let structureValidator = this.structureCache.get(structureKey);
     if (!structureValidator) {
@@ -178,20 +185,26 @@ export class ObjectValidationCache {
     schema: Record<string, any>
   ): (value: any) => SchemaValidationResult {
     // Pre-compile field validators for maximum performance
-    const validationChecks: Array<(value: any, errors: string[], data: any) => void> = [];
-    
+    const validationChecks: Array<
+      (value: any, errors: ValidationError[], data: any) => void
+    > = [];
+
     for (const [key, fieldType] of Object.entries(schema)) {
       const isOptional = this.isOptional(fieldType);
       const cleanType = isOptional ? fieldType.slice(0, -1) : fieldType;
-      
+
       // Create optimized validation function for this field
-      const fieldValidator = this.createFieldValidator(key, cleanType, isOptional);
+      const fieldValidator = this.createFieldValidator(
+        key,
+        cleanType,
+        isOptional
+      );
       validationChecks.push(fieldValidator);
     }
 
     // Return highly optimized validator
     return (value: any): SchemaValidationResult => {
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
       const validatedData: any = {};
 
       // Execute all field validations in a tight loop
@@ -203,7 +216,7 @@ export class ObjectValidationCache {
         success: errors.length === 0,
         errors,
         warnings: [],
-        data: validatedData
+        data: validatedData,
       };
     };
   }
@@ -212,84 +225,95 @@ export class ObjectValidationCache {
    * Create optimized field validator
    */
   private static createFieldValidator(
-    key: string, 
-    fieldType: string, 
+    key: string,
+    fieldType: string,
     isOptional: boolean
-  ): (value: any, errors: string[], data: any) => void {
+  ): (value: any, errors: ValidationError[], data: any) => void {
     // Pre-compile type checking logic
-    if (fieldType === 'string') {
-      return (value: any, errors: string[], data: any) => {
+    if (fieldType === "string") {
+      return (value: any, errors: ValidationError[], data: any) => {
         const fieldValue = value[key];
         if (fieldValue === undefined) {
-          if (!isOptional) errors.push(`${key}: Required field is missing`);
-        } else if (typeof fieldValue !== 'string') {
-          errors.push(`${key}: Expected string, got ${typeof fieldValue}`);
+          if (!isOptional)
+            errors.push(ErrorHandler.createMissingFieldError([], key));
+        } else if (typeof fieldValue !== "string") {
+          errors.push(ErrorHandler.createTypeError([], "string", fieldValue));
         } else {
           data[key] = fieldValue;
         }
       };
     }
-    
-    if (fieldType === 'number') {
-      return (value: any, errors: string[], data: any) => {
+
+    if (fieldType === "number") {
+      return (value: any, errors: ValidationError[], data: any) => {
         const fieldValue = value[key];
         if (fieldValue === undefined) {
-          if (!isOptional) errors.push(`${key}: Required field is missing`);
-        } else if (typeof fieldValue !== 'number' || isNaN(fieldValue)) {
-          errors.push(`${key}: Expected number, got ${typeof fieldValue}`);
+          if (!isOptional)
+            errors.push(ErrorHandler.createMissingFieldError([], key));
+        } else if (typeof fieldValue !== "number" || isNaN(fieldValue)) {
+          errors.push(ErrorHandler.createTypeError([], "number", fieldValue));
         } else {
           data[key] = fieldValue;
         }
       };
     }
-    
-    if (fieldType === 'boolean') {
-      return (value: any, errors: string[], data: any) => {
+
+    if (fieldType === "boolean") {
+      return (value: any, errors: ValidationError[], data: any) => {
         const fieldValue = value[key];
         if (fieldValue === undefined) {
-          if (!isOptional) errors.push(`${key}: Required field is missing`);
-        } else if (typeof fieldValue !== 'boolean') {
-          errors.push(`${key}: Expected boolean, got ${typeof fieldValue}`);
+          if (!isOptional)
+            errors.push(ErrorHandler.createMissingFieldError([], key));
+        } else if (typeof fieldValue !== "boolean") {
+          errors.push(ErrorHandler.createTypeError([], "boolean", fieldValue));
         } else {
           data[key] = fieldValue;
         }
       };
     }
-    
-    if (fieldType.includes('|')) {
-      const allowedValues = new Set(fieldType.split('|').map(v => v.trim()));
-      return (value: any, errors: string[], data: any) => {
+
+    if (fieldType.includes("|")) {
+      const allowedValues = new Set(fieldType.split("|").map((v) => v.trim()));
+      return (value: any, errors: ValidationError[], data: any) => {
         const fieldValue = value[key];
         if (fieldValue === undefined) {
-          if (!isOptional) errors.push(`${key}: Required field is missing`);
+          if (!isOptional)
+            errors.push(ErrorHandler.createMissingFieldError([], key));
         } else if (!allowedValues.has(String(fieldValue))) {
-          errors.push(`${key}: Value must be one of: ${Array.from(allowedValues).join(', ')}`);
+          errors.push(
+            ErrorHandler.createUnionError(
+              [],
+              Array.from(allowedValues),
+              fieldValue
+            )
+          );
         } else {
           data[key] = fieldValue;
         }
       };
     }
-    
+
     // Array type
-    if (fieldType.endsWith('[]')) {
+    if (fieldType.endsWith("[]")) {
       const itemType = fieldType.slice(0, -2);
-      return (value: any, errors: string[], data: any) => {
+      return (value: any, errors: ValidationError[], data: any) => {
         const fieldValue = value[key];
         if (fieldValue === undefined) {
-          if (!isOptional) errors.push(`${key}: Required field is missing`);
+          if (!isOptional)
+            errors.push(ErrorHandler.createMissingFieldError([], key));
         } else if (!Array.isArray(fieldValue)) {
-          errors.push(`${key}: Expected array, got ${typeof fieldValue}`);
+          errors.push(ErrorHandler.createTypeError([], "array", fieldValue));
         } else {
           data[key] = fieldValue;
         }
       };
     }
-    
+
     // Default validator
-    return (value: any, errors: string[], data: any) => {
+    return (value: any, errors: ValidationError[], data: any) => {
       const fieldValue = value[key];
       if (fieldValue === undefined && !isOptional) {
-        errors.push(`${key}: Required field is missing`);
+        errors.push(ErrorHandler.createMissingFieldError([], key));
       } else if (fieldValue !== undefined) {
         data[key] = fieldValue;
       }
@@ -303,17 +327,19 @@ export class ObjectValidationCache {
     schema: Record<string, any>
   ): (value: any) => SchemaValidationResult {
     const schemaKeys = Object.keys(schema);
-    const requiredFields = schemaKeys.filter(key => !this.isOptional(schema[key]));
-    
+    const requiredFields = schemaKeys.filter(
+      (key) => !this.isOptional(schema[key])
+    );
+
     return (value: any): SchemaValidationResult => {
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
       const validatedData: any = {};
 
       // Check required fields first
       for (let i = 0; i < requiredFields.length; i++) {
         const key = requiredFields[i];
         if (value[key] === undefined) {
-          errors.push(`${key}: Required field is missing`);
+          errors.push(ErrorHandler.createMissingFieldError([], key));
         }
       }
 
@@ -321,7 +347,7 @@ export class ObjectValidationCache {
       for (let i = 0; i < schemaKeys.length; i++) {
         const key = schemaKeys[i];
         const fieldValue = value[key];
-        
+
         if (fieldValue !== undefined) {
           validatedData[key] = fieldValue;
         }
@@ -331,7 +357,7 @@ export class ObjectValidationCache {
         success: errors.length === 0,
         errors,
         warnings: [],
-        data: validatedData
+        data: validatedData,
       };
     };
   }
@@ -340,32 +366,41 @@ export class ObjectValidationCache {
    * Check if field type is optional
    */
   private static isOptional(fieldType: any): boolean {
-    return typeof fieldType === 'string' && fieldType.endsWith('?');
+    return typeof fieldType === "string" && fieldType.endsWith("?");
   }
 
   /**
    * Mark path as hot path for optimization
    */
   private static markAsHotPath(path: string[]): void {
-    const pathKey = path.join('.');
+    const pathKey = path.join(".");
     this.hotPaths.add(pathKey);
   }
 
   /**
    * Update path statistics
    */
-  private static updatePathStatistics(path: string[], validationTime: number): void {
-    const pathKey = path.join('.');
+  private static updatePathStatistics(
+    path: string[],
+    validationTime: number
+  ): void {
+    const pathKey = path.join(".");
     const existing = this.pathCache.get(pathKey);
-    
+
     if (existing) {
-      existing.avgValidationTime = (existing.avgValidationTime + validationTime) / 2;
+      existing.avgValidationTime =
+        (existing.avgValidationTime + validationTime) / 2;
     } else {
       this.pathCache.set(pathKey, {
         path,
-        validator: () => ({ success: true, errors: [], warnings: [], data: null }),
+        validator: () => ({
+          success: true,
+          errors: [],
+          warnings: [],
+          data: null,
+        }),
         isHotPath: false,
-        avgValidationTime: validationTime
+        avgValidationTime: validationTime,
       });
     }
   }
@@ -375,7 +410,7 @@ export class ObjectValidationCache {
    */
   private static generateCacheKey(value: any, path: string[]): string {
     const valueHash = this.hashValue(value);
-    const pathHash = path.join('.');
+    const pathHash = path.join(".");
     return `${pathHash}:${valueHash}`;
   }
 
@@ -391,7 +426,7 @@ export class ObjectValidationCache {
    */
   private static generateStructureKey(schema: Record<string, any>): string {
     const keys = Object.keys(schema).sort();
-    const typeSignature = keys.map(k => `${k}:${schema[k]}`).join(';');
+    const typeSignature = keys.map((k) => `${k}:${schema[k]}`).join(";");
     return djb2Hash(typeSignature);
   }
 
@@ -399,13 +434,15 @@ export class ObjectValidationCache {
    * Fast hash function for values
    */
   private static hashValue(value: any): string {
-    if (typeof value !== 'object' || value === null) {
+    if (typeof value !== "object" || value === null) {
       return String(value);
     }
-    
+
     // Fast hash for objects
     const str = JSON.stringify(value);
-    return djb2Hash(str.length > 100 ? str.substring(0, 100 + str.length % 50) : str);
+    return djb2Hash(
+      str.length > 100 ? str.substring(0, 100 + (str.length % 50)) : str
+    );
   }
 
   /**
@@ -420,17 +457,17 @@ export class ObjectValidationCache {
    */
   private static cleanupCache(): void {
     if (this.cache.size <= this.MAX_CACHE_SIZE) return;
-    
+
     const now = Date.now();
     const entries: [string, CachedValidation][] = [];
-    
+
     // Collect entries with scores
     for (const [key, cached] of this.cache) {
       const age = now - cached.lastAccessed;
       const score = cached.accessCount / (age + 1); // Higher score = more valuable
       entries.push([key, cached]);
     }
-    
+
     // Sort by value (lower score = less valuable)
     entries.sort((a, b) => {
       const ageA = now - a[1].lastAccessed;
@@ -439,9 +476,12 @@ export class ObjectValidationCache {
       const scoreB = b[1].accessCount / (ageB + 1);
       return scoreA - scoreB;
     });
-    
+
     // Remove least valuable entries
-    const toRemove = this.cache.size - this.MAX_CACHE_SIZE + Math.floor(this.MAX_CACHE_SIZE * 0.1);
+    const toRemove =
+      this.cache.size -
+      this.MAX_CACHE_SIZE +
+      Math.floor(this.MAX_CACHE_SIZE * 0.1);
     for (let i = 0; i < toRemove && i < entries.length; i++) {
       this.cache.delete(entries[i][0]);
       this.stats.evictions++;
@@ -454,17 +494,17 @@ export class ObjectValidationCache {
   static getStats() {
     const total = this.stats.hits + this.stats.misses;
     const hitRate = total > 0 ? this.stats.hits / total : 0;
-    
+
     return {
       ...this.stats,
       hitRate,
       cacheSize: this.cache.size,
       pathCacheSize: this.pathCache.size,
       structureCacheSize: this.structureCache.size,
-      hotPathCount: this.hotPaths.size
+      hotPathCount: this.hotPaths.size,
     };
   }
- 
+
   /**
    * Clear all caches
    */
@@ -473,7 +513,13 @@ export class ObjectValidationCache {
     this.pathCache.clear();
     this.structureCache.clear();
     this.hotPaths.clear();
-    this.stats = { hits: 0, misses: 0, hotPathHits: 0, structureHits: 0, evictions: 0 };
+    this.stats = {
+      hits: 0,
+      misses: 0,
+      hotPathHits: 0,
+      structureHits: 0,
+      evictions: 0,
+    };
   }
 
   /**
@@ -496,19 +542,19 @@ export class ObjectValidationCache {
       hitRate: stats.hitRate,
       hotPathEfficiency: stats.hotPathHits / (stats.hits || 1),
       memoryUtilization: stats.cacheSize / this.MAX_CACHE_SIZE,
-      avgValidationTime: this.calculateAvgValidationTime()
+      avgValidationTime: this.calculateAvgValidationTime(),
     };
   }
 
   private static calculateAvgValidationTime(): number {
     let totalTime = 0;
     let count = 0;
-    
+
     for (const cached of this.cache.values()) {
       totalTime += cached.validationTime;
       count++;
     }
-    
+
     return count > 0 ? totalTime / count : 0;
   }
 }

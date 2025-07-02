@@ -5,6 +5,7 @@
  * Supports all operators and provides detailed debugging information
  */
 
+import { ErrorHandler } from "../../errors/ErrorHandler";
 import { ASTWalker, ASTVisitor } from "../parser/ConditionalAST";
 import {
   ConditionalNode,
@@ -86,7 +87,11 @@ export class ConditionalEvaluator {
       return {
         success: false,
         errors: [
-          `Evaluation error: ${error instanceof Error ? error.message : String(error)}`,
+          ErrorHandler.createConditionalError(
+            context.fieldPath,
+            `Conditional evaluation error: ${error instanceof Error ? error.message : "Unknown error"}`,
+            data
+          ),
         ],
         debugInfo: context.options?.debug
           ? evaluator.getDebugInfo()

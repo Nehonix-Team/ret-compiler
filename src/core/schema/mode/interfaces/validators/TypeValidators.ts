@@ -5,8 +5,13 @@
  * to improve maintainability and reduce file size.
  */
 
-import { SchemaValidationResult } from "../../../../types/types";
+import {
+  SchemaValidationResult,
+  ValidationError,
+} from "../../../../types/types";
 import { SchemaOptions } from "../Interface";
+import { ErrorHandler } from "../errors/ErrorHandler";
+import { ErrorCode } from "../errors/types/errors.type";
 import { validatePassword } from "./mods/passValidator";
 import { Security } from "./mods/securityValidator";
 import { UrlValidation } from "./mods/urlValidation";
@@ -30,7 +35,7 @@ export class TypeValidators {
   private static createResult(
     success: boolean = true,
     data: any = null,
-    errors: string[] = [],
+    errors: ValidationError[] = [],
     warnings: string[] = []
   ): SchemaValidationResult {
     return {
@@ -43,7 +48,7 @@ export class TypeValidators {
 
   private static addError(
     result: SchemaValidationResult,
-    message: string
+    message: ValidationError
   ): void {
     result.success = false;
     result.errors.push(message);
@@ -81,11 +86,17 @@ export class TypeValidators {
     typeLabel: string = "Number"
   ): void {
     if (constraints.min !== undefined && value < constraints.min) {
-      this.addError(result, `${typeLabel} must be at least ${constraints.min}`);
+      this.addError(
+        result,
+        ErrorHandler.createNumberError([], "minimum", value)
+      );
     }
 
     if (constraints.max !== undefined && value > constraints.max) {
-      this.addError(result, `${typeLabel} must be at most ${constraints.max}`);
+      this.addError(
+        result,
+        ErrorHandler.createNumberError([], "maximum", value)
+      );
     }
   }
 
@@ -115,7 +126,7 @@ export class TypeValidators {
     ) {
       this.addError(
         result,
-        `String must be at least ${constraints.minLength} characters`
+        ErrorHandler.createStringError([], "minimumLength", value)
       );
     }
 
@@ -125,12 +136,15 @@ export class TypeValidators {
     ) {
       this.addError(
         result,
-        `String must be at most ${constraints.maxLength} characters - (${value.length})`
+        ErrorHandler.createStringError([], "maximumLength", value)
       );
     }
 
     if (constraints.pattern && !constraints.pattern.test(value)) {
-      this.addError(result, "String does not match required pattern");
+      this.addError(
+        result,
+        ErrorHandler.createStringError([], "pattern", value)
+      );
     }
   }
 
@@ -187,9 +201,12 @@ export class TypeValidators {
     const result = this.createResult(true, value);
 
     if (typeof value !== "string") {
-      this.addError(result, `Expected string for ${typeName}`);
+      this.addError(result, ErrorHandler.createTypeError([], "string", value));
     } else if (!pattern.test(value)) {
-      this.addError(result, `Invalid ${typeName} format`);
+      this.addError(
+        result,
+        ErrorHandler.createSyntaxError([], "valid format", value)
+      );
     }
 
     return result;
@@ -206,7 +223,7 @@ export class TypeValidators {
     const result = this.createResult(true, value);
 
     if (typeof value !== "string") {
-      this.addError(result, `Expected string, got ${typeof value}`);
+      this.addError(result, ErrorHandler.createTypeError([], "string", value));
       return result;
     }
 
@@ -234,20 +251,29 @@ export class TypeValidators {
           "String converted to number (loose mode)"
         )
       ) {
-        this.addError(result, "Expected number");
+        this.addError(
+          result,
+          ErrorHandler.createTypeError([], "number", value)
+        );
         return result;
       }
       value = result.data;
     } else if (!this.isValidNumber(value)) {
-      this.addError(result, `Expected number, got ${typeof value}`);
+      this.addError(result, ErrorHandler.createTypeError([], "number", value));
       return result;
     }
 
     // CRITICAL FIX: Handle positive/negative validation for number types
     if (constraints.type === "positive" && value <= 0) {
-      this.addError(result, "Expected positive number");
+      this.addError(
+        result,
+        ErrorHandler.createNumberError([], "positive", value)
+      );
     } else if (constraints.type === "negative" && value >= 0) {
-      this.addError(result, "Expected negative number");
+      this.addError(
+        result,
+        ErrorHandler.createNumberError([], "negative", value)
+      );
     }
 
     this.validateNumberConstraints(result, value, constraints);
@@ -277,21 +303,30 @@ export class TypeValidators {
           "String converted to integer (loose mode)"
         )
       ) {
-        this.addError(result, "Expected integer");
+        this.addError(
+          result,
+          ErrorHandler.createTypeError([], "integer", value)
+        );
         return result;
       }
       value = result.data;
     } else if (!this.isValidInteger(value)) {
-      this.addError(result, `Expected integer, got ${typeof value}`);
+      this.addError(result, ErrorHandler.createTypeError([], "integer", value));
       return result;
     }
 
     // Type-specific validation
     if (type === "positive" && value <= 0) {
       console.log("test");
-      this.addError(result, "Expected positive number");
+      this.addError(
+        result,
+        ErrorHandler.createNumberError([], "positive", value)
+      );
     } else if (type === "negative" && value >= 0) {
-      this.addError(result, "Expected negative number");
+      this.addError(
+        result,
+        ErrorHandler.createNumberError([], "negative", value)
+      );
     }
 
     this.validateNumberConstraints(result, value, constraints, "Integer");
@@ -318,12 +353,12 @@ export class TypeValidators {
           "String converted to float (loose mode)"
         )
       ) {
-        this.addError(result, "Expected float");
+        this.addError(result, ErrorHandler.createTypeError([], "float", value));
         return result;
       }
       value = result.data;
     } else if (!this.isValidNumber(value)) {
-      this.addError(result, `Expected float, got ${typeof value}`);
+      this.addError(result, ErrorHandler.createTypeError([], "float", value));
       return result;
     }
 
@@ -345,10 +380,13 @@ export class TypeValidators {
       result.data = value;
     } else if (options.loose) {
       if (!this.handleLooseBooleanConversion(result, value)) {
-        this.addError(result, "Expected boolean");
+        this.addError(
+          result,
+          ErrorHandler.createTypeError([], "boolean", value)
+        );
       }
     } else {
-      this.addError(result, `Expected boolean, got ${typeof value}`);
+      this.addError(result, ErrorHandler.createTypeError([], "boolean", value));
     }
 
     return result;
@@ -367,19 +405,25 @@ export class TypeValidators {
 
     if (value instanceof Date) {
       if (isNaN(value.getTime())) {
-        this.addError(result, "Invalid date");
+        this.addError(result, ErrorHandler.createDateError([], value));
       }
     } else if (options.loose) {
       if (!this.handleLooseDateConversion(result, value)) {
         this.addError(
           result,
-          typeof value === "string"
-            ? "Invalid date string"
-            : "Invalid timestamp"
+          ErrorHandler.createError(
+            [],
+            typeof value === "string"
+              ? "Invalid date string"
+              : "Invalid timestamp",
+            ErrorCode.INVALID_DATE,
+            "date",
+            value
+          )
         );
       }
     } else {
-      this.addError(result, `Expected Date object, got ${typeof value}`);
+      this.addError(result, ErrorHandler.createTypeError([], "date", value));
     }
 
     return result;
@@ -420,11 +464,11 @@ export class TypeValidators {
     const result = this.createResult(true, value);
 
     if (typeof value !== "string") {
-      this.addError(result, "Expected string for phone");
+      this.addError(result, ErrorHandler.createTypeError([], "phone", value));
     } else {
       const cleanPhone = value.replace(/[\s\-\(\)\.+]/g, "");
       if (!this.PHONE_PATTERN.test(cleanPhone)) {
-        this.addError(result, "Invalid phone format");
+        this.addError(result, ErrorHandler.createTypeError([], "phone", value));
       }
     }
 
@@ -511,17 +555,26 @@ export class TypeValidators {
         break;
       case "void":
         if (value !== undefined) {
-          this.addError(result, "Expected undefined for void type");
+          this.addError(
+            result,
+            ErrorHandler.createTypeError([], "void", value)
+          );
         }
         break;
       case "null":
         if (value !== null) {
-          this.addError(result, "Expected null");
+          this.addError(
+            result,
+            ErrorHandler.createTypeError([], "null", value)
+          );
         }
         break;
       case "undefined":
         if (value !== undefined) {
-          this.addError(result, "Expected undefined");
+          this.addError(
+            result,
+            ErrorHandler.createTypeError([], "undefined", value)
+          );
         }
         break;
     }

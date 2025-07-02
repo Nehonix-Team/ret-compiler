@@ -343,3 +343,17 @@ export { Mod } from "../../../utils/Mod";
  * Helper functions for creating schema values
  */
 export { Make } from "../../../utils/Make";
+
+/**
+ * Custom error class for schema validation
+ */
+export class SchemaValidationError extends Error {
+  constructor(
+    message: string,
+    public errors: string[],
+    public warnings: string[]
+  ) {
+    super(message);
+    this.name = "SchemaValidationError";
+  }
+}

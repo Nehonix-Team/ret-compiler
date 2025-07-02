@@ -5,12 +5,16 @@
  * to eliminate runtime parsing overhead and dramatically improve performance.
  */
 
-import { SchemaValidationResult } from "../../types/types";
+import { SchemaValidationResult, ValidationError } from "../../types/types";
 import { SchemaFieldType } from "../../types/SchemaValidator.type";
 import { CompiledValidator, OptimizationStrategy } from "../../types/scompiler";
 import { ValidationHelpers } from "../mode/interfaces/validators/ValidationHelpers";
 import { ConstraintParser } from "../mode/interfaces/validators/ConstraintParser";
 import { OptimizedUnionValidator } from "../mode/interfaces/validators/UnionCache";
+import {
+  ErrorHandler,
+} from "../mode/interfaces/errors/ErrorHandler";
+import { ErrorCode } from "../mode/interfaces/errors/types/errors.type";
 
 export class SchemaCompiler {
   private static compiledCache = new Map<string, CompiledValidator>();
@@ -196,20 +200,20 @@ export class SchemaCompiler {
       if (typeof value !== "object" || value === null) {
         return {
           success: false,
-          errors: ["Expected object"],
+          errors: [ErrorHandler.createTypeError([], "object", value)],
           warnings: [],
           data: value,
         };
       }
 
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
       const validatedData: any = {};
 
       // Fast validation loop
       for (const [key, validator] of fieldValidators) {
         const result = validator(value[key]);
         if (!result.success) {
-          errors.push(`${key}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else {
           validatedData[key] = result.data;
         }
@@ -352,7 +356,7 @@ export class SchemaCompiler {
           if (typeof value !== "string") {
             return {
               success: false,
-              errors: ["Expected string"],
+              errors: [ErrorHandler.createTypeError([], "string", value)],
               warnings: [],
               data: value,
             };
@@ -360,7 +364,14 @@ export class SchemaCompiler {
           if (constraints.minLength && value.length < constraints.minLength) {
             return {
               success: false,
-              errors: [`String too short (min: ${constraints.minLength})`],
+              errors: [
+                ErrorHandler.createStringError(
+                  [],
+                  `String too short (min: ${constraints.minLength})`,
+                  value,
+                  ErrorCode.STRING_TOO_SHORT
+                ),
+              ],
               warnings: [],
               data: value,
             };
@@ -368,7 +379,14 @@ export class SchemaCompiler {
           if (constraints.maxLength && value.length > constraints.maxLength) {
             return {
               success: false,
-              errors: [`String too long (max: ${constraints.maxLength})`],
+              errors: [
+                ErrorHandler.createStringError(
+                  [],
+                  `String too long (max: ${constraints.maxLength})`,
+                  value,
+                  ErrorCode.STRING_TOO_LONG
+                ),
+              ],
               warnings: [],
               data: value,
             };
@@ -391,7 +409,7 @@ export class SchemaCompiler {
           if (typeof value !== "number" || isNaN(value)) {
             return {
               success: false,
-              errors: ["Expected number"],
+              errors: [ErrorHandler.createTypeError([], "number", value)],
               warnings: [],
               data: value,
             };
@@ -399,7 +417,7 @@ export class SchemaCompiler {
           if (type === "int" && !Number.isInteger(value)) {
             return {
               success: false,
-              errors: ["Expected integer"],
+              errors: [ErrorHandler.createTypeError([], "integer", value)],
               warnings: [],
               data: value,
             };
@@ -407,7 +425,14 @@ export class SchemaCompiler {
           if (constraints.min !== undefined && value < constraints.min) {
             return {
               success: false,
-              errors: [`Number too small (min: ${constraints.min})`],
+              errors: [
+                ErrorHandler.createNumberError(
+                  [],
+                  `Number too small (min: ${constraints.min})`,
+                  value,
+                  ErrorCode.NUMBER_TOO_SMALL
+                ),
+              ],
               warnings: [],
               data: value,
             };
@@ -415,7 +440,14 @@ export class SchemaCompiler {
           if (constraints.max !== undefined && value > constraints.max) {
             return {
               success: false,
-              errors: [`Number too large (max: ${constraints.max})`],
+              errors: [
+                ErrorHandler.createNumberError(
+                  [],
+                  `Number too large (max: ${constraints.max})`,
+                  value,
+                  ErrorCode.NUMBER_TOO_LARGE
+                ),
+              ],
               warnings: [],
               data: value,
             };
@@ -506,13 +538,13 @@ export class SchemaCompiler {
     if (typeof value !== "object" || value === null) {
       return {
         success: false,
-        errors: ["Expected object"],
+        errors: [ErrorHandler.createTypeError([], "object", value)],
         warnings: [],
         data: value,
       };
     }
 
-    const errors: string[] = [];
+    const errors: ValidationError[] = [];
     const validatedData: any = {};
 
     // Fast path for flat structures
@@ -523,7 +555,7 @@ export class SchemaCompiler {
         const result = validator(fieldValue, value); // Pass full data context
 
         if (!result.success) {
-          errors.push(`${fieldKey}: ${result.errors.join(", ")}`);
+          errors.push(...result.errors);
         } else if (result.data !== undefined) {
           validatedData[fieldKey!] = result.data;
         }
@@ -538,7 +570,7 @@ export class SchemaCompiler {
         if (field.type === "primitive") {
           const result = field.validator(fieldValue, value); // Pass full data context
           if (!result.success) {
-            errors.push(`${path}: ${result.errors.join(", ")}`);
+            errors.push(...result.errors);
           } else {
             this.setValueByPath(validatedData, pathParts, result.data);
           }

@@ -362,4 +362,14 @@ export const FORTIFY_TYPES: TypeDefinition[] = [
     supportsOptional: true,
     supportsArrays: true,
   },
+  {
+    name: "record",
+    description:
+      "Validates key-value pairs with string keys and a specified value type.",
+    category: "structural",
+    examples: ['"record<string, string>"'],
+    supportsConstraints: false,
+    supportsOptional: true,
+    supportsArrays: true,
+  },
 ];

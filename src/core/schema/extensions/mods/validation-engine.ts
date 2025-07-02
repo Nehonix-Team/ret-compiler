@@ -11,6 +11,7 @@ import { TypeValidators } from "../../mode/interfaces/validators/TypeValidators"
 import { ConstraintParser } from "../../mode/interfaces/validators/ConstraintParser";
 import { TypeGuards } from "../../mode/interfaces/validators/TypeGuards";
 import { ValidationHelpers } from "../../mode/interfaces/validators/ValidationHelpers";
+import { ErrorHandler } from "../../mode/interfaces/errors/ErrorHandler";
 import { SchemaOptions } from "../../../types/SchemaValidator.type";
 
 /**
@@ -129,9 +130,29 @@ export class ValidationEngine {
                   elemType,
                   elemValue
                 );
+                // Convert string errors to ValidationError objects
+                const validationErrors = fieldResult.errors.map((errorMsg) => {
+                  if (typeof errorMsg === "string") {
+                    // console.log("converting string error to ValidationError");
+                    return ErrorHandler.convertStringToError(errorMsg);
+                  }
+                  // If it's already a ValidationError object, return as is
+                  if (
+                    errorMsg &&
+                    typeof errorMsg === "object" &&
+                    "message" in errorMsg
+                  ) {
+                    return errorMsg as any;
+                  }
+                  // Fallback: convert to string and then to ValidationError
+                  // console.log(
+                  //   "converting unknown error format to ValidationError"
+                  // );
+                  return ErrorHandler.convertStringToError(String(errorMsg));
+                });
                 return {
                   success: fieldResult.isValid,
-                  errors: fieldResult.errors,
+                  errors: validationErrors,
                   warnings: [],
                   data: elemValue,
                 };
@@ -151,7 +172,25 @@ export class ValidationEngine {
       // Convert TypeValidators result format to ValidationEngine format
       return {
         isValid: validationResult.success,
-        errors: validationResult.errors || [],
+        errors: (validationResult.errors || []).map((error) => {
+          if (typeof error === "string") {
+            return error;
+          }
+          if (error && typeof error === "object" && error.message) {
+            return error.message;
+          }
+          // Fallback: try to extract meaningful information
+          if (error && typeof error === "object") {
+            if (
+              error.toString &&
+              error.toString !== Object.prototype.toString
+            ) {
+              return error.toString();
+            }
+            return JSON.stringify(error);
+          }
+          return String(error);
+        }),
       };
     } catch (error) {
       return {
@@ -181,9 +220,17 @@ export class ValidationEngine {
     for (const [nestedField, nestedSchema] of Object.entries(fieldSchema)) {
       const nestedResult = this.validateField(nestedSchema, value[nestedField]);
       if (!nestedResult.isValid) {
-        errors.push(
-          ...nestedResult.errors.map((err) => `${nestedField}: ${err}`)
-        );
+        const errRes = nestedResult.errors.map((err) => {
+          // Handle both string and ValidationError object cases
+          const errorMessage =
+            typeof err === "string"
+              ? err
+              : err && typeof err === "object" && "message" in err
+                ? (err as any).message
+                : JSON.stringify(err);
+          return `${nestedField}: ${errorMessage}`;
+        });
+        errors.push(...errRes);
       }
     }
 

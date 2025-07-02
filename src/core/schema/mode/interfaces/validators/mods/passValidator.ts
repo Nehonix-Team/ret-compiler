@@ -1,4 +1,5 @@
 import { SchemaValidationResult } from "../../../../../types/types";
+import {  ErrorHandler } from "../../errors/ErrorHandler";
 
 /**
  * Password validation with comprehensive security checks
@@ -60,7 +61,7 @@ export function validatePassword(
   // Check if value is a string
   if (typeof value !== "string") {
     result.success = false;
-    result.errors.push("Expected string for password");
+    result.errors.push(ErrorHandler.createTypeError([], "string", value));
     return result;
   }
 
@@ -70,13 +71,23 @@ export function validatePassword(
   if (password.length < minLength) {
     result.success = false;
     result.errors.push(
-      `Password must be at least ${minLength} characters long`
+      ErrorHandler.createPasswordError(
+        [],
+        `Password must be at least ${minLength} characters long`,
+        value
+      )
     );
   }
 
   if (password.length > maxLength) {
     result.success = false;
-    result.errors.push(`Password must not exceed ${maxLength} characters`);
+    result.errors.push(
+      ErrorHandler.createPasswordError(
+        [],
+        `Password must not exceed ${maxLength} characters`,
+        value
+      )
+    );
   }
 
   // Continue with comprehensive password validation for security
@@ -93,28 +104,44 @@ export function validatePassword(
   if (requireUppercase && uppercaseCount < minUppercase) {
     result.success = false;
     result.errors.push(
-      `Password must contain at least ${minUppercase} uppercase letter(s)`
+      ErrorHandler.createPasswordError(
+        [],
+        `Password must contain at least ${minUppercase} uppercase letter(s)`,
+        value
+      )
     );
   }
 
   if (requireLowercase && lowercaseCount < minLowercase) {
     result.success = false;
     result.errors.push(
-      `Password must contain at least ${minLowercase} lowercase letter(s)`
+      ErrorHandler.createPasswordError(
+        [],
+        `Password must contain at least ${minLowercase} lowercase letter(s)`,
+        value
+      )
     );
   }
 
   if (requireNumbers && numberCount < minNumbers) {
     result.success = false;
     result.errors.push(
-      `Password must contain at least ${minNumbers} number(s)`
+      ErrorHandler.createPasswordError(
+        [],
+        `Password must contain at least ${minNumbers} number(s)`,
+        value
+      )
     );
   }
 
   if (requireSpecialChars && specialCharCount < minSpecialChars) {
     result.success = false;
     result.errors.push(
-      `Password must contain at least ${minSpecialChars} special character(s): ${allowedSpecialChars}`
+      ErrorHandler.createPasswordError(
+        [],
+        `Password must contain at least ${minSpecialChars} special character(s): ${allowedSpecialChars}`,
+        value
+      )
     );
   }
 
@@ -125,7 +152,13 @@ export function validatePassword(
   if (invalidSpecialChars.length > 0) {
     result.success = false;
     result.errors.push(
-      `Password contains invalid special characters: ${[...new Set(invalidSpecialChars)].join("")}`
+      ErrorHandler.createPasswordError(
+        [],
+        `Password contains invalid special characters: ${[
+          ...new Set(invalidSpecialChars),
+        ].join("")}`,
+        value
+      )
     );
   }
 
@@ -135,7 +168,11 @@ export function validatePassword(
     if (repeatingPattern.test(password)) {
       result.success = false;
       result.errors.push(
-        `Password cannot contain more than ${maxRepeatingChars} consecutive identical characters`
+        ErrorHandler.createPasswordError(
+          [],
+          `Password cannot contain more than ${maxRepeatingChars} consecutive identical characters`,
+          value
+        )
       );
     }
   }
@@ -145,7 +182,11 @@ export function validatePassword(
     if (hasSequentialChars(password, maxSequentialChars)) {
       result.success = false;
       result.errors.push(
-        `Password cannot contain more than ${maxSequentialChars} sequential characters`
+        ErrorHandler.createPasswordError(
+          [],
+          `Password cannot contain more than ${maxSequentialChars} sequential characters`,
+          value
+        )
       );
     }
   }
@@ -153,13 +194,25 @@ export function validatePassword(
   // Keyboard pattern check
   if (preventKeyboardPatterns && hasKeyboardPatterns(password)) {
     result.success = false;
-    result.errors.push("Password cannot contain common keyboard patterns");
+    result.errors.push(
+      ErrorHandler.createPasswordError(
+        [],
+        "Password cannot contain common keyboard patterns",
+        value
+      )
+    );
   }
 
   // Common passwords check
   if (preventCommonPasswords && isCommonPassword(password.toLowerCase())) {
     result.success = false;
-    result.errors.push("Password is too common and easily guessable");
+    result.errors.push(
+      ErrorHandler.createPasswordError(
+        [],
+        "Password is too common and easily guessable",
+        value
+      )
+    );
   }
 
   // Personal information check
@@ -167,7 +220,13 @@ export function validatePassword(
     for (const info of preventPersonalInfo) {
       if (info && password.toLowerCase().includes(info.toLowerCase())) {
         result.success = false;
-        result.errors.push("Password cannot contain personal information");
+        result.errors.push(
+          ErrorHandler.createPasswordError(
+            [],
+            "Password cannot contain personal information",
+            value
+          )
+        );
         break;
       }
     }
@@ -177,7 +236,13 @@ export function validatePassword(
   for (const pattern of forbiddenPatterns) {
     if (new RegExp(pattern, "i").test(password)) {
       result.success = false;
-      result.errors.push("Password contains forbidden pattern");
+      result.errors.push(
+        ErrorHandler.createPasswordError(
+          [],
+          "Password contains forbidden pattern",
+          value
+        )
+      );
       break;
     }
   }
@@ -186,7 +251,13 @@ export function validatePassword(
   for (const word of forbiddenWords) {
     if (password.toLowerCase().includes(word.toLowerCase())) {
       result.success = false;
-      result.errors.push("Password contains forbidden word");
+      result.errors.push(
+        ErrorHandler.createPasswordError(
+          [],
+          "Password contains forbidden word",
+          value
+        )
+      );
       break;
     }
   }

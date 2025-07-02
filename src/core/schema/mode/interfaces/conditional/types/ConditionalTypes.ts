@@ -2,6 +2,8 @@
  * Type definitions for enhanced conditional validation system
  */
 
+import { ValidationError } from "../../../../../types/types";
+
 // Token types for lexical analysis
 export enum TokenType {
   // Keywords
@@ -190,7 +192,7 @@ export interface EvaluationContext {
 export interface EvaluationResult {
   success: boolean;
   value?: any;
-  errors: string[];
+  errors: ValidationError[];
   debugInfo?: {
     evaluationPath: string[];
     conditionResults: Record<string, boolean>;

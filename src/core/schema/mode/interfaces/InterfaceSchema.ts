@@ -10,9 +10,10 @@ import {
   SchemaFieldType,
   SchemaOptions,
 } from "../../../types/SchemaValidator.type";
-import { SchemaValidationResult } from "../../../types/types";
+import { SchemaValidationResult, ValidationError } from "../../../types/types";
 
 import { ConstraintParser, TypeGuards, ValidationHelpers } from "./validators";
+import { ErrorHandler } from "./errors/ErrorHandler";
 
 // Import our conditional validation system
 import { ConditionalParser } from "./conditional/parser/ConditionalParser";
@@ -32,6 +33,8 @@ import {
   OptimizationLevel,
 } from "./precompilation/SchemaPrecompiler";
 import { MAX_OBJECT_DEPTH } from "../../../../constants/VALIDATION_CONSTANTS";
+import { SchemaValidationError } from "./Interface";
+import { ErrorCode } from "./errors/types/errors.type";
 
 /**
  * Interface Schema class for TypeScript-like schema definitions
@@ -85,7 +88,7 @@ export class InterfaceSchema<T = any> {
     if (!this.options.skipOptimization) {
       this.applyOptimizations();
 
-      // ULTRA-PERFORMANCE: Create precompiled validator for maximum speed
+      //  Create precompiled validator for maximum speed
       this.createPrecompiledValidator();
     }
   }
@@ -94,7 +97,7 @@ export class InterfaceSchema<T = any> {
    * Check if a field type uses conditional syntax
    */
   private isConditionalSyntax(fieldType: string): boolean {
-    return fieldType.includes("when ") && fieldType.includes(" *? ");
+    return /\bwhen\s+\S.*?\s*\*\?\s*.+/.test(fieldType);
   }
 
   /**
@@ -113,7 +116,7 @@ export class InterfaceSchema<T = any> {
     const maxNestingDepth = this.calculateMaxNestingDepth();
 
     // debugging optimization decisions:
-    // console.log(`[DEBUG] Schema optimization analysis:
+    //// console.log(`[DEBUG] Schema optimization analysis:
     //   - Complexity: ${this.schemaComplexity}
     //   - Has conditionals: ${hasConditionalFields}
     //   - Max nesting depth: ${maxNestingDepth}
@@ -149,7 +152,7 @@ export class InterfaceSchema<T = any> {
   }
 
   /**
-   * ULTRA-PERFORMANCE: Create precompiled validator for maximum speed
+   *  Create precompiled validator for maximum speed
    * SAFETY: Now includes recursion protection and cycle detection
    */
   private createPrecompiledValidator(): void {
@@ -179,10 +182,10 @@ export class InterfaceSchema<T = any> {
         this.optimizationLevel = this.precompiledValidator._optimizationLevel;
       } catch (error) {
         // Fallback to standard validation if precompilation fails
-        console.warn(
-          "Schema precompilation failed, falling back to standard validation:",
-          error
-        );
+        // console.warn(
+        //   "Schema precompilation failed, falling back to standard validation:",
+        //   error
+        // );
       }
     }
   }
@@ -334,7 +337,7 @@ export class InterfaceSchema<T = any> {
       (field) => field.isConditional
     );
 
-    // ULTRA-PERFORMANCE: Use precompiled validator first (fastest path)
+    //  Use precompiled validator first (fastest path)
     // BUT: Skip precompiled validator if loose mode is enabled (needs type coercion)
     // ALSO: Skip ALL optimizations if schema has conditional fields (they need special handling)
     if (
@@ -342,12 +345,14 @@ export class InterfaceSchema<T = any> {
       !this.options.loose &&
       !hasConditionalFields
     ) {
+      // console.log("using precompiled validator");
       result = this.precompiledValidator(data) as SchemaValidationResult<T>;
     } else if (
       this.isOptimized &&
       this.compiledValidator &&
       !hasConditionalFields
     ) {
+      // console.log("using compiled validator");
       // Use compiled validator (second fastest) - but not for conditional fields
       result = this.compiledValidator.validate(data);
     } else if (
@@ -355,6 +360,7 @@ export class InterfaceSchema<T = any> {
       this.schemaComplexity > 5 &&
       !hasConditionalFields
     ) {
+      // console.log("using cached validation for medium complexity");
       // Use cached validation for medium complexity - but not for conditional fields
       result = ObjectValidationCache.getCachedValidation(
         data,
@@ -362,6 +368,9 @@ export class InterfaceSchema<T = any> {
         []
       ) as SchemaValidationResult<T>;
     } else {
+      // console.log(
+      //   "XMS/using standard validation for simple schemas or conditional schemas"
+      // );
       // Standard validation for simple schemas or conditional schemas
       result = this.validateStandard(data);
     }
@@ -382,14 +391,10 @@ export class InterfaceSchema<T = any> {
    * Standard validation method (original implementation)
    */
   private validateStandard(data: any): SchemaValidationResult<T> {
+    // console.log("validating standard");
     // Fast path for non-objects
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
-      return {
-        success: false,
-        errors: ["Expected object"],
-        warnings: [],
-        data: undefined,
-      };
+      return ValidationHelpers.createErrorResult("Expected object", data);
     }
 
     const validatedData: any = {};
@@ -406,6 +411,7 @@ export class InterfaceSchema<T = any> {
 
       // Use pre-compiled information to skip parsing
       if (field.isConditional) {
+        // console.log("validating conditional field");
         if (field.isConditional && field.ConditionalAST) {
           // FIXED: Use conditional validation with proper nested context
           // Pass the current data object as nested context for field resolution
@@ -416,6 +422,7 @@ export class InterfaceSchema<T = any> {
             data // Nested context (same as data at this level)
           );
         } else {
+          // console.log("validating legacy conditional field");
           // Use legacy conditional validation
           fieldResult = this.validateConditionalFieldWithContext(
             field.conditionalConfig,
@@ -424,9 +431,11 @@ export class InterfaceSchema<T = any> {
           );
         }
       } else if (field.isString && field.parsedConstraints) {
+        // console.log("validating precompiled string field");
         // Use pre-parsed constraints for string fields
         fieldResult = this.validatePrecompiledStringField(field, value);
       } else {
+        // console.log("fallback to original validation for complex types");
         // Fallback to original validation for complex types
         fieldResult = this.validateField(
           field.key,
@@ -441,7 +450,15 @@ export class InterfaceSchema<T = any> {
         hasErrors = true;
         // Batch error processing
         for (let j = 0; j < fieldResult.errors.length; j++) {
-          errors.push(`${field.key}: ${fieldResult.errors[j]}`);
+          const error = fieldResult.errors[j];
+          // Handle both string and ValidationError object cases
+          const errorMessage =
+            typeof error === "string"
+              ? error
+              : error && typeof error === "object" && "message" in error
+                ? (error as any).message
+                : JSON.stringify(error);
+          errors.push(`${field.key}: ${errorMessage}`);
         }
       } else if (fieldResult.data !== undefined) {
         validatedData[field.key] = fieldResult.data;
@@ -478,10 +495,12 @@ export class InterfaceSchema<T = any> {
         errors.push(`Unexpected properties: ${extraKeys.join(", ")}`);
       }
     }
-
+    // console.log("validation error: ", errors);
     return {
       success: !hasErrors,
-      errors,
+      errors: ErrorHandler.convertStringArrayToErrors(
+        typeof errors === "string" ? [errors] : errors
+      ),
       warnings,
       data: hasErrors ? undefined : (validatedData as T),
     };
@@ -508,7 +527,7 @@ export class InterfaceSchema<T = any> {
           }
         : {
             success: false,
-            errors: ["Required field is missing"],
+            errors: [ErrorHandler.createMissingFieldError([], field.key)],
             warnings: [],
             data: value,
           };
@@ -519,7 +538,7 @@ export class InterfaceSchema<T = any> {
         ? { success: true, errors: [], warnings: [], data: null }
         : {
             success: false,
-            errors: ["Field cannot be null"],
+            errors: [ErrorHandler.createTypeError([], "null", value)],
             warnings: [],
             data: value,
           };
@@ -530,7 +549,7 @@ export class InterfaceSchema<T = any> {
       if (!Array.isArray(value)) {
         return {
           success: false,
-          errors: ["Expected array"],
+          errors: [ErrorHandler.createTypeError([], "array", value)],
           warnings: [],
           data: value,
         };
@@ -543,7 +562,14 @@ export class InterfaceSchema<T = any> {
       ) {
         return {
           success: false,
-          errors: [`Array must have at least ${constraints.minItems} items`],
+          errors: [
+            ErrorHandler.createArrayError(
+              [],
+              `must have at least ${constraints.minItems} items, got ${value.length}`,
+              value,
+              ErrorCode.ARRAY_TOO_SHORT
+            ),
+          ],
           warnings: [],
           data: value,
         };
@@ -555,7 +581,14 @@ export class InterfaceSchema<T = any> {
       ) {
         return {
           success: false,
-          errors: [`Array must have at most ${constraints.maxItems} items`],
+          errors: [
+            ErrorHandler.createArrayError(
+              [],
+              `must have at most ${constraints.maxItems} items, got ${value.length}`,
+              value,
+              ErrorCode.ARRAY_TOO_LONG
+            ),
+          ],
           warnings: [],
           data: value,
         };
@@ -563,7 +596,7 @@ export class InterfaceSchema<T = any> {
 
       // Validate array elements
       const validatedArray: any[] = [];
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       for (let i = 0; i < value.length; i++) {
         // Use validateStringFieldType to handle union types properly
@@ -572,7 +605,12 @@ export class InterfaceSchema<T = any> {
           value[i]
         );
         if (!elementResult.success) {
-          errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+          errors.push(
+            ...elementResult.errors.map((error) => ({
+              ...error,
+              path: [i.toString(), ...error.path],
+            }))
+          );
         } else {
           validatedArray.push(elementResult.data);
         }
@@ -588,7 +626,14 @@ export class InterfaceSchema<T = any> {
         if (uniqueValues.size !== validatedArray.length) {
           return {
             success: false,
-            errors: ["Array values must be unique"],
+            errors: [
+              ErrorHandler.createArrayError(
+                [],
+                "values must be unique",
+                value,
+                ErrorCode.ARRAY_VALUES_NOT_UNIQUE
+              ),
+            ],
             warnings: [],
             data: value,
           };
@@ -634,18 +679,20 @@ export class InterfaceSchema<T = any> {
       data: value,
     };
 
+    // console.log("checking for union types");
     // Handle union values
     if (TypeGuards.isUnionValue(fieldType)) {
       const allowedValues = fieldType.union;
       if (!allowedValues.includes(value)) {
         result.success = false;
         result.errors.push(
-          `Expected one of: ${allowedValues.join(", ")}, got ${value}`
+          ErrorHandler.createUnionError([], allowedValues as any[], value)
         );
       }
       return result;
     }
 
+    // console.log("checking for constant types");
     // Handle constant values
     if (TypeGuards.isConstantValue(fieldType)) {
       const expectedValue = fieldType.const;
@@ -659,14 +706,21 @@ export class InterfaceSchema<T = any> {
       if (value !== expectedValue) {
         result.success = false;
         result.errors.push(
-          `Expected constant value ${expectedValue}, got ${value}`
+          ErrorHandler.createConstantError(
+            [],
+            expectedValue,
+            value,
+            expectedValue
+          )
         );
       }
       return result;
     }
 
+    // console.log("checking for optional constant types");
     // Handle optional nested schemas
     if (TypeGuards.isOptionalSchemaInterface(fieldType)) {
+      // console.log("validating optional schema interface");
       if (value === undefined) {
         result.data = this.options.default;
         return result;
@@ -675,11 +729,13 @@ export class InterfaceSchema<T = any> {
       return nestedSchema.validate(value);
     }
 
+    // console.log("checking for conditional validation objects");
     // Handle conditional validation objects
     if (TypeGuards.isConditionalValidation(fieldType)) {
       return this.validateConditionalField(fieldType, value);
     }
 
+    // console.log("checking for nested objects");
     // Handle nested objects
     if (TypeGuards.isSchemaInterface(fieldType)) {
       const nestedSchema = new InterfaceSchema(fieldType, this.options);
@@ -692,11 +748,12 @@ export class InterfaceSchema<T = any> {
       );
     }
 
+    // console.log("checking for array of schemas");
     // Handle array of schemas
     if (Array.isArray(fieldType) && fieldType.length === 1) {
       if (!Array.isArray(value)) {
         result.success = false;
-        result.errors.push("Expected array");
+        result.errors.push(ErrorHandler.createTypeError([], "array", value));
         return result;
       }
 
@@ -712,7 +769,10 @@ export class InterfaceSchema<T = any> {
         if (!elementResult.success) {
           result.success = false;
           result.errors.push(
-            `Element ${i}: ${elementResult.errors.join(", ")}`
+            ...elementResult.errors.map((error) => ({
+              ...error,
+              path: [i.toString(), ...error.path],
+            }))
           );
         } else {
           validatedArray.push(elementResult.data);
@@ -727,13 +787,14 @@ export class InterfaceSchema<T = any> {
 
     // Handle string field types
     if (typeof fieldType === "string") {
+      // console.log("validating string field type");
       // conditional validation is handled in the main validation loop
       // This method is only for direct field type validation
       return this.validateStringFieldType(fieldType, value);
     }
-
+    // console.log("val/donex");
     result.success = false;
-    result.errors.push(`Unknown field type: ${typeof fieldType}`);
+    result.errors.push(ErrorHandler.createUnknownFieldError([], fieldType));
     return result;
   }
 
@@ -762,7 +823,16 @@ export class InterfaceSchema<T = any> {
           }
         : {
             success: false,
-            errors: ["Required field is missing"],
+            errors: [
+              {
+                path: [],
+                message: "Missing required field",
+                code: ErrorCode.MISSING_REQUIRED_FIELD,
+                expected: "required field",
+                received: undefined,
+                receivedType: "undefined",
+              },
+            ],
             warnings: [],
             data: value,
           };
@@ -773,7 +843,7 @@ export class InterfaceSchema<T = any> {
         ? { success: true, errors: [], warnings: [], data: null }
         : {
             success: false,
-            errors: ["Field cannot be null"],
+            errors: [ErrorHandler.createTypeError([], "null", value)],
             warnings: [],
             data: value,
           };
@@ -787,7 +857,7 @@ export class InterfaceSchema<T = any> {
       if (!Array.isArray(value)) {
         return {
           success: false,
-          errors: ["Expected array"],
+          errors: [ErrorHandler.createTypeError([], "array", value)],
           warnings: [],
           data: value,
         };
@@ -800,7 +870,14 @@ export class InterfaceSchema<T = any> {
       if (Options.minItems !== undefined && value.length < Options.minItems) {
         return {
           success: false,
-          errors: [`Array must have at least ${Options.minItems} items`],
+          errors: [
+            ErrorHandler.createArrayError(
+              [],
+              `must have at least ${Options.minItems} items, got ${value.length}`,
+              value,
+              ErrorCode.ARRAY_TOO_SHORT
+            ),
+          ],
           warnings: [],
           data: value,
         };
@@ -809,7 +886,14 @@ export class InterfaceSchema<T = any> {
       if (Options.maxItems !== undefined && value.length > Options.maxItems) {
         return {
           success: false,
-          errors: [`Array must have at most ${Options.maxItems} items`],
+          errors: [
+            ErrorHandler.createArrayError(
+              [],
+              `must have at most ${Options.maxItems} items, got ${value.length}`,
+              value,
+              ErrorCode.ARRAY_TOO_LONG
+            ),
+          ],
           warnings: [],
           data: value,
         };
@@ -817,7 +901,7 @@ export class InterfaceSchema<T = any> {
 
       // Validate array elements
       const validatedArray: any[] = [];
-      const errors: string[] = [];
+      const errors: ValidationError[] = [];
 
       for (let i = 0; i < value.length; i++) {
         const elementResult = this.validateStringFieldType(
@@ -825,7 +909,12 @@ export class InterfaceSchema<T = any> {
           value[i]
         );
         if (!elementResult.success) {
-          errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+          errors.push(
+            ...elementResult.errors.map((error) => ({
+              ...error,
+              path: [i.toString(), ...error.path],
+            }))
+          );
         } else {
           validatedArray.push(elementResult.data);
         }
@@ -841,7 +930,14 @@ export class InterfaceSchema<T = any> {
         if (uniqueValues.size !== validatedArray.length) {
           return {
             success: false,
-            errors: ["Array values must be unique"],
+            errors: [
+              ErrorHandler.createArrayError(
+                [],
+                "values must be unique",
+                value,
+                ErrorCode.ARRAY_VALUES_NOT_UNIQUE
+              ),
+            ],
             warnings: [],
             data: value,
           };
@@ -920,8 +1016,10 @@ export class InterfaceSchema<T = any> {
   ): SchemaValidationResult {
     // If we don't have full data context, fall back to standard validation
     if (!fullDataContext) {
+      // console.log("no full data context, falling back to standard validation");
       return nestedSchema.validate(nestedValue);
     }
+    // console.log("validating nested object with full data context");
 
     // CRITICAL FIX: Temporarily store the full context in the nested schema
     // so that conditional validation can access parent fields
@@ -935,6 +1033,7 @@ export class InterfaceSchema<T = any> {
       localData: any,
       nestedContext?: any
     ) {
+      // console.log("validating enhanced conditional field with context");
       return originalValidateEnhancedConditionalField.call(
         this,
         ast,
@@ -947,8 +1046,10 @@ export class InterfaceSchema<T = any> {
     try {
       // Perform the validation with the modified context
       const result = nestedSchema.validate(nestedValue);
+      // console.log("nested validation result:", result);
       return result;
     } finally {
+      // console.log("restoring original conditional validation method");
       // Restore the original method
       nestedSchema["validateEnhancedConditionalField"] =
         originalValidateEnhancedConditionalField;
@@ -1053,7 +1154,12 @@ export class InterfaceSchema<T = any> {
           return {
             success: false,
             errors: [
-              `Expected constant value ${JSON.stringify(actualExpectedValue)}, got ${JSON.stringify(value)}`,
+              ErrorHandler.createConstantError(
+                [],
+                actualExpectedValue,
+                value,
+                expectedValue
+              ),
             ],
             warnings: [],
             data: value, // Return original user input, not the expected value
@@ -1077,7 +1183,7 @@ export class InterfaceSchema<T = any> {
           if (typeof value !== "boolean") {
             return {
               success: false,
-              errors: [`Expected boolean, got ${typeof value}`],
+              errors: [ErrorHandler.createTypeError([], "boolean", value)],
               warnings: [],
               data: value,
             };
@@ -1096,7 +1202,7 @@ export class InterfaceSchema<T = any> {
           if (typeof value !== "string") {
             return {
               success: false,
-              errors: [`Expected string, got ${typeof value}`],
+              errors: [ErrorHandler.createTypeError([], "string", value)],
               warnings: [],
               data: value,
             };
@@ -1114,7 +1220,7 @@ export class InterfaceSchema<T = any> {
           if (typeof value !== "number") {
             return {
               success: false,
-              errors: [`Expected number, got ${typeof value}`],
+              errors: [ErrorHandler.createTypeError([], "number", value)],
               warnings: [],
               data: value,
             };
@@ -1122,7 +1228,7 @@ export class InterfaceSchema<T = any> {
           if (expectedSchema === "int" && !Number.isInteger(value)) {
             return {
               success: false,
-              errors: [`Expected integer, got ${value}`],
+              errors: [ErrorHandler.createTypeError([], "integer", value)],
               warnings: [],
               data: value,
             };
@@ -1150,7 +1256,7 @@ export class InterfaceSchema<T = any> {
             } else {
               return {
                 success: false,
-                errors: [`Field cannot be null`],
+                errors: [ErrorHandler.createTypeError([], "null", value)],
                 warnings: [],
                 data: value,
               };
@@ -1160,7 +1266,7 @@ export class InterfaceSchema<T = any> {
           if (!Array.isArray(value)) {
             return {
               success: false,
-              errors: [`Expected array, got ${typeof value}`],
+              errors: [ErrorHandler.createTypeError([], "array", value)],
               warnings: [],
               data: value,
             };
@@ -1172,7 +1278,7 @@ export class InterfaceSchema<T = any> {
 
           // Validate each array element
           const validatedArray: any[] = [];
-          const errors: string[] = [];
+          const errors: ValidationError[] = [];
 
           for (let i = 0; i < value.length; i++) {
             const elementResult = this.validateStringFieldType(
@@ -1180,7 +1286,12 @@ export class InterfaceSchema<T = any> {
               value[i]
             );
             if (!elementResult.success) {
-              errors.push(`Element ${i}: ${elementResult.errors.join(", ")}`);
+              errors.push(
+                ...elementResult.errors.map((error) => ({
+                  ...error,
+                  path: [i.toString(), ...error.path],
+                }))
+              );
             } else {
               validatedArray.push(elementResult.data);
             }
@@ -1213,11 +1324,27 @@ export class InterfaceSchema<T = any> {
         warnings: [],
         data: value,
       };
-    } catch (error) {
+    } catch (error: any) {
+      // Better error message extraction
+      let errorMessage = "Unknown error";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as any).message;
+      } else if (error && typeof error === "object") {
+        errorMessage = JSON.stringify(error);
+      } else {
+        errorMessage = String(error);
+      }
+
       return {
         success: false,
         errors: [
-          `conditional validation error: ${error instanceof Error ? error.message : String(error)}`,
+          ErrorHandler.createConditionalError(
+            [],
+            `Conditional validation error: ${errorMessage}`,
+            value
+          ),
         ],
         warnings: [],
         data: value,
@@ -1306,7 +1433,7 @@ export class InterfaceSchema<T = any> {
     // Since we don't have access to the full data object in this context,
     // we'll validate against all possible schemas and accept if any pass
     let validationPassed = false;
-    let lastError: string[] = [];
+    let lastError: ValidationError[] = [];
 
     // Try to validate against each condition's schema
     for (const condition of conditions) {
@@ -1326,7 +1453,13 @@ export class InterfaceSchema<T = any> {
           }
         } catch (error) {
           // Continue to next condition if this one fails
-          lastError = [`Condition validation error: ${error}`];
+          lastError = [
+            ErrorHandler.createConditionalError(
+              [],
+              `Conditional validation error: ${error instanceof Error ? error.message : String(error)}`,
+              value
+            ),
+          ];
         }
       }
     }
@@ -1343,7 +1476,13 @@ export class InterfaceSchema<T = any> {
           lastError = defaultResult.errors;
         }
       } catch (error) {
-        lastError = [`Default schema validation error: ${error}`];
+        lastError = [
+          ErrorHandler.createConditionalError(
+            [],
+            `Default schema validation error: ${error instanceof Error ? error.message : String(error)}`,
+            value
+          ),
+        ];
       }
     }
 
@@ -1353,7 +1492,13 @@ export class InterfaceSchema<T = any> {
       result.errors =
         lastError.length > 0
           ? lastError
-          : ["No valid conditional schema found"];
+          : [
+              ErrorHandler.createConditionalError(
+                [],
+                "No valid conditional schema found",
+                value
+              ),
+            ];
       result.warnings.push(
         "Conditional validation performed without full data context"
       );
@@ -1384,11 +1529,13 @@ export class InterfaceSchema<T = any> {
   parse(data: T): T {
     const result = this.validate(data);
     if (!result.success) {
-      throw new SchemaValidationError(
-        `Schema validation failed: ${result.errors.join(", ")}`,
-        result.errors,
-        result.warnings
-      );
+      result.errors.forEach((error) => {
+        throw new SchemaValidationError(
+          error.message,
+          [error.context?.suggestion || error.code],
+          result.warnings
+        );
+      });
     }
     return result.data!;
   }
@@ -1430,11 +1577,13 @@ export class InterfaceSchema<T = any> {
             const result = this.validate(data);
             if (!result.success) {
               reject(
-                new SchemaValidationError(
-                  `Schema validation failed: ${result.errors.join(", ")}`,
-                  result.errors,
-                  result.warnings
-                )
+                result.errors.forEach((error) => {
+                  throw new SchemaValidationError(
+                    error.message,
+                    [error.context?.suggestion || error.code],
+                    result.warnings
+                  );
+                })
               );
             } else {
               resolve(result.data!);
@@ -1462,7 +1611,11 @@ export class InterfaceSchema<T = any> {
         } catch (error) {
           resolve({
             success: false,
-            errors: [`Unexpected validation error: ${error}`],
+            errors: [
+              ErrorHandler.createSimpleError(
+                `Unexpected validation error: ${error}`
+              ),
+            ],
             warnings: [],
             data: undefined,
           });
@@ -1485,7 +1638,11 @@ export class InterfaceSchema<T = any> {
         } catch (error) {
           resolve({
             success: false,
-            errors: [`Unexpected validation error: ${error}`],
+            errors: [
+              ErrorHandler.createSimpleError(
+                `Unexpected validation error: ${error}`
+              ),
+            ],
             warnings: [],
             data: undefined,
           });
@@ -1560,28 +1717,4 @@ export class InterfaceSchema<T = any> {
   default(value: any): InterfaceSchema<T> {
     return this.withOptions({ default: value });
   }
-}
-
-/**
- * Custom error class for schema validation
- */
-export class SchemaValidationError extends Error {
-  constructor(
-    message: string,
-    public errors: string[],
-    public warnings: string[]
-  ) {
-    super(message);
-    this.name = "SchemaValidationError";
-  }
-}
-
-/**
- * Factory function for creating schemas
- */
-export function createSchema<T = any>(
-  definition: SchemaInterface,
-  options?: SchemaOptions
-): InterfaceSchema<T> {
-  return new InterfaceSchema<T>(definition, options);
 }

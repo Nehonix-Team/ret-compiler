@@ -5,10 +5,12 @@
  * extracted from InterfaceSchema to improve maintainability.
  */
 
-import { SchemaValidationResult } from "../../../../types/types";
+import {
+  SchemaValidationResult,
+  ValidationError,
+} from "../../../../types/types";
 import { VALIDATOR_TYPES } from "../../../../types/ValidatorTypes";
 import {
-  UrlArg,
   UrlArgArray,
   UrlArgsEnum,
   UrlArgType,
@@ -16,6 +18,8 @@ import {
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
 import { OptimizedUnionValidator as OUV } from "./UnionCache";
+import { ErrorHandler,  } from "../errors/ErrorHandler";
+import { ErrorCode } from "../errors/types/errors.type";
 
 // Cache for parsed constant values with LRU eviction
 const MAX_CACHE_SIZE = 1000;
@@ -337,7 +341,7 @@ export class ValidationHelpers {
     const [, keyType, valueType] = recordMatch;
     const trimmedKeyType = keyType.trim();
     const trimmedValueType = valueType.trim();
-    const errors: string[] = [];
+    const errors: ValidationError[] = [];
     const validatedRecord: Record<string, any> = {};
 
     // validation with proper key type checking
@@ -345,7 +349,13 @@ export class ValidationHelpers {
       // Validate key type more comprehensively
       if (!this.validateKeyType(key, trimmedKeyType)) {
         errors.push(
-          `Record key "${key}" must be of type ${trimmedKeyType}, got ${typeof key}`
+          ErrorHandler.createError(
+            [key],
+            `Record key "${key}" must be of type ${trimmedKeyType}, got ${typeof key}`,
+            ErrorCode.TYPE_ERROR,
+            trimmedKeyType,
+            key
+          )
         );
         continue;
       }
@@ -353,9 +363,12 @@ export class ValidationHelpers {
       // Validate value type
       const valueResult = validateFieldType(trimmedValueType, val);
       if (!valueResult.success) {
-        errors.push(
-          `Record value for key "${key}": ${valueResult.errors.join(", ")}`
-        );
+        // Add path context to nested errors
+        const nestedErrors = valueResult.errors.map((error) => ({
+          ...error,
+          path: [key, ...error.path],
+        }));
+        errors.push(...nestedErrors);
       } else {
         validatedRecord[key] = valueResult.data;
       }
@@ -422,15 +435,18 @@ export class ValidationHelpers {
 
     // Validate elements with better error aggregation
     const validatedArray: any[] = [];
-    const errors: string[] = [];
+    const errors: ValidationError[] = [];
     const warnings: string[] = [];
 
     for (let i = 0; i < value.length; i++) {
       const elementResult = validateElementType(elementType, value[i]);
       if (!elementResult.success) {
-        errors.push(
-          `Element at index ${i}: ${elementResult.errors.join(", ")}`
-        );
+        // Add index to error paths
+        const indexedErrors = elementResult.errors.map((error) => ({
+          ...error,
+          path: [i.toString(), ...error.path],
+        }));
+        errors.push(...indexedErrors);
       } else {
         validatedArray.push(elementResult.data);
         if (elementResult.warnings.length > 0) {
@@ -467,8 +483,8 @@ export class ValidationHelpers {
   private static validateArrayConstraints(
     value: any[],
     constraints: any
-  ): string[] {
-    const errors: string[] = [];
+  ): ValidationError[] {
+    const errors: ValidationError[] = [];
 
     if (!constraints) return errors;
 
@@ -477,7 +493,12 @@ export class ValidationHelpers {
       value.length < constraints.minItems
     ) {
       errors.push(
-        `Array must have at least ${constraints.minItems} items, got ${value.length}`
+        ErrorHandler.createArrayError(
+          [],
+          `must have at least ${constraints.minItems} items, got ${value.length}`,
+          value,
+          ErrorCode.ARRAY_TOO_SHORT
+        )
       );
     }
 
@@ -486,7 +507,12 @@ export class ValidationHelpers {
       value.length > constraints.maxItems
     ) {
       errors.push(
-        `Array must have at most ${constraints.maxItems} items, got ${value.length}`
+        ErrorHandler.createArrayError(
+          [],
+          `must have at most ${constraints.maxItems} items, got ${value.length}`,
+          value,
+          ErrorCode.ARRAY_TOO_LONG
+        )
       );
     }
 
@@ -495,7 +521,12 @@ export class ValidationHelpers {
       value.length !== constraints.exactItems
     ) {
       errors.push(
-        `Array must have exactly ${constraints.exactItems} items, got ${value.length}`
+        ErrorHandler.createArrayError(
+          [],
+          `must have exactly ${constraints.exactItems} items, got ${value.length}`,
+          value,
+          ErrorCode.ARRAY_TOO_SHORT
+        )
       );
     }
 
@@ -603,16 +634,26 @@ export class ValidationHelpers {
       if (urlArgType !== UrlArgsEnum.web) {
         // Check if it's a valid URL arg
         if (!UrlArgArray.includes(urlArgType as any)) {
+          const error = this.createValidationError(
+            [],
+            `Invalid URL argument: ${urlArgType}. Valid arguments are: ${UrlArgArray.join(", ")}`,
+            "INVALID_URL_ARGUMENT",
+            `url.${UrlArgArray.join("|url.")}`,
+            value,
+            {
+              allowedValues: [...UrlArgArray],
+              suggestion: `Use one of: ${UrlArgArray.join(", ")}`,
+            }
+          );
+
           return {
             success: false,
-            errors: [
-              `Invalid URL argument: ${urlArgType}. Valid arguments are: ${UrlArgArray.join(", ")}`,
-            ],
+            errors: [error],
             warnings: [],
             data: value,
           };
         }
-      } 
+      }
 
       return TypeValidators.validateUrl(value, urlArgType as UrlArgType);
     }
@@ -940,7 +981,7 @@ export class ValidationHelpers {
     }
 
     let success = true;
-    const errors: string[] = [];
+    const errors: ValidationError[] = [];
     const warnings: string[] = [];
     const mergedData: any[] = [];
 
@@ -956,29 +997,105 @@ export class ValidationHelpers {
       }
     }
 
+    // Remove duplicate errors by comparing path and message
+    const uniqueErrors = errors.filter(
+      (error, index, arr) =>
+        arr.findIndex(
+          (e) =>
+            e.path.join(".") === error.path.join(".") &&
+            e.message === error.message
+        ) === index
+    );
+
     return {
       success,
-      errors: [...new Set(errors)], // Remove duplicates
+      errors: uniqueErrors,
       warnings: [...new Set(warnings)], // Remove duplicates
       data: mergedData.length === 1 ? mergedData[0] : mergedData,
     };
   }
 
   /**
-   * error result creation with context
+   * Create rich error result with detailed information
    */
   static createErrorResult(
     error: string,
     value?: any,
     context?: string
   ): SchemaValidationResult {
-    const fullError = context ? `${context}: ${error}` : error;
+    const errorObj = ErrorHandler.createError(
+      context ? [context] : [],
+      error,
+      ErrorCode.VALIDATION_ERROR,
+      "unknown",
+      value
+    );
+
     return {
       success: false,
-      errors: [fullError],
+      errors: [errorObj],
       warnings: [],
       data: value,
     };
+  }
+
+  /**
+   * Create detailed validation error object
+   */
+  static createValidationError(
+    path: string[],
+    message: string,
+    code: string,
+    expected: string,
+    received: any,
+    context?: {
+      suggestion?: string;
+      allowedValues?: any[];
+      constraints?: Record<string, any>;
+    }
+  ): ValidationError {
+    return {
+      path,
+      message,
+      code,
+      expected,
+      received,
+      receivedType: this.getValueType(received),
+      context,
+    };
+  }
+
+  /**
+   * Create field validation error with path
+   */
+  static createFieldError(
+    fieldPath: string,
+    message: string,
+    expected: string,
+    received: any,
+    code: string = "FIELD_VALIDATION_ERROR",
+    suggestion?: string
+  ): ValidationError {
+    return this.createValidationError(
+      fieldPath.split(".").filter((p) => p.length > 0),
+      message,
+      code,
+      expected,
+      received,
+      suggestion ? { suggestion } : undefined
+    );
+  }
+
+  /**
+   * Get detailed type information for values
+   */
+  static getValueType(value: any): string {
+    if (value === null) return "null";
+    if (value === undefined) return "undefined";
+    if (Array.isArray(value)) return "array";
+    if (value instanceof Date) return "date";
+    if (value instanceof RegExp) return "regexp";
+    return typeof value;
   }
 
   /**
@@ -1068,9 +1185,16 @@ export class ValidationHelpers {
     const result = this.routeTypeValidation(type, value, options, constraints);
 
     if (!result.success && fieldPath) {
+      // Update error paths with field context
+      const updatedErrors = result.errors.map((error) => ({
+        ...error,
+        path: fieldPath.split(".").concat(error.path),
+        message: error.message, // Keep original message, path provides context
+      }));
+
       return {
         ...result,
-        errors: result.errors.map((error) => `${fieldPath}: ${error}`),
+        errors: updatedErrors,
       };
     }
 
