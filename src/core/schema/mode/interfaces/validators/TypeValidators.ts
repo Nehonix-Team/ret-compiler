@@ -205,7 +205,13 @@ export class TypeValidators {
     } else if (!pattern.test(value)) {
       this.addError(
         result,
-        ErrorHandler.createSyntaxError([], "valid format", value)
+        ErrorHandler.createStringError(
+          [],
+          typeName === "uuid" || typeName === "guid"
+            ? "Invalid UUID/GUID format"
+            : "Invalid format",
+          value
+        )
       );
     }
 
