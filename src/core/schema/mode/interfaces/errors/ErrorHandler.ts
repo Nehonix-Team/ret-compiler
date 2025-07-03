@@ -122,16 +122,10 @@ export class ErrorHandler {
     const sanitizedMessage = this.sanitizeMessage(message);
     const detectedType = this.detectValueType(received);
 
-    // Validate code parameter
-    const validatedCode =
-      typeof code === "string" && code.trim().length > 0
-        ? code.trim()
-        : ErrorCode.VALIDATION_ERROR;
-
     return {
       path: normalizedPath,
       message: sanitizedMessage,
-      code: validatedCode,
+      code: code,
       expected: typeof expected === "string" ? expected.trim() : "unknown",
       received,
       receivedType: detectedType,
@@ -305,12 +299,15 @@ export class ErrorHandler {
    * Convert string errors to ValidationError objects
    * (for backward compatibility)
    */
-  static convertStringToError(error: string | any): ValidationError {
+  static convertStringToError(
+    error: string | any,
+    code: ErrorCode
+  ): ValidationError {
     // If it's already a ValidationError object, return as is
     if (this.isValidationError(error)) {
       return error;
     }
-
+    // console.log("converting string to error. Code: ", code);
     // Handle ValidationError-like objects
     if (
       error &&
@@ -320,7 +317,7 @@ export class ErrorHandler {
       return this.createError(
         error.path || [],
         error.message,
-        error.code || ErrorCode.VALIDATION_ERROR,
+        code || ErrorCode.VALIDATION_ERROR,
         error.expected || "unknown",
         error.received
       );
@@ -337,20 +334,14 @@ export class ErrorHandler {
       return this.createError(
         path.trim(),
         message.trim(),
-        ErrorCode.VALIDATION_ERROR,
+        code,
         "unknown",
         undefined
       );
     }
 
     // No path found, use generic error
-    return this.createError(
-      [],
-      errorString,
-      ErrorCode.VALIDATION_ERROR,
-      "unknown",
-      undefined
-    );
+    return this.createError([], errorString, code, "unknown", undefined);
   }
 
   /**
@@ -397,12 +388,14 @@ export class ErrorHandler {
    * Convert string array to ValidationError array
    * (for backward compatibility)
    */
-  static convertStringArrayToErrors(errors: string[]): ValidationError[] {
+  static convertStringArrayToErrors(
+    errors: string[],
+    code: string
+  ): ValidationError[] {
     if (!Array.isArray(errors)) {
       return [];
     }
-
-    return errors.map((error) => this.convertStringToError(error));
+    return errors.map((error) => this.convertStringToError(error, code as any) );
   }
 
   /**
@@ -573,6 +566,7 @@ export class ErrorHandler {
     message: string,
     received: any
   ): ValidationError {
+    // console.log("createValidationError", message);
     return this.createError(
       path,
       `Validation failed: ${message}`,

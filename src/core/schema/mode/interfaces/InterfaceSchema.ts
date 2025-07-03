@@ -399,6 +399,7 @@ export class InterfaceSchema<T = any> {
 
     const validatedData: any = {};
     const errors: string[] = [];
+    // let errorCodes: string
     const warnings: string[] = [];
     let hasErrors = false;
 
@@ -495,11 +496,12 @@ export class InterfaceSchema<T = any> {
         errors.push(`Unexpected properties: ${extraKeys.join(", ")}`);
       }
     }
-    // console.log("validation error: ", errors);
+    // console.log("validation error: ", validatedData);
     return {
       success: !hasErrors,
       errors: ErrorHandler.convertStringArrayToErrors(
-        typeof errors === "string" ? [errors] : errors
+        typeof errors === "string" ? [errors] : errors,
+        ErrorCode.VALIDATION_ERROR
       ),
       warnings,
       data: hasErrors ? undefined : (validatedData as T),

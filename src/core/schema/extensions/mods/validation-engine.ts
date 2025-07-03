@@ -13,6 +13,7 @@ import { TypeGuards } from "../../mode/interfaces/validators/TypeGuards";
 import { ValidationHelpers } from "../../mode/interfaces/validators/ValidationHelpers";
 import { ErrorHandler } from "../../mode/interfaces/errors/ErrorHandler";
 import { SchemaOptions } from "../../../types/SchemaValidator.type";
+import { ErrorCode } from "../../mode/interfaces/errors/types/errors.type";
 
 /**
  * Core validation engine for schema validation
@@ -134,7 +135,8 @@ export class ValidationEngine {
                 const validationErrors = fieldResult.errors.map((errorMsg) => {
                   if (typeof errorMsg === "string") {
                     // console.log("converting string error to ValidationError");
-                    return ErrorHandler.convertStringToError(errorMsg);
+                    return ErrorHandler.convertStringToError(errorMsg, ErrorCode.VALIDATION_ERROR
+                    );
                   }
                   // If it's already a ValidationError object, return as is
                   if (
@@ -148,7 +150,10 @@ export class ValidationEngine {
                   // console.log(
                   //   "converting unknown error format to ValidationError"
                   // );
-                  return ErrorHandler.convertStringToError(String(errorMsg));
+                  return ErrorHandler.convertStringToError(
+                    String(errorMsg),
+                    ErrorCode.VALIDATION_ERROR
+                  );
                 });
                 return {
                   success: fieldResult.isValid,
