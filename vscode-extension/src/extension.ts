@@ -11,16 +11,20 @@ import { FortifyDiagnosticsProvider } from "./providers/FortifyDiagnostics";
 import { FortifyHoverProvider } from "./providers/HoverProvider";
 import { FortifySemanticTokensProvider } from "./providers/SemanticTokensProvider";
 import { FortifyDefinitionProvider } from "./providers/DefinitionProvider";
+import { DocumentationProvider } from "./providers/DocumentationProvider";
 import {
   FortifyColorThemeManager,
   FortifyColorSchemes,
-} from "./themes/FortifyColorTheme"; 
+} from "./themes/FortifyColorTheme";
 
 /**
  * Extension activation - called when the extension is activated
  */
 export function activate(context: vscode.ExtensionContext) {
   console.log("🚀 Fortify Schema extension is now active!");
+
+  // ENHANCED: Initialize documentation provider for hover and definition support
+  DocumentationProvider.initialize(context.extensionPath);
 
   // Register completion provider for TypeScript files
   const completionProvider = vscode.languages.registerCompletionItemProvider(
@@ -33,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
     "(", // Trigger on parentheses for constraints
     ".", // Trigger on dot for property access
     "$" // Trigger on dollar for V2 method calls
-  ); 
+  );
 
   // Register hover provider for type information
   const hoverProvider = vscode.languages.registerHoverProvider(
@@ -70,7 +74,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
   );
- 
+
   // Watch for document open to provide initial validation
   const documentOpenListener = vscode.workspace.onDidOpenTextDocument(
     (document) => {
@@ -184,12 +188,14 @@ export function activate(context: vscode.ExtensionContext) {
         "Fortify Color Schemes"
       );
       outputChannel.clear();
-      outputChannel.appendLine("Nehonix Fortify Schema - Available Color Schemes");
+      outputChannel.appendLine(
+        "Nehonix Fortify Schema - Available Color Schemes"
+      );
       outputChannel.appendLine("=".repeat(50));
       outputChannel.appendLine("");
       schemes.forEach((scheme, index) => {
         outputChannel.appendLine(`${index + 1}. ${scheme.name}`);
-        outputChannel.appendLine(`   Description: ${scheme.description}`);
+        outputChannel.appendLine(`  Description: ${scheme.description}`);
         outputChannel.appendLine("");
       });
       outputChannel.show();
@@ -201,7 +207,7 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       try {
         const result = await vscode.window.showWarningMessage(
-          "This will remove all Fortify Schema color customizations from your VSCode settings. Continue?",
+          "This will remove all Fortify Schema color customizations from your VSCode settings. Would you like to continue?",
           { modal: true },
           "Yes, Remove Themes",
           "Cancel"

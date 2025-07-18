@@ -66,11 +66,16 @@ function convertMakeObjectsToStrings(definition: any): any {
   if (
     typeof definition === "object" &&
     "union" in definition &&
-    Array.isArray(definition.union) &&
-    Object.keys(definition).length === 1
+    Array.isArray(definition.union)
   ) {
-    // Convert Make.union() to string syntax
-    return definition.union.join("|");
+    // Check if it's an optional union (Make.unionOptional)
+    if ("optional" in definition && definition.optional === true) {
+      // Convert Make.unionOptional() to string syntax with "?" suffix
+      return definition.union.join("|") + "?";
+    } else {
+      // Convert Make.union() to string syntax
+      return definition.union.join("|");
+    }
   }
 
   // Recursively process nested objects

@@ -9,6 +9,8 @@ import {
   SchemaInterface,
   SchemaFieldType,
   SchemaOptions,
+  type CompiledField,
+  type AllowUnknownSchema,
 } from "../../../types/SchemaValidator.type";
 import { SchemaValidationResult, ValidationError } from "../../../types/types";
 
@@ -26,7 +28,7 @@ import { SchemaCompiler } from "../../optimization/SchemaCompiler";
 import { ObjectValidationCache } from "../../optimization/ObjectValidationCache";
 import { PerformanceMonitor } from "../../optimization/PerformanceMonitor";
 
-// Import ULTRA-OPTIMIZED precompilation system
+// Import precompilation system
 import {
   SchemaPrecompiler,
   PrecompiledValidator,
@@ -39,23 +41,6 @@ import { ErrorCode } from "./errors/types/errors.type";
 /**
  * Interface Schema class for TypeScript-like schema definitions
  */
-// Helper type for schemas that allow unknown properties
-type AllowUnknownSchema<T> = T & Record<string, any>;
-
-// Pre-compiled field definition for faster validation
-interface CompiledField {
-  key: string;
-  originalType: SchemaFieldType;
-  isString: boolean;
-  isConditional: boolean;
-  conditionalConfig?: any;
-  parsedConstraints?: any;
-  isArray?: boolean;
-  elementType?: string;
-  isOptional?: boolean;
-  // conditional validation
-  ConditionalAST?: ConditionalNode;
-}
 
 export class InterfaceSchema<T = any> {
   private compiledFields: CompiledField[] = [];
@@ -289,10 +274,10 @@ export class InterfaceSchema<T = any> {
             compiled.ConditionalAST = ast;
           } else {
             // If parsing fails, treat as regular field type
-            console.warn(
-              `Failed to parse conditional expression: ${fieldType}`,
-              errors
-            );
+            // console.warn(
+            //   `Failed to parse conditional expression: ${fieldType}`,
+            //   errors
+            // );
             const parsed = ConstraintParser.parseConstraints(fieldType);
             compiled.parsedConstraints = parsed;
             compiled.isOptional = parsed.optional;
@@ -369,7 +354,7 @@ export class InterfaceSchema<T = any> {
       ) as SchemaValidationResult<T>;
     } else {
       // console.log(
-      //   "XMS/using standard validation for simple schemas or conditional schemas"
+      //   "using standard validation for simple schemas or conditional schemas"
       // );
       // Standard validation for simple schemas or conditional schemas
       result = this.validateStandard(data);
@@ -398,10 +383,19 @@ export class InterfaceSchema<T = any> {
     }
 
     const validatedData: any = {};
-    const errors: string[] = [];
-    // let errorCodes: string
+    const errors: ValidationError[] = [];
     const warnings: string[] = [];
     let hasErrors = false;
+
+    // Apply default values if they exist
+    const defaults = (this.options as any)?.defaults;
+    if (defaults) {
+      for (const [key, defaultValue] of Object.entries(defaults)) {
+        if (!(key in data) || data[key] === undefined) {
+          data = { ...data, [key]: defaultValue };
+        }
+      }
+    }
 
     // Use pre-compiled fields for faster validation
     for (let i = 0; i < this.compiledFields.length; i++) {
@@ -449,17 +443,40 @@ export class InterfaceSchema<T = any> {
       // Process field result
       if (!fieldResult.success) {
         hasErrors = true;
-        // Batch error processing
+        // Batch error processing with proper path tracking
         for (let j = 0; j < fieldResult.errors.length; j++) {
           const error = fieldResult.errors[j];
-          // Handle both string and ValidationError object cases
-          const errorMessage =
-            typeof error === "string"
-              ? error
-              : error && typeof error === "object" && "message" in error
-                ? (error as any).message
-                : JSON.stringify(error);
-          errors.push(`${field.key}: ${errorMessage}`);
+
+          // Convert string errors to ValidationError objects and add field path
+          if (typeof error === "string") {
+            errors.push(ErrorHandler.createSimpleError(error, [field.key]));
+          } else if (error && typeof error === "object" && "message" in error) {
+            // This is already a ValidationError object, add field to path and enhance message
+            const validationError = error as ValidationError;
+            const fullPath = [field.key, ...validationError.path];
+
+            // Always use the full path for field context, replacing any existing field context
+            let message = validationError.message;
+
+            // Remove any existing field context to avoid duplication
+            const fieldContextRegex = / in field "[^"]*"$/;
+            message = message.replace(fieldContextRegex, "");
+
+            // Add the complete field path context
+            const fieldContext =
+              fullPath.length > 0 ? ` in field "${fullPath.join(".")}"` : "";
+
+            errors.push({
+              ...validationError,
+              path: fullPath,
+              message: `${message}${fieldContext}`,
+            });
+          } else {
+            // Fallback for unknown error format
+            errors.push(
+              ErrorHandler.createSimpleError(JSON.stringify(error), [field.key])
+            );
+          }
         }
       } else if (fieldResult.data !== undefined) {
         validatedData[field.key] = fieldResult.data;
@@ -473,36 +490,54 @@ export class InterfaceSchema<T = any> {
 
     // Handle extra properties efficiently using pre-computed schema keys
     const inputKeys = Object.keys(data);
-    if (this.options.allowUnknown === true) {
+    const omittedFields = (this.options as any)._omittedFields || [];
+
+    // Check for strict mode or additionalProperties setting
+    const isStrict =
+      (this.options as any).strict === true ||
+      (this.options as any).additionalProperties === false;
+    const allowAdditional =
+      this.options.allowUnknown === true ||
+      (this.options as any).additionalProperties === true;
+
+    if (allowAdditional && !isStrict) {
       // Allow unknown properties
       for (let i = 0; i < inputKeys.length; i++) {
         const key = inputKeys[i];
-        if (!this.schemaKeys.includes(key)) {
+        if (!this.schemaKeys.includes(key) && !omittedFields.includes(key)) {
           validatedData[key] = data[key];
         }
       }
     } else {
-      // Check for extra keys
+      // Check for extra keys in strict mode or when additional properties are not allowed
       const extraKeys: string[] = [];
       for (let i = 0; i < inputKeys.length; i++) {
         const key = inputKeys[i];
-        if (!this.schemaKeys.includes(key)) {
+        if (!this.schemaKeys.includes(key) && !omittedFields.includes(key)) {
           extraKeys.push(key);
         }
       }
 
       if (extraKeys.length > 0) {
-        hasErrors = true;
-        errors.push(`Unexpected properties: ${extraKeys.join(", ")}`);
+        if (isStrict) {
+          // In strict mode, reject extra properties
+          hasErrors = true;
+          errors.push(
+            ErrorHandler.createSimpleError(
+              `Unexpected properties: ${extraKeys.join(", ")}`,
+              []
+            )
+          );
+        } else {
+          // Default behavior: ignore extra properties (don't include them in result)
+          // This maintains backward compatibility
+        }
       }
     }
     // console.log("validation error: ", validatedData);
     return {
       success: !hasErrors,
-      errors: ErrorHandler.convertStringArrayToErrors(
-        typeof errors === "string" ? [errors] : errors,
-        ErrorCode.VALIDATION_ERROR
-      ),
+      errors: errors,
       warnings,
       data: hasErrors ? undefined : (validatedData as T),
     };
@@ -743,11 +778,16 @@ export class InterfaceSchema<T = any> {
       const nestedSchema = new InterfaceSchema(fieldType, this.options);
       // CRITICAL FIX: For nested objects, we need to pass the full data context
       // so that conditional validation can access parent fields
-      return this.validateNestedObjectWithContext(
+      const nestedResult = this.validateNestedObjectWithContext(
         nestedSchema,
         value,
         fullData
       );
+
+      // Path is already handled in the main validation loop, no need to add it here
+      // The main validation loop will add the field key to the path
+
+      return nestedResult;
     }
 
     // console.log("checking for array of schemas");
@@ -986,10 +1026,18 @@ export class InterfaceSchema<T = any> {
     // Apply parsed constraints to options, but preserve important options like loose
     const Options = { ...constraints, ...this.options };
 
-    // Check for Record types first
-    if (type.startsWith("record<") && type.endsWith(">")) {
+    // Check for Record types first (both lowercase and TypeScript-style uppercase)
+    if (
+      (type.startsWith("record<") && type.endsWith(">")) ||
+      (type.startsWith("Record<") && type.endsWith(">"))
+    ) {
+      // Normalize to lowercase for the validator
+      const normalizedType = type.startsWith("Record<")
+        ? "record<" + type.slice(7)
+        : type;
+
       return ValidationHelpers.validateRecordType(
-        type,
+        normalizedType,
         value,
         (fieldType: string, value: any) =>
           this.validateStringFieldType(fieldType, value)

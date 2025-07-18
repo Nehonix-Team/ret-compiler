@@ -1,3 +1,5 @@
+import { ConditionalNode } from "../schema/mode/interfaces/conditional/types/ConditionalTypes";
+
 /**
  * Constant value wrapper to distinguish from string types
  */
@@ -187,4 +189,22 @@ export interface SchemaOptions {
   enableOptimizations?: boolean;
   cacheValidation?: boolean;
   skipOptimization?: boolean; // Skip optimization to prevent circular dependency
+}
+
+// Helper type for schemas that allow unknown properties
+export type AllowUnknownSchema<T> = T & Record<string, any>;
+
+// Pre-compiled field definition for faster validation
+export interface CompiledField {
+  key: string;
+  originalType: SchemaFieldType;
+  isString: boolean;
+  isConditional: boolean;
+  conditionalConfig?: any;
+  parsedConstraints?: any;
+  isArray?: boolean;
+  elementType?: string;
+  isOptional?: boolean;
+  // conditional validation
+  ConditionalAST?: ConditionalNode;
 }

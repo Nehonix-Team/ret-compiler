@@ -2,25 +2,25 @@
 
 ## 📊 Executive Summary
 
-**Generated:** 26/06/2025 13:47:34
-**Node.js Version:** v22.6.0
-**Platform:** win32 (x64)
-**Fortify Schema Version:** 2.0.2
+**Generated:** 7/18/2025, 8:19:17 AM
+**Node.js Version:** v24.3.0
+**Platform:** linux (x64)
+**Fortify Schema Version:** 2.0.21
 
 ### 🏆 Performance Highlights
 
 | Metric | Value |
 |--------|-------|
 | **Total Test Suites** | 6 |
-| **Fastest Operation** | Complex Nested (8 674 531,575 ops/sec) |
-| **Most Consistent** | Conditional Logic (5.4% CV) |
-| **Memory Efficiency** | 1.07 KB per schema |
+| **Fastest Operation** | Basic Types (496,131.184 ops/sec) |
+| **Most Consistent** | Union Types (5.8% CV) |
+| **Memory Efficiency** | 1.42 KB per schema |
 
 ### 💾 Memory Usage
 
-- **Total Memory Used:** 2.10 MB
-- **Schemas Created:** 2 000
-- **Memory Per Schema:** 1.07 KB
+- **Total Memory Used:** 2.78 MB
+- **Schemas Created:** 2,000
+- **Memory Per Schema:** 1.42 KB
 
 ## 📋 Detailed Performance Results
 
@@ -28,133 +28,133 @@
 ### 1. Basic Types
 
 **Performance Metrics:**
-- **Operations/Second:** 6 133 313,707 ops/sec
-- **Average Time/Op:** 0.16 μs
-- **Median Time:** 8.15 ms
+- **Operations/Second:** 496,131.184 ops/sec
+- **Average Time/Op:** 2.02 μs
+- **Median Time:** 100.78 ms
 
 **Reliability Metrics:**
 - **Success Rate:** 100.0%
-- **Coefficient of Variation:** 57.8%
-- **Time Range:** 4.72 - 22.23 ms
+- **Coefficient of Variation:** 32.3%
+- **Time Range:** 88.70 - 188.94 ms
 
 | Metric | Value |
 |--------|-------|
-| **Iterations** | 50 000 |
-| **Median Time** | 8.15 ms |
-| **Mean Time** | 10.26 ms |
-| **Std Deviation** | 5.93 ms |
-| **Min Time** | 4.72 ms |
-| **Max Time** | 22.23 ms |
+| **Iterations** | 50,000 |
+| **Median Time** | 100.78 ms |
+| **Mean Time** | 124.86 ms |
+| **Std Deviation** | 40.36 ms |
+| **Min Time** | 88.70 ms |
+| **Max Time** | 188.94 ms |
 
 
 ### 2. Complex Nested
 
 **Performance Metrics:**
-- **Operations/Second:** 8 674 531,575 ops/sec
-- **Average Time/Op:** 0.12 μs
-- **Median Time:** 0.58 ms
+- **Operations/Second:** 12,443.531 ops/sec
+- **Average Time/Op:** 80.36 μs
+- **Median Time:** 401.82 ms
 
 **Reliability Metrics:**
 - **Success Rate:** 100.0%
-- **Coefficient of Variation:** 21.1%
-- **Time Range:** 0.56 - 0.99 ms
+- **Coefficient of Variation:** 10.8%
+- **Time Range:** 345.57 - 484.38 ms
 
 | Metric | Value |
 |--------|-------|
-| **Iterations** | 5 000 |
-| **Median Time** | 0.58 ms |
-| **Mean Time** | 0.65 ms |
-| **Std Deviation** | 0.14 ms |
-| **Min Time** | 0.56 ms |
-| **Max Time** | 0.99 ms |
+| **Iterations** | 5,000 |
+| **Median Time** | 401.82 ms |
+| **Mean Time** | 407.29 ms |
+| **Std Deviation** | 44.08 ms |
+| **Min Time** | 345.57 ms |
+| **Max Time** | 484.38 ms |
 
 
 ### 3. Array Validation
 
 **Performance Metrics:**
-- **Operations/Second:** 6 447 972,919 ops/sec
-- **Average Time/Op:** 0.16 μs
-- **Median Time:** 1.24 ms
+- **Operations/Second:** 147,805.966 ops/sec
+- **Average Time/Op:** 6.77 μs
+- **Median Time:** 54.13 ms
 
 **Reliability Metrics:**
-- **Success Rate:** 100.0%
-- **Coefficient of Variation:** 56.2%
-- **Time Range:** 0.91 - 3.72 ms
+- **Success Rate:** 0.0%
+- **Coefficient of Variation:** 34.5%
+- **Time Range:** 38.10 - 98.61 ms
 
 | Metric | Value |
 |--------|-------|
-| **Iterations** | 8 000 |
-| **Median Time** | 1.24 ms |
-| **Mean Time** | 1.54 ms |
-| **Std Deviation** | 0.86 ms |
-| **Min Time** | 0.91 ms |
-| **Max Time** | 3.72 ms |
+| **Iterations** | 8,000 |
+| **Median Time** | 54.13 ms |
+| **Mean Time** | 57.39 ms |
+| **Std Deviation** | 19.80 ms |
+| **Min Time** | 38.10 ms |
+| **Max Time** | 98.61 ms |
 
 
 ### 4. Union Types
 
 **Performance Metrics:**
-- **Operations/Second:** 1 382 944,15 ops/sec
-- **Average Time/Op:** 0.72 μs
-- **Median Time:** 14.46 ms
+- **Operations/Second:** 130,063.973 ops/sec
+- **Average Time/Op:** 7.69 μs
+- **Median Time:** 153.77 ms
 
 **Reliability Metrics:**
 - **Success Rate:** 100.0%
-- **Coefficient of Variation:** 24.3%
-- **Time Range:** 11.39 - 24.76 ms
+- **Coefficient of Variation:** 5.8%
+- **Time Range:** 145.57 - 177.70 ms
 
 | Metric | Value |
 |--------|-------|
-| **Iterations** | 20 000 |
-| **Median Time** | 14.46 ms |
-| **Mean Time** | 15.28 ms |
-| **Std Deviation** | 3.71 ms |
-| **Min Time** | 11.39 ms |
-| **Max Time** | 24.76 ms |
+| **Iterations** | 20,000 |
+| **Median Time** | 153.77 ms |
+| **Mean Time** | 156.50 ms |
+| **Std Deviation** | 9.14 ms |
+| **Min Time** | 145.57 ms |
+| **Max Time** | 177.70 ms |
 
 
 ### 5. Conditional Logic
 
 **Performance Metrics:**
-- **Operations/Second:** 32 108,639 ops/sec
-- **Average Time/Op:** 31.14 μs
-- **Median Time:** 467.16 ms
+- **Operations/Second:** 13,833.264 ops/sec
+- **Average Time/Op:** 72.29 μs
+- **Median Time:** 1084.34 ms
 
 **Reliability Metrics:**
 - **Success Rate:** 0.0%
-- **Coefficient of Variation:** 5.4%
-- **Time Range:** 436.20 - 536.04 ms
+- **Coefficient of Variation:** 13.1%
+- **Time Range:** 924.03 - 1443.54 ms
 
 | Metric | Value |
 |--------|-------|
-| **Iterations** | 15 000 |
-| **Median Time** | 467.16 ms |
-| **Mean Time** | 470.52 ms |
-| **Std Deviation** | 25.26 ms |
-| **Min Time** | 436.20 ms |
-| **Max Time** | 536.04 ms |
+| **Iterations** | 15,000 |
+| **Median Time** | 1084.34 ms |
+| **Mean Time** | 1078.61 ms |
+| **Std Deviation** | 140.92 ms |
+| **Min Time** | 924.03 ms |
+| **Max Time** | 1443.54 ms |
 
 
 ### 6. Format Validation
 
 **Performance Metrics:**
-- **Operations/Second:** 6 324 777,315 ops/sec
-- **Average Time/Op:** 0.16 μs
-- **Median Time:** 1.90 ms
+- **Operations/Second:** 90,788.957 ops/sec
+- **Average Time/Op:** 11.01 μs
+- **Median Time:** 132.17 ms
 
 **Reliability Metrics:**
 - **Success Rate:** 100.0%
-- **Coefficient of Variation:** 29.4%
-- **Time Range:** 1.57 - 3.74 ms
+- **Coefficient of Variation:** 22.8%
+- **Time Range:** 109.13 - 216.44 ms
 
 | Metric | Value |
 |--------|-------|
-| **Iterations** | 12 000 |
-| **Median Time** | 1.90 ms |
-| **Mean Time** | 2.09 ms |
-| **Std Deviation** | 0.61 ms |
-| **Min Time** | 1.57 ms |
-| **Max Time** | 3.74 ms |
+| **Iterations** | 12,000 |
+| **Median Time** | 132.17 ms |
+| **Mean Time** | 132.19 ms |
+| **Std Deviation** | 30.17 ms |
+| **Min Time** | 109.13 ms |
+| **Max Time** | 216.44 ms |
 
 
 ## 🎯 Performance Analysis
@@ -171,18 +171,18 @@
 
 ### Performance Characteristics by Test Type
 
-- **Basic Types**: 6 133 313,707 ops/sec (57.8% variation)
-- **Complex Nested**: 8 674 531,575 ops/sec (21.1% variation)
-- **Array Validation**: 6 447 972,919 ops/sec (56.2% variation)
-- **Union Types**: 1 382 944,15 ops/sec (24.3% variation)
-- **Conditional Logic**: 32 108,639 ops/sec (5.4% variation)
-- **Format Validation**: 6 324 777,315 ops/sec (29.4% variation)
+- **Basic Types**: 496,131.184 ops/sec (32.3% variation)
+- **Complex Nested**: 12,443.531 ops/sec (10.8% variation)
+- **Array Validation**: 147,805.966 ops/sec (34.5% variation)
+- **Union Types**: 130,063.973 ops/sec (5.8% variation)
+- **Conditional Logic**: 13,833.264 ops/sec (13.1% variation)
+- **Format Validation**: 90,788.957 ops/sec (22.8% variation)
 
 ## 🔧 Technical Details
 
 ### Test Environment
-- **Node.js:** v22.6.0
-- **Platform:** win32
+- **Node.js:** v24.3.0
+- **Platform:** linux
 - **Architecture:** x64
 - **Test Type:** standalone-performance
 
@@ -208,4 +208,4 @@
 ---
 
 *Generated automatically by the Fortify Schema benchmark suite*
-*Last updated: 26/06/2025 13:47:34*
+*Last updated: 7/18/2025, 8:19:17 AM*

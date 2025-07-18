@@ -165,6 +165,13 @@ export class FortifyPatterns {
   }
 
   /**
+   * Generate regex pattern for Make.const() function calls
+   */
+  static getMakeConstPattern(): RegExp {
+    return /Make\.const\s*\(\s*["'`][^"'`]*["'`]\s*\)/g;
+  }
+
+  /**
    * Generate comprehensive schema detection pattern
    * ENHANCED: Include bracket notation and array indexing patterns
    */
@@ -175,11 +182,14 @@ export class FortifyPatterns {
     const methodPattern = this.getMethodPattern().source;
     const propertyAccessPattern = this.getPropertyAccessPattern().source;
 
+    const makeConstPattern = this.getMakeConstPattern().source;
+
     const patterns = [
       typePattern,
       `${typePattern}\\s*${constraintPattern}`,
       "\\b\\w+\\s*\\|\\s*\\w+", // Union types
       "=\\w+", // Constants
+      makeConstPattern, // Make.const() function calls
       conditionalPattern,
       "\\*\\?", // Conditional then
       methodPattern,

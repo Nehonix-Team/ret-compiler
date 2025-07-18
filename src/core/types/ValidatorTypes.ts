@@ -52,6 +52,8 @@ export const SUPPORTED_VALIDATOR_TYPES = [
   "base64",
   "jwt",
   "semver",
+
+  "record",
 ] as const;
 
 export const VALIDATOR_TYPES = createEnum(SUPPORTED_VALIDATOR_TYPES);

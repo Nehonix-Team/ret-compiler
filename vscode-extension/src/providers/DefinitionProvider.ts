@@ -8,16 +8,17 @@
  */
 
 import * as vscode from "vscode";
+import { DocumentationProvider } from "./DocumentationProvider";
 
 export class FortifyDefinitionProvider implements vscode.DefinitionProvider {
   /**
    * Provide definition for the symbol at the given position
    */
-  provideDefinition(
+  async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
     token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.Definition | vscode.LocationLink[]> {
+  ): Promise<vscode.Definition | vscode.LocationLink[] | undefined> {
     const text = document.getText();
     const line = document.lineAt(position);
     const lineText = line.text;
@@ -34,6 +35,12 @@ export class FortifyDefinitionProvider implements vscode.DefinitionProvider {
     }
 
     const word = document.getText(wordRange);
+
+    // ENHANCED: Check for documentation links first (Ctrl+Click to open docs)
+    const docLocation = await this.getDocumentationLocation(word, lineText);
+    if (docLocation) {
+      return docLocation;
+    }
 
     // Check if this word is a variable in a conditional expression
     if (!this.isVariableInConditional(lineText, word, position.character)) {
@@ -286,5 +293,80 @@ export class FortifyDefinitionProvider implements vscode.DefinitionProvider {
     }
 
     return undefined;
+  }
+
+  /**
+   * ENHANCED: Get documentation location for Fortify Schema types
+   * Provides Ctrl+Click functionality to open documentation
+   */
+  private async getDocumentationLocation(
+    word: string,
+    lineText: string
+  ): Promise<vscode.Location | undefined> {
+    let targetWord = word;
+
+    // Handle Make.const() function calls
+    if (
+      lineText.includes("Make.const") &&
+      (word === "Make" || word === "const")
+    ) {
+      targetWord = "Make.const";
+    }
+
+    // Handle record types
+    if (word === "record" || lineText.includes("record<")) {
+      targetWord = "record";
+    }
+
+    // Check if we have documentation for this type
+    const docEntry = DocumentationProvider.getDocumentation(targetWord);
+    if (!docEntry) {
+      return undefined;
+    }
+
+    // Create a location pointing to the documentation file
+    const docPath = DocumentationProvider.getDocumentationPath();
+    const docUri = vscode.Uri.file(docPath);
+
+    try {
+      // Open the documentation file and find the specific section
+      const docDocument = await vscode.workspace.openTextDocument(docUri);
+      const text = docDocument.getText();
+      const lines = text.split("\n");
+
+      // Look for the specific type definition
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        // Look for exact match: ### `url`
+        if (line.startsWith("### ") && line.includes(`\`${targetWord}\``)) {
+          const position = new vscode.Position(i, 0);
+          const range = new vscode.Range(position, position);
+          return new vscode.Location(docUri, range);
+        }
+
+        // Look for partial match: ### url (without backticks)
+        if (
+          line.startsWith("### ") &&
+          line.toLowerCase().includes(targetWord.toLowerCase())
+        ) {
+          const position = new vscode.Position(i, 0);
+          const range = new vscode.Range(position, position);
+          return new vscode.Location(docUri, range);
+        }
+      }
+
+      // Fallback to the beginning of the file
+      const position = new vscode.Position(0, 0);
+      const range = new vscode.Range(position, position);
+      return new vscode.Location(docUri, range);
+    } catch (error) {
+      console.error("Failed to find specific section in documentation:", error);
+
+      // Fallback: just open the documentation file at the beginning
+      const position = new vscode.Position(0, 0);
+      const range = new vscode.Range(position, position);
+      return new vscode.Location(docUri, range);
+    }
   }
 }

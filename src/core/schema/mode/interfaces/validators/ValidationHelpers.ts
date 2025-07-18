@@ -18,7 +18,7 @@ import {
 import { SchemaOptions } from "../Interface";
 import { TypeValidators } from "./TypeValidators";
 import { OptimizedUnionValidator as OUV } from "./UnionCache";
-import { ErrorHandler,  } from "../errors/ErrorHandler";
+import { ErrorHandler } from "../errors/ErrorHandler";
 import { ErrorCode } from "../errors/types/errors.type";
 
 // Cache for parsed constant values with LRU eviction
@@ -621,6 +621,24 @@ export class ValidationHelpers {
         constraints,
         (elementType: string, elementValue: any) =>
           this.routeTypeValidation(elementType, elementValue, options, {})
+      );
+    }
+
+    // Handle Record types first (both lowercase and TypeScript-style uppercase)
+    if (
+      (type.startsWith("record<") && type.endsWith(">")) ||
+      (type.startsWith("Record<") && type.endsWith(">"))
+    ) {
+      // Normalize to lowercase for the validator
+      const normalizedType = type.startsWith("Record<")
+        ? "record<" + type.slice(7)
+        : type;
+
+      return this.validateRecordType(
+        normalizedType,
+        value,
+        (fieldType: string, value: any) =>
+          this.routeTypeValidation(fieldType, value, options, {})
       );
     }
 

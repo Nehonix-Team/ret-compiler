@@ -74,7 +74,7 @@ export class ErrorHandler {
   /**
    * Enhanced value type detection with better precision
    */
-  private static detectValueType(value: any): string {
+  private static detectValueType(value: unknown): string {
     // Handle primitive null/undefined first
     if (value === null) return "null";
     if (value === undefined) return "undefined";
@@ -139,14 +139,16 @@ export class ErrorHandler {
   static createTypeError(
     path: string | string[],
     expected: string,
-    received: any
+    received: unknown
   ): ValidationError {
     const receivedType = this.detectValueType(received);
+    const sanitizedValue = this.sanitizeReceivedValue(received);
 
+    // Create a user-friendly message that includes the actual value
     const message =
       expected === "phone"
-        ? `Invalid phone number format: received ${this.sanitizeReceivedValue(received)} instead of valid phone number`
-        : `Type mismatch detected: value of type '${this.capitalizeFirstLetter(receivedType)}' cannot be processed as '${this.capitalizeFirstLetter(expected)}'`;
+        ? `Invalid phone number format: received "${sanitizedValue}" instead of valid phone number`
+        : `Expected ${this.capitalizeFirstLetter(expected)}, but received ${this.capitalizeFirstLetter(receivedType)}: "${sanitizedValue}"`;
 
     return this.createError(
       path,
@@ -291,7 +293,7 @@ export class ErrorHandler {
   /**
    * Get detailed type information for values (legacy method name for compatibility)
    */
-  static getValueType(value: any): string {
+  static getValueType(value: unknown): string {
     return this.detectValueType(value);
   }
 
@@ -395,7 +397,7 @@ export class ErrorHandler {
     if (!Array.isArray(errors)) {
       return [];
     }
-    return errors.map((error) => this.convertStringToError(error, code as any) );
+    return errors.map((error) => this.convertStringToError(error, code as any));
   }
 
   /**

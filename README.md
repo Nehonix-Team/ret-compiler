@@ -63,6 +63,7 @@ _Note: you may have tsx installed if using this command. "npm i -g tsx"._
 
 - [Installation & Setup](#installation--setup)
 - [Core Features](#core-features)
+- [Utility Functions](#utility-functions)
 - [Conditional Validation](#conditional-validation)
 - [Live Utility - Real-time Validation](#live-utility---real-time-validation)
 - [Real-World Applications](#real-world-applications)
@@ -97,7 +98,27 @@ bun add fortify-schema
 
 ### VS Code Extension
 
-Enhance your development workflow with our dedicated VS Code extension featuring syntax highlighting and intelligent IntelliSense:
+Enhance your development workflow with our dedicated VS Code extension featuring comprehensive developer tools:
+
+#### **🎨 Enhanced Features**
+
+- **Syntax Highlighting**: Full syntax highlighting for all Fortify Schema types and utilities
+- **Hover Documentation**: Detailed type information, examples, and use cases on hover
+- **Go-to-Definition**: Ctrl+Click on types to open comprehensive documentation
+- **IntelliSense Support**: Smart autocomplete for schema definitions
+- **Error Detection**: Real-time validation of schema syntax
+- **Code Snippets**: Pre-built templates for common schema patterns
+
+#### **📖 Interactive Documentation**
+
+When you hover over any type in `Interface({...})` blocks, you'll see:
+
+- **Type Description**: What the type validates
+- **Usage Examples**: `"string"`, `"string?"`, `"string[]"`
+- **Use Cases**: When and where to use each type
+- **Code Examples**: Complete working examples
+
+#### **🔧 Installation**
 
 ```bash
 # Download and install
@@ -177,6 +198,11 @@ const ComprehensiveSchema = Interface({
   status: "active|inactive|pending",
   role: "user|admin|moderator",
 
+  // Record types (dynamic key-value objects)
+  settings: "record<string, any>", // String keys, any values
+  counters: "record<string, number>", // String keys, number values
+  metadata: "record<string, string>", // String keys, string values
+
   // Literal values
   version: "=2.0",
   type: "=user",
@@ -207,6 +233,87 @@ const UserProfileSchema = Interface({
     loginCount: "number(0,)",
   },
 });
+```
+
+### Utility Functions
+
+Fortify Schema provides powerful utility functions for advanced schema definition:
+
+#### **Make.const() - Constant Values**
+
+Create schemas that validate against exact constant values:
+
+```typescript
+import { Interface, Make } from "fortify-schema";
+
+const ConfigSchema = Interface({
+  // Exact string constants
+  apiVersion: Make.const("v2.1"),
+  environment: Make.const("production"),
+
+  // Numeric constants
+  maxRetries: Make.const(3),
+  timeout: Make.const(5000),
+
+  // Boolean constants
+  enableLogging: Make.const(true),
+
+  // Complex constants
+  defaultSettings: Make.const({
+    theme: "dark",
+    language: "en",
+  }),
+
+  // Array constants
+  supportedFormats: Make.const(["json", "xml", "csv"]),
+});
+
+// Usage
+const config = {
+  apiVersion: "v2.1", // ✅ Valid
+  environment: "staging", // ❌ Invalid - must be exactly "production"
+  maxRetries: 3, // ✅ Valid
+  timeout: 3000, // ❌ Invalid - must be exactly 5000
+};
+```
+
+#### **Record Types - Dynamic Objects**
+
+Validate objects with dynamic keys but consistent value types:
+
+```typescript
+const DynamicSchema = Interface({
+  // String keys with any values
+  metadata: "record<string, any>",
+
+  // String keys with number values (counters, scores, etc.)
+  scores: "record<string, number>",
+
+  // String keys with string values (translations, labels, etc.)
+  translations: "record<string, string>",
+
+  // Optional record types
+  optionalSettings: "record<string, boolean>?",
+});
+
+// Usage
+const data = {
+  metadata: {
+    userId: "123",
+    timestamp: new Date(),
+    flags: ["active", "verified"],
+  },
+  scores: {
+    math: 95,
+    science: 87,
+    english: 92,
+  },
+  translations: {
+    hello: "Hola",
+    goodbye: "Adiós",
+    welcome: "Bienvenido",
+  },
+};
 ```
 
 ## Conditional Validation

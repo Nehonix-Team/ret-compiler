@@ -412,8 +412,11 @@ export class TypeValidators {
       if (isNaN(value.getTime())) {
         this.addError(result, ErrorHandler.createDateError([], value));
       }
-    } else if (options.loose) {
-      if (!this.handleLooseDateConversion(result, value)) {
+    } else if (typeof value === "string" || typeof value === "number") {
+      // Accept date strings and timestamps even in strict mode
+      // This is reasonable since they represent valid date values
+      const dateValue = new Date(value);
+      if (isNaN(dateValue.getTime())) {
         this.addError(
           result,
           ErrorHandler.createError(
@@ -426,6 +429,20 @@ export class TypeValidators {
             value
           )
         );
+      } else {
+        result.data = dateValue;
+        if (!options.loose) {
+          // Add a warning in strict mode to indicate conversion
+          result.warnings = result.warnings || [];
+          result.warnings.push({
+            path: [],
+            message: `Date string converted to Date object`,
+            code: "DATE_CONVERSION",
+            expected: "Date object",
+            received: value,
+            receivedType: typeof value,
+          });
+        }
       }
     } else {
       this.addError(result, ErrorHandler.createTypeError([], "date", value));

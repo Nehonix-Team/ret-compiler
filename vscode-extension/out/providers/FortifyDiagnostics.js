@@ -195,6 +195,10 @@ class FortifyDiagnosticsProvider {
                     if (this.isStringInBracketNotation(line, match.index, match[0].length)) {
                         continue;
                     }
+                    // ENHANCED: Skip strings inside Make.const() calls - they are constant values, not type definitions
+                    if (this.isStringInMakeConstCall(line, match.index)) {
+                        continue;
+                    }
                     const stringValue = match[0].slice(1, -1); // Remove quotes
                     // Within Interface blocks, validate all strings that could be schemas
                     if (this.couldBeSchemaString(stringValue)) {
@@ -288,6 +292,22 @@ class FortifyDiagnosticsProvider {
         const hasBracketBefore = beforeString.endsWith("[");
         const hasBracketAfter = afterString.startsWith("]");
         return hasBracketBefore && hasBracketAfter;
+    }
+    /**
+     * ENHANCED: Check if a string is inside a Make.const() call
+     * @param line The line text
+     * @param stringIndex The start index of the string
+     * @returns True if the string is inside a Make.const() call
+     */
+    isStringInMakeConstCall(line, stringIndex) {
+        // Look for Make.const( before the string
+        const beforeString = line.substring(0, stringIndex);
+        // Check for various patterns:
+        // Make.const("value")
+        // Make.const('value')
+        // Make.const(`value`)
+        const makeConstPattern = /Make\.const\s*\(\s*$/;
+        return makeConstPattern.test(beforeString);
     }
     /**
      * Determines if a string could potentially be a Fortify schema string.
@@ -388,6 +408,20 @@ class FortifyDiagnosticsProvider {
             }
             // Validate constraints
             diagnostics.push(...this.validateConstraintSyntax(constraints, type, range));
+            return diagnostics;
+        }
+        // Handle record types (record<string, any>, record<string, string>)
+        const recordMatch = schema.match(/^record<\s*(\w+)\s*,\s*(\w+)\s*>$/);
+        if (recordMatch) {
+            const [, keyType, valueType] = recordMatch;
+            // Validate key type (should be string)
+            if (keyType !== "string") {
+                diagnostics.push(new vscode.Diagnostic(range, `Record key type must be "string", got "${keyType}".`, vscode.DiagnosticSeverity.Error));
+            }
+            // Validate value type
+            if (!FortifySyntaxDefinitions_1.FortifySyntaxUtils.isValidType(valueType) && valueType !== "any") {
+                diagnostics.push(new vscode.Diagnostic(range, `Unknown record value type: "${valueType}".`, vscode.DiagnosticSeverity.Error));
+            }
             return diagnostics;
         }
         // Handle simple types (string, number, boolean, url.https) - but also catch invalid types

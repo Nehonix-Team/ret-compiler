@@ -95,6 +95,14 @@ export class ConstraintParser {
       }
     }
 
+    // SPECIAL CASE: Handle union types in parentheses like "(web|test|ok)"
+    // This should be treated as a union type, not a constraint
+    if (type.startsWith("(") && type.endsWith(")") && type.includes("|")) {
+      // This is a union type in parentheses, not a constraint
+      // Return it as-is without trying to parse as constraint
+      return { type, constraints: {}, optional };
+    }
+
     // Parse constraints with balanced parentheses support
     const constraintMatch = this._parseBalancedConstraints(type);
     if (constraintMatch) {
@@ -296,7 +304,7 @@ export class ConstraintParser {
       constraints.max !== undefined &&
       constraints.min > constraints.max
     ) {
-      throw new Error( 
+      throw new Error(
         `Minimum value (${constraints.min}) cannot be greater than maximum value (${constraints.max})`
       );
     }
@@ -367,8 +375,44 @@ export class ConstraintParser {
       return true;
     }
 
-    // Check if it matches the general pattern for custom types
-    return this._patterns.baseType.test(type);
+    // Check for Record types (both lowercase and TypeScript-style uppercase)
+    if (
+      (type.startsWith("record<") && type.endsWith(">")) ||
+      (type.startsWith("Record<") && type.endsWith(">"))
+    ) {
+      return true;
+    }
+
+    // Check for additional valid types that might not be in VALID_CONDITIONNAL_TYPES
+    const additionalValidTypes = [
+      "object",
+      "array",
+      "any",
+      "unknown",
+      "void",
+      "null",
+      "undefined",
+      "int",
+      "integer",
+      "float",
+      "double",
+      "positive",
+      "negative",
+      "text",
+      "json",
+      "hexcolor",
+      "base64",
+      "jwt",
+      "semver",
+    ];
+
+    if (additionalValidTypes.includes(type)) {
+      return true;
+    }
+
+    // STRICT: Reject unknown types instead of using permissive regex
+    // This ensures unknown types like "unknownType" are properly rejected
+    return false;
   }
 
   /**

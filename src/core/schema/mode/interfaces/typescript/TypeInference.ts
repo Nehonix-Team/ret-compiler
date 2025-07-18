@@ -5,7 +5,7 @@
  * This is the single source of truth for all TypeScript type operations.
  */
 
-import { 
+import {
   ConditionalNode,
   FieldAccessNode,
   ComparisonNode,
@@ -70,7 +70,12 @@ export type ExtractBaseType<T extends string> =
         ? Base
         : T extends `${infer Base}[]?`
           ? Base
-          : T;
+          : // Handle parentheses around union types like "(web | test | ok)?"
+            T extends `(${infer Content})?`
+            ? Content
+            : T extends `(${infer Content})`
+              ? Content
+              : T;
 
 /**
  * Check if field type is optional
@@ -110,9 +115,9 @@ export type MapFieldType<T extends string> =
     : // Handle conditional expressions (contains "when" and "*?")
       T extends `when ${string} *? ${string}`
       ? InferConditionalType<T>
-      : // Handle union types (contains |)
-        T extends `${string}|${string}`
-        ? ParseUnionType<T>
+      : // Handle union types (contains |) - check after removing optional and parentheses
+        ExtractBaseType<T> extends `${string}|${string}`
+        ? ParseUnionType<ExtractBaseType<T>>
         : // Handle constant types (starts with =)
           T extends `=${infer Value}?`
           ? Value | undefined
@@ -125,16 +130,25 @@ export type MapFieldType<T extends string> =
                 any;
 
 /**
+ * Utility type to trim whitespace from string literal types
+ */
+export type Trim<T extends string> = T extends ` ${infer Rest}`
+  ? Trim<Rest>
+  : T extends `${infer Rest} `
+    ? Trim<Rest>
+    : T;
+
+/**
  * Parse union type string into union of literal types
  */
 export type ParseUnionType<T extends string> =
-  // First handle parentheses if present
+  // First handle parentheses if present - trim the content inside
   T extends `(${infer Content})`
-    ? ParseUnionType<Content>
+    ? ParseUnionType<Trim<Content>>
     : // Then parse the union
       T extends `${infer First}|${infer Rest}`
-      ? First | ParseUnionType<Rest>
-      : T;
+      ? Trim<First> | ParseUnionType<Rest>
+      : Trim<T>;
 
 /**
  * Handle optional fields
@@ -152,15 +166,17 @@ export type InferFieldType<T> = T extends string
     ? T["const"]
     : T extends OptionalConstantValue
       ? T["const"] | undefined
-      : T extends UnionValue<infer U>
-        ? U[number]
-        : T extends OptionalSchemaInterface
-          ? InferSchemaType<T["schema"]> | undefined
-          : T extends Array<infer U>
-            ? Array<InferSchemaType<U>>
-            : T extends object
-              ? InferSchemaType<T>
-              : any;
+      : T extends UnionValue<infer U> & { optional: true }
+        ? U[number] | undefined
+        : T extends UnionValue<infer U>
+          ? U[number]
+          : T extends OptionalSchemaInterface
+            ? InferSchemaType<T["schema"]> | undefined
+            : T extends Array<infer U>
+              ? Array<InferSchemaType<U>>
+              : T extends object
+                ? InferSchemaType<T>
+                : any;
 
 /**
  * Main type inference for schema interfaces

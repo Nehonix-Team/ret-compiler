@@ -1,7 +1,7 @@
 /***************************************************************************
- * FortifyJS - Secure Array Types
+ *  Fortify Schema - TypeScript Interface-like Schema Validation
  *
- * This file contains type definitions for the SecureArray architecture
+ * @file index.ts
  *
  * @author Nehonix
  * @license MIT
@@ -66,7 +66,7 @@
  * ```
  */
 
-// Main Interface-based API (Recommended)
+// Main Interface-based API
 export {
   Interface,
   Make,
@@ -114,13 +114,11 @@ export type {
 export type {
   // Traditional API types
   SchemaValidationResult,
-  BaseSchemaOptions,
   StringSchemaOptions,
   NumberSchemaOptions,
   BooleanSchemaOptions,
   ArraySchemaOptions,
   ObjectSchemaOptions,
   SchemaType,
-  SchemaDefinition,
   SchemaConfig,
 } from "./core/types/types";

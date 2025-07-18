@@ -7,6 +7,7 @@
 
 import * as vscode from "vscode";
 import { FortifyPatterns, FortifySyntaxUtils } from "../syntax/FortifyPatterns";
+import { DocumentationProvider } from "./DocumentationProvider";
 import { FORTIFY_CONDITIONAL_KEYWORDS } from "../syntax/mods/definitions/CONDITIONAL_KEYWORDS";
 
 export class FortifyHoverProvider implements vscode.HoverProvider {
@@ -18,20 +19,57 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
     position: vscode.Position,
     _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.Hover> {
+    console.log(
+      "🔍 Hover provider called at position:",
+      position.line,
+      position.character
+    );
+
     const line = document.lineAt(position);
     const lineText = line.text;
+    console.log("📝 Line text:", lineText);
 
-    // Check if we're in a string that contains schema syntax AND within an Interface block
-    if (
-      !this.isInSchemaContext(lineText, position.character) ||
-      !this.isInInterfaceBlock(document, position)
-    ) {
+    // SIMPLIFIED: Only check if we're in an Interface block (same as definition provider)
+    const inInterfaceBlock = DocumentationProvider.isInInterfaceBlock(
+      document,
+      position
+    );
+
+    console.log("🔍 Interface block:", inInterfaceBlock);
+
+    if (!inInterfaceBlock) {
+      console.log("❌ Not in Interface block, returning null");
       return null;
     }
 
     // Get word range, including $ prefix for V2 methods
     let range = document.getWordRangeAtPosition(position);
     let word = range ? document.getText(range) : "";
+    console.log("📝 Initial word:", word, "range:", range);
+
+    // ENHANCED: If no word found with standard method, try to extract from string context
+    if (!word || !range) {
+      console.log("🔍 No standard word found, trying string extraction...");
+
+      // Try to find word inside quotes
+      const char = position.character;
+      let start = char;
+      let end = char;
+
+      // Find word boundaries within the line
+      while (start > 0 && /[a-zA-Z0-9_<>]/.test(lineText[start - 1])) {
+        start--;
+      }
+      while (end < lineText.length && /[a-zA-Z0-9_<>]/.test(lineText[end])) {
+        end++;
+      }
+
+      if (start < end) {
+        word = lineText.substring(start, end);
+        range = new vscode.Range(position.line, start, position.line, end);
+        console.log("📝 Extracted word from string:", word);
+      }
+    }
 
     // Check if there's a $ before the word (V2 method syntax)
     if (range && position.character > 0) {
@@ -44,20 +82,27 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
         );
         word = document.getText(extendedRange);
         range = extendedRange;
+        console.log("📝 Extended word with $:", word);
       }
     }
 
     if (!range || !word) {
+      console.log("❌ No word found after all attempts, returning null");
       return null;
     }
 
+    console.log("✅ Final word for hover:", word);
+
     // Get hover information based on the word
     const hoverInfo = this.getHoverInfo(word, lineText);
+    console.log("📖 Hover info result:", !!hoverInfo);
 
     if (hoverInfo) {
+      console.log("✅ Returning hover with content");
       return new vscode.Hover(hoverInfo.content, range);
     }
 
+    console.log("❌ No hover info found, returning null");
     return null;
   }
 
@@ -181,7 +226,43 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
     word: string,
     context: string
   ): { content: vscode.MarkdownString } | null {
-    // Check types first
+    console.log("🔍 getHoverInfo called with word:", word, "context:", context);
+
+    // ENHANCED: Check documentation provider first for comprehensive documentation
+    const docEntry = DocumentationProvider.getDocumentation(word);
+    console.log("📖 Documentation entry found:", !!docEntry, docEntry?.name);
+
+    if (docEntry) {
+      return {
+        content: DocumentationProvider.createHoverMessage(docEntry),
+      };
+    }
+
+    // Check for Make.const() function calls
+    if (
+      context.includes("Make.const") &&
+      (word === "Make" || word === "const")
+    ) {
+      const makeConstEntry =
+        DocumentationProvider.getDocumentation("Make.const");
+      if (makeConstEntry) {
+        return {
+          content: DocumentationProvider.createHoverMessage(makeConstEntry),
+        };
+      }
+    }
+
+    // Check for record types
+    if (word === "record" || context.includes("record<")) {
+      const recordEntry = DocumentationProvider.getDocumentation("record");
+      if (recordEntry) {
+        return {
+          content: DocumentationProvider.createHoverMessage(recordEntry),
+        };
+      }
+    }
+
+    // Fallback to existing logic for types not in documentation
     const typeInfo = this.getTypeInfo(word);
     if (typeInfo) return typeInfo;
 

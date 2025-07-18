@@ -13,8 +13,9 @@ import {
 import { SchemaOptions } from "../Interface";
 import { FieldPrecompilers, CompiledFieldValidator } from "./FieldPrecompilers";
 import { MAX_COMPILATION_DEPTH as IMPORTED_MAX_COMPILATION_DEPTH } from "../../../../../constants/VALIDATION_CONSTANTS";
-import {  ErrorHandler } from "../errors/ErrorHandler";
+import { ErrorHandler } from "../errors/ErrorHandler";
 import { ErrorCode } from "../errors/types/errors.type";
+import { SUPPORTED_VALIDATOR_TYPES } from "../../../../types/ValidatorTypes";
 
 // Precompiled validator function signature
 export interface PrecompiledValidator {
@@ -210,7 +211,15 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(...result.errors);
+          // Add field path to errors
+          const errorsWithPath = result.errors.map((error) => ({
+            ...error,
+            path: [field.fieldName, ...error.path],
+            message: error.message.includes(" in field ")
+              ? error.message
+              : `${error.message} in field "${field.fieldName}"`,
+          }));
+          errors.push(...errorsWithPath);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -222,7 +231,15 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(...result.errors);
+          // Add field path to errors
+          const errorsWithPath = result.errors.map((error) => ({
+            ...error,
+            path: [field.fieldName, ...error.path],
+            message: error.message.includes(" in field ")
+              ? error.message
+              : `${error.message} in field "${field.fieldName}"`,
+          }));
+          errors.push(...errorsWithPath);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -234,7 +251,15 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(...result.errors);
+          // Add field path to errors
+          const errorsWithPath = result.errors.map((error) => ({
+            ...error,
+            path: [field.fieldName, ...error.path],
+            message: error.message.includes(" in field ")
+              ? error.message
+              : `${error.message} in field "${field.fieldName}"`,
+          }));
+          errors.push(...errorsWithPath);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -246,7 +271,15 @@ export class SchemaPrecompiler {
         const result = field.validator(value);
 
         if (!result.success) {
-          errors.push(...result.errors);
+          // Add field path to errors
+          const errorsWithPath = result.errors.map((error) => ({
+            ...error,
+            path: [field.fieldName, ...error.path],
+            message: error.message.includes(" in field ")
+              ? error.message
+              : `${error.message} in field "${field.fieldName}"`,
+          }));
+          errors.push(...errorsWithPath);
         } else {
           validatedData[field.fieldName] = result.data;
         }
@@ -491,35 +524,13 @@ export class SchemaPrecompiler {
     // Handle constants (=value) as simple types
     if (fieldType.startsWith("=")) return true;
 
-    const simpleTypes = [
-      "string",
-      "number",
-      "boolean",
-      "int",
-      "float",
-      "positive",
-      "negative",
-      "double",
-      "date",
-      "any",
-      // Format types
-      "email",
-      "url",
-      "uuid",
-      "phone",
-      "slug",
-      "username",
-      "ip",
-      "json",
-      "password",
-      "text",
-      "object",
-      // New types
-      "hexcolor",
-      "base64",
-      "jwt",
-      "semver",
-    ];
+    // Handle record types as simple types (they have precompiled validators)
+    if (fieldType.startsWith("record<") || fieldType.startsWith("Record<")) {
+      return true;
+    }
+
+    const simpleTypes = SUPPORTED_VALIDATOR_TYPES;
+
     return simpleTypes.some((type) => fieldType.startsWith(type));
   }
 
@@ -565,7 +576,10 @@ export class SchemaPrecompiler {
         if (value === undefined) {
           if (!field.isOptional) {
             errors.push(
-              ErrorHandler.createMissingFieldError([], field.fieldName)
+              ErrorHandler.createMissingFieldError(
+                [field.fieldName],
+                field.fieldName
+              )
             );
           } else if (field.hasDefault) {
             validatedData[field.fieldName] = field.defaultValue;
@@ -576,7 +590,15 @@ export class SchemaPrecompiler {
         // Use the compiled field validator
         const result = field.validator(value);
         if (!result.success) {
-          errors.push(...result.errors);
+          // Add field path to errors
+          const errorsWithPath = result.errors.map((error) => ({
+            ...error,
+            path: [field.fieldName, ...error.path],
+            message: error.message.includes(" in field ")
+              ? error.message
+              : `${error.message} in field "${field.fieldName}"`,
+          }));
+          errors.push(...errorsWithPath);
         } else {
           validatedData[field.fieldName] = result.data;
         }

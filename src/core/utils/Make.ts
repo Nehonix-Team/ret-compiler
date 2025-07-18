@@ -27,7 +27,7 @@ export class Make {
       const: value,
     };
   }
- 
+
   /**
    * Create a union type (multiple allowed values) with proper type inference
    * @example
@@ -45,7 +45,7 @@ export class Make {
   }
 
   /**
-   * Create an optional union type
+   * Create an optional union type with proper type inference
    * @example
    * ```typescript
    * const schema = Interface({
@@ -53,8 +53,13 @@ export class Make {
    * });
    * ```
    */
-  static unionOptional(...values: string[]): string {
-    return values.join("|") + "?";
+  static unionOptional<const T extends readonly string[]>(
+    ...values: T
+  ): UnionValue<T> & { optional: true } {
+    return {
+      union: values,
+      optional: true,
+    };
   }
 
   /**

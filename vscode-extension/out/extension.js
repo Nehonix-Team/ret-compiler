@@ -13,12 +13,15 @@ const FortifyDiagnostics_1 = require("./providers/FortifyDiagnostics");
 const HoverProvider_1 = require("./providers/HoverProvider");
 const SemanticTokensProvider_1 = require("./providers/SemanticTokensProvider");
 const DefinitionProvider_1 = require("./providers/DefinitionProvider");
+const DocumentationProvider_1 = require("./providers/DocumentationProvider");
 const FortifyColorTheme_1 = require("./themes/FortifyColorTheme");
 /**
  * Extension activation - called when the extension is activated
  */
 function activate(context) {
     console.log("🚀 Fortify Schema extension is now active!");
+    // ENHANCED: Initialize documentation provider for hover and definition support
+    DocumentationProvider_1.DocumentationProvider.initialize(context.extensionPath);
     // Register completion provider for TypeScript files
     const completionProvider = vscode.languages.registerCompletionItemProvider(["typescript", "javascript"], new CompletionProvider_1.FortifyCompletionProvider(), '"', // Trigger on quote to provide schema type suggestions
     ":", // Trigger on colon for field definitions
@@ -114,14 +117,14 @@ function activate(context) {
         outputChannel.appendLine("");
         schemes.forEach((scheme, index) => {
             outputChannel.appendLine(`${index + 1}. ${scheme.name}`);
-            outputChannel.appendLine(`   Description: ${scheme.description}`);
+            outputChannel.appendLine(`  Description: ${scheme.description}`);
             outputChannel.appendLine("");
         });
         outputChannel.show();
     });
     const cleanupThemesCommand = vscode.commands.registerCommand("fortify.cleanupThemes", async () => {
         try {
-            const result = await vscode.window.showWarningMessage("This will remove all Fortify Schema color customizations from your VSCode settings. Continue?", { modal: true }, "Yes, Remove Themes", "Cancel");
+            const result = await vscode.window.showWarningMessage("This will remove all Fortify Schema color customizations from your VSCode settings. Would you like to continue?", { modal: true }, "Yes, Remove Themes", "Cancel");
             if (result === "Yes, Remove Themes") {
                 const success = await cleanupFortifySettings();
                 if (success) {

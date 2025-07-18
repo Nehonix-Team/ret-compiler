@@ -608,6 +608,55 @@ export function generateFortifyGrammar(): any {
       },
       "fortify-constants": {
         patterns: [
+          // Make.const() function calls
+          {
+            name: "meta.function-call.make-const.fortify",
+            begin: "\\b(Make)\\.(const)\\s*\\(",
+            end: "\\)",
+            beginCaptures: {
+              "1": {
+                name: "support.class.fortify.make",
+              },
+              "2": {
+                name: "support.function.fortify.const",
+              },
+            },
+            patterns: [
+              {
+                name: "string.quoted.double.fortify.const-value",
+                begin: '"',
+                end: '"',
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "string.quoted.single.fortify.const-value",
+                begin: "'",
+                end: "'",
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+              {
+                name: "string.template.fortify.const-value",
+                begin: "`",
+                end: "`",
+                patterns: [
+                  {
+                    name: "constant.character.escape.fortify",
+                    match: "\\\\.",
+                  },
+                ],
+              },
+            ],
+          },
           // Complex array constants like =["default","user"]
           {
             name: "meta.constant.array.fortify",

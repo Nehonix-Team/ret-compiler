@@ -1,44 +1,44 @@
 {
   "metadata": {
-    "timestamp": "2025-06-26T13:47:34.334Z",
-    "nodeVersion": "v22.6.0",
-    "platform": "win32",
+    "timestamp": "2025-07-18T08:19:17.534Z",
+    "nodeVersion": "v24.3.0",
+    "platform": "linux",
     "arch": "x64",
-    "fortifyVersion": "2.0.2",
+    "fortifyVersion": "2.0.21",
     "testType": "standalone-performance"
   },
   "summary": {
     "totalTests": 6,
     "fastestTest": {
-      "name": "Complex Nested",
-      "iterations": 5000,
-      "median": 0.5764000000000351,
-      "mean": 0.6521400000000085,
-      "std": 0.13757017263928228,
-      "min": 0.5640999999999963,
-      "max": 0.9866000000000099,
-      "avgTimePerOp": 0.00011528000000000703,
-      "operationsPerSecond": 8674531.575294405,
+      "name": "Basic Types",
+      "iterations": 50000,
+      "median": 100.77979699999992,
+      "mean": 124.8620427,
+      "std": 40.36453915326238,
+      "min": 88.70023300000003,
+      "max": 188.9411030000001,
+      "avgTimePerOp": 0.002015595939999998,
+      "operationsPerSecond": 496131.18391179177,
       "successRate": 100,
-      "coefficientOfVariation": 21.095190087907582
+      "coefficientOfVariation": 32.327309629431824
     },
     "mostConsistent": {
-      "name": "Conditional Logic",
-      "iterations": 15000,
-      "median": 467.16399999999976,
-      "mean": 470.5243899999999,
-      "std": 25.262167038654894,
-      "min": 436.2035999999998,
-      "max": 536.0357,
-      "avgTimePerOp": 0.03114426666666665,
-      "operationsPerSecond": 32108.63850810424,
-      "successRate": 0,
-      "coefficientOfVariation": 5.3689389063667665
+      "name": "Union Types",
+      "iterations": 20000,
+      "median": 153.77048300000024,
+      "mean": 156.50413840000002,
+      "std": 9.143031275966724,
+      "min": 145.56904900000063,
+      "max": 177.70391199999995,
+      "avgTimePerOp": 0.007688524150000012,
+      "operationsPerSecond": 130063.97333095435,
+      "successRate": 100,
+      "coefficientOfVariation": 5.842038024961724
     },
     "memoryUsage": {
-      "totalMB": 2.0986413955688477,
+      "totalMB": 2.7825021743774414,
       "schemasCreated": 2000,
-      "memoryPerSchemaKB": 1.07450439453125
+      "memoryPerSchemaKB": 1.42464111328125
     }
   },
   "detailedResults": [
@@ -46,16 +46,16 @@
       "testName": "Basic Types",
       "iterations": 50000,
       "performance": {
-        "operationsPerSecond": 6133313.706729477,
-        "avgTimePerOpMs": 0.00016304399999999986,
-        "medianTimeMs": 8.152199999999993,
-        "meanTimeMs": 10.258230000000006
+        "operationsPerSecond": 496131.18391179177,
+        "avgTimePerOpMs": 0.002015595939999998,
+        "medianTimeMs": 100.77979699999992,
+        "meanTimeMs": 124.8620427
       },
       "reliability": {
-        "standardDeviationMs": 5.930291405496023,
-        "coefficientOfVariation": 57.81008424938824,
-        "minTimeMs": 4.7158000000000015,
-        "maxTimeMs": 22.23490000000001,
+        "standardDeviationMs": 40.36453915326238,
+        "coefficientOfVariation": 32.327309629431824,
+        "minTimeMs": 88.70023300000003,
+        "maxTimeMs": 188.9411030000001,
         "successRate": 100
       }
     },
@@ -63,16 +63,16 @@
       "testName": "Complex Nested",
       "iterations": 5000,
       "performance": {
-        "operationsPerSecond": 8674531.575294405,
-        "avgTimePerOpMs": 0.00011528000000000703,
-        "medianTimeMs": 0.5764000000000351,
-        "meanTimeMs": 0.6521400000000085
+        "operationsPerSecond": 12443.531317100646,
+        "avgTimePerOpMs": 0.08036303960000005,
+        "medianTimeMs": 401.81519800000024,
+        "meanTimeMs": 407.28758210000007
       },
       "reliability": {
-        "standardDeviationMs": 0.13757017263928228,
-        "coefficientOfVariation": 21.095190087907582,
-        "minTimeMs": 0.5640999999999963,
-        "maxTimeMs": 0.9866000000000099,
+        "standardDeviationMs": 44.081113162774365,
+        "coefficientOfVariation": 10.823092846457387,
+        "minTimeMs": 345.57275200000004,
+        "maxTimeMs": 484.38353800000027,
         "successRate": 100
       }
     },
@@ -80,33 +80,33 @@
       "testName": "Array Validation",
       "iterations": 8000,
       "performance": {
-        "operationsPerSecond": 6447972.918513722,
-        "avgTimePerOpMs": 0.00015508750000000048,
-        "medianTimeMs": 1.240700000000004,
-        "meanTimeMs": 1.536869999999999
+        "operationsPerSecond": 147805.96638737075,
+        "avgTimePerOpMs": 0.006765626750000024,
+        "medianTimeMs": 54.12501400000019,
+        "meanTimeMs": 57.39228440000024
       },
       "reliability": {
-        "standardDeviationMs": 0.8632581537987307,
-        "coefficientOfVariation": 56.16988774579055,
-        "minTimeMs": 0.9096999999999866,
-        "maxTimeMs": 3.722699999999975,
-        "successRate": 100
+        "standardDeviationMs": 19.797747163451515,
+        "coefficientOfVariation": 34.49548553507557,
+        "minTimeMs": 38.095392000000174,
+        "maxTimeMs": 98.61152699999911,
+        "successRate": 0
       }
     },
     {
       "testName": "Union Types",
       "iterations": 20000,
       "performance": {
-        "operationsPerSecond": 1382944.149800509,
-        "avgTimePerOpMs": 0.0007230950000000007,
-        "medianTimeMs": 14.461900000000014,
-        "meanTimeMs": 15.284129999999987
+        "operationsPerSecond": 130063.97333095435,
+        "avgTimePerOpMs": 0.007688524150000012,
+        "medianTimeMs": 153.77048300000024,
+        "meanTimeMs": 156.50413840000002
       },
       "reliability": {
-        "standardDeviationMs": 3.7090358979255016,
-        "coefficientOfVariation": 24.26723600182349,
-        "minTimeMs": 11.38779999999997,
-        "maxTimeMs": 24.76310000000001,
+        "standardDeviationMs": 9.143031275966724,
+        "coefficientOfVariation": 5.842038024961724,
+        "minTimeMs": 145.56904900000063,
+        "maxTimeMs": 177.70391199999995,
         "successRate": 100
       }
     },
@@ -114,16 +114,16 @@
       "testName": "Conditional Logic",
       "iterations": 15000,
       "performance": {
-        "operationsPerSecond": 32108.63850810424,
-        "avgTimePerOpMs": 0.03114426666666665,
-        "medianTimeMs": 467.16399999999976,
-        "meanTimeMs": 470.5243899999999
+        "operationsPerSecond": 13833.264244632099,
+        "avgTimePerOpMs": 0.07228951766666662,
+        "medianTimeMs": 1084.3427649999994,
+        "meanTimeMs": 1078.6061701999997
       },
       "reliability": {
-        "standardDeviationMs": 25.262167038654894,
-        "coefficientOfVariation": 5.3689389063667665,
-        "minTimeMs": 436.2035999999998,
-        "maxTimeMs": 536.0357,
+        "standardDeviationMs": 140.92447308897908,
+        "coefficientOfVariation": 13.065424339529624,
+        "minTimeMs": 924.0281079999986,
+        "maxTimeMs": 1443.5429700000004,
         "successRate": 0
       }
     },
@@ -131,16 +131,16 @@
       "testName": "Format Validation",
       "iterations": 12000,
       "performance": {
-        "operationsPerSecond": 6324777.315130224,
-        "avgTimePerOpMs": 0.00015810833333337843,
-        "medianTimeMs": 1.8973000000005413,
-        "meanTimeMs": 2.0864000000001397
+        "operationsPerSecond": 90788.95717269111,
+        "avgTimePerOpMs": 0.011014555416666856,
+        "medianTimeMs": 132.17466500000228,
+        "meanTimeMs": 132.18898519999965
       },
       "reliability": {
-        "standardDeviationMs": 0.6138587313054299,
-        "coefficientOfVariation": 29.4219100510635,
-        "minTimeMs": 1.5726999999997133,
-        "maxTimeMs": 3.7445999999999913,
+        "standardDeviationMs": 30.17182710625554,
+        "coefficientOfVariation": 22.824766421049446,
+        "minTimeMs": 109.12656799999968,
+        "maxTimeMs": 216.44466499999908,
         "successRate": 100
       }
     }

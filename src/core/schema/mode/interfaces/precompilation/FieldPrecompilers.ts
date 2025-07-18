@@ -11,7 +11,7 @@ import {
 import { ConstraintParser } from "../validators";
 import { UnionCache } from "../validators/UnionCache";
 import { ValidationHelpers } from "../validators/ValidationHelpers";
-import { ErrorHandler,  } from "../errors/ErrorHandler";
+import { ErrorHandler } from "../errors/ErrorHandler";
 import { ErrorCode } from "../errors/types/errors.type";
 
 export interface CompiledFieldValidator {
@@ -682,6 +682,28 @@ export class FieldPrecompilers {
   }
 
   /**
+   * Precompile record field types (record<string, number>, Record<string, any>, etc.)
+   */
+  static precompileRecord(recordType: string): CompiledFieldValidator {
+    const validator = (value: any): SchemaValidationResult => {
+      // Use ValidationHelpers.validateRecordType for proper record validation
+      return ValidationHelpers.validateRecordType(
+        recordType,
+        value,
+        (fieldType: string, value: any) => {
+          // Recursively validate nested field types using the same precompiler system
+          const nestedValidator = FieldPrecompilers.parseAndCompile(fieldType);
+          return nestedValidator(value);
+        }
+      );
+    };
+
+    (validator as any)._fieldType = recordType;
+    (validator as any)._isCompiled = true;
+    return validator as CompiledFieldValidator;
+  }
+
+  /**
    *  Precompile special field types (email, url, json, etc.)
    */
   static precompileSpecialType(type: string): CompiledFieldValidator {
@@ -730,6 +752,15 @@ export class FieldPrecompilers {
       const elementType = baseType.slice(0, -2);
       const elementValidator = this.parseAndCompile(elementType);
       const validator = this.precompileArray(elementValidator);
+      return isOptional ? this.precompileOptional(validator) : validator;
+    }
+
+    // Handle record types (record<string, number>, Record<string, any>, etc.)
+    if (
+      (baseType.startsWith("record<") && baseType.endsWith(">")) ||
+      (baseType.startsWith("Record<") && baseType.endsWith(">"))
+    ) {
+      const validator = this.precompileRecord(baseType);
       return isOptional ? this.precompileOptional(validator) : validator;
     }
 
