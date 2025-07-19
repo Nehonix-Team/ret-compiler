@@ -7,6 +7,8 @@ _See full documentation on [GitHub](https://github.com/Nehonix-Team/fortify-sche
 
 ## 🆕 Latest Features
 
+Fortify Schema is constantly evolving to provide the best developer experience. The latest features include:
+
 - **Required Fields (`!`)**: Enforce non-empty strings and non-zero numbers
 - **Object Types**: Validate generic object structures with `"object"`
 - **Enhanced Security**: All string operations use secure regex patterns

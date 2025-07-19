@@ -502,6 +502,12 @@ export class FortifyDiagnosticsProvider {
       return this.validateRegularSchema(optionalMatch[1], range); // Validate base type without ?
     }
 
+    // Handle required types (string!, number!, etc.)
+    const requiredMatch = schema.match(/^(.+)!$/);
+    if (requiredMatch) {
+      return this.validateRegularSchema(requiredMatch[1], range); // Validate base type without !
+    }
+
     // Handle array types with constraints (string[](1,10), url.https[](1,5))
     const arrayConstraintMatch = schema.match(/^([\w.]+)\[\]\(([^)]*)\)$/);
     if (arrayConstraintMatch) {
@@ -547,7 +553,7 @@ export class FortifyDiagnosticsProvider {
         );
       }
       return diagnostics;
-    } 
+    }
 
     // Handle types with constraints (string(1,10), number(0,100), url.https(constraints))
     const constraintMatch = schema.match(/^([\w.]+)\(([^)]*)\)$/);
@@ -573,7 +579,9 @@ export class FortifyDiagnosticsProvider {
     }
 
     // Handle record types (record<string, any>, Record<string, any>, record<string, string>)
-    const recordMatch = schema.match(/^(record|Record)<\s*(\w+)\s*,\s*(\w+)\s*>$/);
+    const recordMatch = schema.match(
+      /^(record|Record)<\s*(\w+)\s*,\s*(\w+)\s*>$/
+    );
     if (recordMatch) {
       const [, keyType, valueType] = recordMatch;
 
@@ -624,7 +632,7 @@ export class FortifyDiagnosticsProvider {
     diagnostics.push(
       new vscode.Diagnostic(
         range,
-        `Invalid schema syntax: "${schema}". Expected a type, type(constraints), type[], or type?`,
+        `Invalid schema syntax: "${schema}". Expected a type, type(constraints), type[], type?, or type!`,
         vscode.DiagnosticSeverity.Error
       )
     );

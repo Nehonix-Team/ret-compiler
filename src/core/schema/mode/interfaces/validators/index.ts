@@ -12,7 +12,7 @@ export { TypeGuards } from "./TypeGuards";
 export { ValidationHelpers } from "./ValidationHelpers";
 
 // Re-export types for convenience
-export type { ParsedConstraints } from "./ConstraintParser";
+export type { ParsedConstraints } from "../../../../types/parser.type";
 
 /**
  * Note: All validation functionality is available through the individual exports above.

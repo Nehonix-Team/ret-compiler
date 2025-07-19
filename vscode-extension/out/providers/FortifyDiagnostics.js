@@ -390,6 +390,11 @@ class FortifyDiagnosticsProvider {
         if (optionalMatch) {
             return this.validateRegularSchema(optionalMatch[1], range); // Validate base type without ?
         }
+        // Handle required types (string!, number!, etc.)
+        const requiredMatch = schema.match(/^(.+)!$/);
+        if (requiredMatch) {
+            return this.validateRegularSchema(requiredMatch[1], range); // Validate base type without !
+        }
         // Handle array types with constraints (string[](1,10), url.https[](1,5))
         const arrayConstraintMatch = schema.match(/^([\w.]+)\[\]\(([^)]*)\)$/);
         if (arrayConstraintMatch) {
@@ -456,7 +461,7 @@ class FortifyDiagnosticsProvider {
             return diagnostics;
         }
         // If none of the patterns match, it's invalid syntax
-        diagnostics.push(new vscode.Diagnostic(range, `Invalid schema syntax: "${schema}". Expected a type, type(constraints), type[], or type?`, vscode.DiagnosticSeverity.Error));
+        diagnostics.push(new vscode.Diagnostic(range, `Invalid schema syntax: "${schema}". Expected a type, type(constraints), type[], type?, or type!`, vscode.DiagnosticSeverity.Error));
         return diagnostics;
     }
     /**
