@@ -218,18 +218,74 @@ export class TypeValidators {
   }
 
   /**
+   * Validate required field (non-empty/non-zero)
+   */
+  private static validateRequired(
+    result: SchemaValidationResult,
+    value: any,
+    type: string
+  ): void {
+    let isEmpty = false;
+
+    switch (type) {
+      case "string":
+        isEmpty = value === "";
+        break;
+      case "number":
+      case "int":
+      case "integer":
+      case "float":
+      case "double":
+      case "positive":
+      case "negative":
+        isEmpty = value === 0;
+        break;
+      case "boolean":
+        isEmpty = false; // Booleans can't be "empty"
+        break;
+      default:
+        // For arrays, objects, etc.
+        if (Array.isArray(value)) {
+          isEmpty = value.length === 0;
+        } else if (value && typeof value === "object") {
+          isEmpty = Object.keys(value).length === 0;
+        } else {
+          isEmpty = value === null || value === undefined;
+        }
+        break;
+    }
+
+    if (isEmpty) {
+      this.addError(
+        result,
+        ErrorHandler.createValidationError(
+          [],
+          `Required field cannot be empty (expected non-empty ${type})`,
+          value
+        )
+      );
+    }
+  }
+
+  /**
    * Validate string type with constraints
    */
   static validateString(
     value: any,
     options: SchemaOptions,
-    constraints: any
+    constraints: any,
+    required: boolean = false
   ): SchemaValidationResult {
     const result = this.createResult(true, value);
 
     if (typeof value !== "string") {
       this.addError(result, ErrorHandler.createTypeError([], "string", value));
       return result;
+    }
+
+    // Check required validation (non-empty)
+    if (required) {
+      this.validateRequired(result, value, "string");
     }
 
     this.validateStringConstraints(result, value, constraints);
@@ -243,7 +299,7 @@ export class TypeValidators {
     value: any,
     options: SchemaOptions,
     constraints: any,
-    type: "number" | "float" = "number"
+    required: boolean = false
   ): SchemaValidationResult {
     const result = this.createResult(true, value);
 
@@ -279,6 +335,11 @@ export class TypeValidators {
         result,
         ErrorHandler.createNumberError([], "negative", value)
       );
+    }
+
+    // Check required validation (non-zero)
+    if (required) {
+      this.validateRequired(result, value, "number");
     }
 
     this.validateNumberConstraints(result, value, constraints);
@@ -434,14 +495,7 @@ export class TypeValidators {
         if (!options.loose) {
           // Add a warning in strict mode to indicate conversion
           result.warnings = result.warnings || [];
-          result.warnings.push({
-            path: [],
-            message: `Date string converted to Date object`,
-            code: "DATE_CONVERSION",
-            expected: "Date object",
-            received: value,
-            receivedType: typeof value,
-          });
+          result.warnings.push("Date string converted to Date object");
         }
       }
     } else {

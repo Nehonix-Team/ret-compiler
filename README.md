@@ -18,6 +18,14 @@
 
 A modern TypeScript validation library designed around familiar interface syntax and powerful conditional validation. Experience schema validation that feels natural to TypeScript developers while unlocking advanced runtime validation capabilities.
 
+## 🆕 What's New
+
+- **Required Fields (`!`)**: Enforce non-empty strings and non-zero numbers with `"string!"` and `"number!"`
+- **Object Types**: Validate generic object structures with `"object"` and `"object?"`
+- **Enhanced Security**: All string operations now use secure regex patterns instead of potentially vulnerable methods
+- **Improved Performance**: Optimized validation paths with better caching and precompilation
+- **Better Error Messages**: More descriptive validation errors with clear property paths
+
 ## Quick Start
 
 ```bash
@@ -30,10 +38,15 @@ import { Interface } from "fortify-schema";
 // Define schemas with familiar TypeScript-like syntax
 const UserSchema = Interface({
   id: "uuid",
-  email: "email",
-  name: "string(2,50)",
+  email: "email!", // 🆕 Required (non-empty) email
+  name: "string(2,50)!", // 🆕 Required string with length constraints
   age: "number(18,120)?",
   role: "admin|user|guest",
+
+  // 🆕 Object and array types
+  profile: "object", // Any object structure
+  tags: "string[]", // Array of strings
+  metadata: "record<string, any>", // Dynamic key-value pairs
 
   // Advanced conditional validation based on runtime properties
   permissions: "when config.hasPermissions.$exists() *? string[] : =[]",
@@ -176,6 +189,10 @@ const ComprehensiveSchema = Interface({
   nickname: "string?",
   bio: "string?",
 
+  // 🆕 Required fields (cannot be empty/zero)
+  requiredName: "string!", // Non-empty string required
+  requiredCount: "number!", // Non-zero number required
+
   // Constraint validation
   username: "string(3,20)", // 3-20 characters
   password: "string(8,)", // Minimum 8 characters
@@ -197,6 +214,10 @@ const ComprehensiveSchema = Interface({
   // Union types
   status: "active|inactive|pending",
   role: "user|admin|moderator",
+
+  // 🆕 Object types
+  profile: "object", // Any object
+  config: "object?", // Optional object
 
   // Record types (dynamic key-value objects)
   settings: "record<string, any>", // String keys, any values

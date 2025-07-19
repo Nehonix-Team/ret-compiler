@@ -601,14 +601,45 @@ export class ValidationHelpers {
   }
 
   /**
+   * Check if type is a conditional expression using secure regex pattern
+   */
+  private static isConditionalExpression(type: string): boolean {
+    // Secure regex pattern to match: when <condition> *? <thenValue> [: <elseValue>]
+    const conditionalPattern = /^\s*when\s+.+?\s*\*\?\s*.+/;
+    return conditionalPattern.test(type);
+  }
+
+  /**
    * type validation routing with new types and better error handling
    */
   static routeTypeValidation(
     type: string,
     value: any,
     options: SchemaOptions,
-    constraints: any
+    constraints: any,
+    required: boolean = false
   ): SchemaValidationResult {
+    // Debug logging
+
+    // Check for conditional expressions first
+    if (this.isConditionalExpression(type)) {
+      // Conditional expressions should not be validated here
+      // They should be handled by the conditional validation system
+      // Return an error indicating this is not supported in this context
+      const result: SchemaValidationResult = {
+        success: false,
+        errors: [
+          ErrorHandler.createValidationError(
+            [],
+            `Unknown or unsupported type: ${type}. Please check the type definition.`,
+            value
+          ),
+        ],
+        warnings: [],
+        data: value,
+      };
+      return result;
+    }
     if (!type || typeof type !== "string") {
       return this.createErrorResult("Invalid type definition", value);
     }
@@ -680,7 +711,12 @@ export class ValidationHelpers {
     // switch with new types and better grouping using VALIDATOR_TYPES enum
     switch (type.toLowerCase()) {
       case VALIDATOR_TYPES.STRING:
-        return TypeValidators.validateString(value, options, constraints);
+        return TypeValidators.validateString(
+          value,
+          options,
+          constraints,
+          required
+        );
 
       case VALIDATOR_TYPES.NUMBER:
       case VALIDATOR_TYPES.FLOAT:
@@ -688,7 +724,7 @@ export class ValidationHelpers {
           value,
           options,
           constraints,
-          type as "number" | "float"
+          required
         );
 
       case VALIDATOR_TYPES.INT:
@@ -708,7 +744,7 @@ export class ValidationHelpers {
           value,
           options,
           { ...constraints, type },
-          "number"
+          required
         );
 
       case VALIDATOR_TYPES.DOUBLE:

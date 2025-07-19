@@ -17,6 +17,7 @@ function generateSchemaStringBeginPattern() {
         ...operators,
         methods,
         "\\[\\]",
+        "\\!",
         "\\(\\d+,?\\d*\\)",
         "\\(\\/.*?\\/[gimsuy]*\\)", // Regex patterns like (/^v\\d+\\.\\d+$/)
     ];
@@ -60,6 +61,7 @@ function generateSchemaTemplateBeginPattern() {
         ...operators,
         methods,
         "\\[\\]",
+        "\\!",
         "\\(\\d+,?\\d*\\)",
         "\\(\\/.*?\\/[gimsuy]*\\)",
         "\\$\\{[^}]*\\}", // Template literal expressions

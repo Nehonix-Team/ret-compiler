@@ -70,17 +70,26 @@ export type ExtractBaseType<T extends string> =
         ? Base
         : T extends `${infer Base}[]?`
           ? Base
-          : // Handle parentheses around union types like "(web | test | ok)?"
-            T extends `(${infer Content})?`
-            ? Content
-            : T extends `(${infer Content})`
+          : T extends `${infer Base}!`
+            ? Base
+            : // Handle parentheses around union types like "(web | test | ok)?"
+              T extends `(${infer Content})?`
               ? Content
-              : T;
+              : T extends `(${infer Content})`
+                ? Content
+                : T;
 
 /**
  * Check if field type is optional
  */
 export type IsOptional<T extends string> = T extends `${string}?`
+  ? true
+  : false;
+
+/**
+ * Check if field type is required (non-empty/non-zero)
+ */
+export type IsRequired<T extends string> = T extends `${string}!`
   ? true
   : false;
 
@@ -112,22 +121,37 @@ export type MapFieldType<T extends string> =
   // Handle arrays first
   IsArray<T> extends true
     ? Array<MapFieldType<ExtractElementType<T>>>
-    : // Handle conditional expressions (contains "when" and "*?")
-      T extends `when ${string} *? ${string}`
-      ? InferConditionalType<T>
-      : // Handle union types (contains |) - check after removing optional and parentheses
-        ExtractBaseType<T> extends `${string}|${string}`
-        ? ParseUnionType<ExtractBaseType<T>>
-        : // Handle constant types (starts with =)
-          T extends `=${infer Value}?`
-          ? Value | undefined
-          : T extends `=${infer Value}`
-            ? Value
-            : // Handle core types
-              ExtractBaseType<T> extends keyof CoreTypeMap
-              ? CoreTypeMap[ExtractBaseType<T>]
-              : // Fallback to any for unknown types
-                any;
+    : // Handle record types (record<K, V> or Record<K, V>)
+      T extends `record<${infer K}, ${infer V}>`
+      ? Record<
+          MapFieldType<K> extends string | number | symbol
+            ? MapFieldType<K>
+            : string,
+          MapFieldType<V>
+        >
+      : T extends `Record<${infer K}, ${infer V}>`
+        ? Record<
+            MapFieldType<K> extends string | number | symbol
+              ? MapFieldType<K>
+              : string,
+            MapFieldType<V>
+          >
+        : // Handle conditional expressions (contains "when" and "*?")
+          T extends `when ${string} *? ${string}`
+          ? InferConditionalType<T>
+          : // Handle union types (contains |) - check after removing optional and parentheses
+            ExtractBaseType<T> extends `${string}|${string}`
+            ? ParseUnionType<ExtractBaseType<T>>
+            : // Handle constant types (starts with =)
+              T extends `=${infer Value}?`
+              ? Value | undefined
+              : T extends `=${infer Value}`
+                ? Value
+                : // Handle core types
+                  ExtractBaseType<T> extends keyof CoreTypeMap
+                  ? CoreTypeMap[ExtractBaseType<T>]
+                  : // Fallback to any for unknown types
+                    any;
 
 /**
  * Utility type to trim whitespace from string literal types

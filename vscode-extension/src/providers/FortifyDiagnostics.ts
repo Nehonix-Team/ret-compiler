@@ -259,6 +259,11 @@ export class FortifyDiagnosticsProvider {
             continue;
           }
 
+          // ENHANCED: Skip strings inside Make.union() and Make.unionOptional() calls - they are literal values, not type definitions
+          if (this.isStringInMakeUnionCall(line, match.index)) {
+            continue;
+          }
+
           const stringValue = match[0].slice(1, -1); // Remove quotes
 
           // Within Interface blocks, validate all strings that could be schemas
@@ -405,6 +410,26 @@ export class FortifyDiagnosticsProvider {
   }
 
   /**
+   * ENHANCED: Check if a string is inside a Make.union() or Make.unionOptional() call
+   * @param line The line text
+   * @param stringIndex The start index of the string
+   * @returns True if the string is inside a Make.union() or Make.unionOptional() call
+   */
+  private isStringInMakeUnionCall(line: string, stringIndex: number): boolean {
+    // Look for Make.union( or Make.unionOptional( before the string
+    const beforeString = line.substring(0, stringIndex);
+
+    // Check for various patterns:
+    // Make.union("value1", "value2")
+    // Make.unionOptional("value1", "value2")
+    // Also handle cases with whitespace and multiple arguments
+    const makeUnionPattern =
+      /Make\.(union|unionOptional)\s*\(\s*(?:"[^"]*"\s*,\s*)*$/;
+
+    return makeUnionPattern.test(beforeString);
+  }
+
+  /**
    * Determines if a string could potentially be a Fortify schema string.
    * More permissive than the original containsSchemaPattern for Interface contexts.
    */
@@ -522,7 +547,7 @@ export class FortifyDiagnosticsProvider {
         );
       }
       return diagnostics;
-    }
+    } 
 
     // Handle types with constraints (string(1,10), number(0,100), url.https(constraints))
     const constraintMatch = schema.match(/^([\w.]+)\(([^)]*)\)$/);
@@ -547,8 +572,8 @@ export class FortifyDiagnosticsProvider {
       return diagnostics;
     }
 
-    // Handle record types (record<string, any>, record<string, string>)
-    const recordMatch = schema.match(/^record<\s*(\w+)\s*,\s*(\w+)\s*>$/);
+    // Handle record types (record<string, any>, Record<string, any>, record<string, string>)
+    const recordMatch = schema.match(/^(record|Record)<\s*(\w+)\s*,\s*(\w+)\s*>$/);
     if (recordMatch) {
       const [, keyType, valueType] = recordMatch;
 

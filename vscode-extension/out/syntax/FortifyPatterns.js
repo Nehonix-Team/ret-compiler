@@ -132,6 +132,12 @@ class FortifyPatterns {
         return /\?/g;
     }
     /**
+     * Generate regex pattern for required markers
+     */
+    static getRequiredPattern() {
+        return /!/g;
+    }
+    /**
      * Generate regex pattern for union separators
      */
     static getUnionPattern() {
@@ -170,7 +176,8 @@ class FortifyPatterns {
             "\\*\\?",
             methodPattern,
             propertyAccessPattern,
-            "\\[\\]", // Arrays
+            "\\[\\]",
+            "!", // Required markers
         ];
         return new RegExp(`(${patterns.join("|")})`);
     }
@@ -197,7 +204,8 @@ class FortifyPatterns {
         const allTypeNames = FortifySyntaxDefinitions_1.FortifySyntaxUtils.getAllTypeNames();
         const typeNamesPattern = allTypeNames.join("|");
         // Check for types with constraints or arrays using dynamic type list
-        const typeWithConstraints = new RegExp(`^(${typeNamesPattern})(\\([^)]*\\)|\\[\\]|\\?)`);
+        // UPDATED: Added support for required field syntax with "!"
+        const typeWithConstraints = new RegExp(`^(${typeNamesPattern})(\\([^)]*\\)|\\[\\]|\\?|!)`);
         if (typeWithConstraints.test(text)) {
             return true;
         }
@@ -208,7 +216,8 @@ class FortifyPatterns {
         }
         // Check for potential type names (single words that could be types)
         // This catches invalid types like "invalidtype" so they can be validated
-        const potentialType = /^[a-zA-Z][a-zA-Z0-9]*(\?|\[\](\([^)]*\))?)?$/;
+        // UPDATED: Added support for required field syntax with "!"
+        const potentialType = /^[a-zA-Z][a-zA-Z0-9]*(\?|!|\[\](\([^)]*\))?)?$/;
         if (potentialType.test(text)) {
             return true;
         }
@@ -239,10 +248,11 @@ class FortifyPatterns {
     static validateSyntax(schema) {
         const errors = [];
         // Check for unknown types
-        const typeMatches = schema.match(/\b(\w+)(?:\?|\[\]|\([^)]*\))*/g);
+        // UPDATED: Added support for required field syntax with "!"
+        const typeMatches = schema.match(/\b(\w+)(?:\?|!|\[\]|\([^)]*\))*/g);
         if (typeMatches) {
             for (const match of typeMatches) {
-                const baseType = match.replace(/[\?\[\]()0-9,.\s]/g, "");
+                const baseType = match.replace(/[\?\!\[\]()0-9,.\s]/g, "");
                 if (baseType && !schema.includes("when") && baseType !== "when") {
                     if (!FortifySyntaxDefinitions_1.FortifySyntaxUtils.isValidType(baseType)) {
                         errors.push({

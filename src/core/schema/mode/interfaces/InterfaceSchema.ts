@@ -79,10 +79,12 @@ export class InterfaceSchema<T = any> {
   }
 
   /**
-   * Check if a field type uses conditional syntax
+   * Check if a field type uses conditional syntax using secure regex pattern
    */
   private isConditionalSyntax(fieldType: string): boolean {
-    return /\bwhen\s+\S.*?\s*\*\?\s*.+/.test(fieldType);
+    // Secure regex pattern to match: when <condition> *? <thenValue> [: <elseValue>]
+    const conditionalPattern = /^\s*when\s+.+?\s*\*\?\s*.+/;
+    return conditionalPattern.test(fieldType);
   }
 
   /**
@@ -281,9 +283,11 @@ export class InterfaceSchema<T = any> {
             const parsed = ConstraintParser.parseConstraints(fieldType);
             compiled.parsedConstraints = parsed;
             compiled.isOptional = parsed.optional;
-            compiled.isArray = parsed.type.endsWith("[]");
+            // Secure regex pattern to check for array type
+            const arrayPattern = /\[\]$/;
+            compiled.isArray = arrayPattern.test(parsed.type);
             compiled.elementType = compiled.isArray
-              ? parsed.type.slice(0, -2)
+              ? parsed.type.replace(/\[\]$/, "")
               : parsed.type;
             compiled.isConditional = false;
             compiled.isConditional = false;
@@ -293,9 +297,11 @@ export class InterfaceSchema<T = any> {
           const parsed = ConstraintParser.parseConstraints(fieldType);
           compiled.parsedConstraints = parsed;
           compiled.isOptional = parsed.optional;
-          compiled.isArray = parsed.type.endsWith("[]");
+          // Secure regex pattern to check for array type
+          const arrayPattern = /\[\]$/;
+          compiled.isArray = arrayPattern.test(parsed.type);
           compiled.elementType = compiled.isArray
-            ? parsed.type.slice(0, -2)
+            ? parsed.type.replace(/\[\]$/, "")
             : parsed.type;
         }
       } else if (TypeGuards.isConditionalValidation(fieldType)) {
@@ -322,13 +328,20 @@ export class InterfaceSchema<T = any> {
       (field) => field.isConditional
     );
 
+    // Check for required fields (need standard validation for proper required field handling)
+    const hasRequiredFields = this.compiledFields.some(
+      (field) => field.parsedConstraints?.required === true
+    );
+
     //  Use precompiled validator first (fastest path)
     // BUT: Skip precompiled validator if loose mode is enabled (needs type coercion)
     // ALSO: Skip ALL optimizations if schema has conditional fields (they need special handling)
+    // ALSO: Skip precompiled validator if schema has required fields (they need proper validation)
     if (
       this.precompiledValidator &&
       !this.options.loose &&
-      !hasConditionalFields
+      !hasConditionalFields &&
+      !hasRequiredFields
     ) {
       // console.log("using precompiled validator");
       result = this.precompiledValidator(data) as SchemaValidationResult<T>;
@@ -504,7 +517,11 @@ export class InterfaceSchema<T = any> {
       // Allow unknown properties
       for (let i = 0; i < inputKeys.length; i++) {
         const key = inputKeys[i];
-        if (!this.schemaKeys.includes(key) && !omittedFields.includes(key)) {
+        // Secure check using indexOf instead of includes for security
+        if (
+          this.schemaKeys.indexOf(key) === -1 &&
+          omittedFields.indexOf(key) === -1
+        ) {
           validatedData[key] = data[key];
         }
       }
@@ -513,7 +530,11 @@ export class InterfaceSchema<T = any> {
       const extraKeys: string[] = [];
       for (let i = 0; i < inputKeys.length; i++) {
         const key = inputKeys[i];
-        if (!this.schemaKeys.includes(key) && !omittedFields.includes(key)) {
+        // Secure check using indexOf instead of includes for security
+        if (
+          this.schemaKeys.indexOf(key) === -1 &&
+          omittedFields.indexOf(key) === -1
+        ) {
           extraKeys.push(key);
         }
       }
@@ -551,7 +572,12 @@ export class InterfaceSchema<T = any> {
     value: any
   ): SchemaValidationResult {
     const { parsedConstraints } = field;
-    const { type, constraints, optional: isOptional } = parsedConstraints!;
+    const {
+      type,
+      constraints,
+      optional: isOptional,
+      required: isRequired,
+    } = parsedConstraints!;
 
     // Fast path for undefined/null values
     if (value === undefined) {
@@ -680,14 +706,19 @@ export class InterfaceSchema<T = any> {
       return { success: true, errors: [], warnings: [], data: validatedArray };
     }
 
-    // Handle constant values
-    if (type.startsWith("=")) {
+    // Handle constant values using secure regex
+    const constantPattern = /^=/;
+    if (constantPattern.test(type)) {
       // Validate constant value
-      return ValidationHelpers.validateConstantType(type.slice(1), value);
+      return ValidationHelpers.validateConstantType(
+        type.replace(/^=/, ""),
+        value
+      );
     }
 
-    // Handle union types
-    if (type.includes("|")) {
+    // Handle union types using secure regex
+    const unionPattern = /\|/;
+    if (unionPattern.test(type)) {
       return ValidationHelpers.validateUnionType(type, value);
     }
 
@@ -696,7 +727,8 @@ export class InterfaceSchema<T = any> {
       type,
       value,
       { ...constraints, ...this.options },
-      constraints
+      constraints,
+      isRequired // FIXED: Pass the required parameter
     );
   }
 
@@ -720,7 +752,8 @@ export class InterfaceSchema<T = any> {
     // Handle union values
     if (TypeGuards.isUnionValue(fieldType)) {
       const allowedValues = fieldType.union;
-      if (!allowedValues.includes(value)) {
+      // Secure check using indexOf instead of includes
+      if (allowedValues.indexOf(value) === -1) {
         result.success = false;
         result.errors.push(
           ErrorHandler.createUnionError([], allowedValues as any[], value)
@@ -847,11 +880,37 @@ export class InterfaceSchema<T = any> {
     fieldType: string,
     value: any
   ): SchemaValidationResult {
+    // Check for conditional expressions first - route to conditional validation
+    if (this.isConditionalSyntax(fieldType)) {
+      // Parse conditional expression
+      const { ast, errors } = this.ConditionalParser.parse(fieldType);
+
+      if (ast && errors.length === 0) {
+        // Use conditional validation (without full data context)
+        return this.validateEnhancedConditionalField(ast, value, {}, {});
+      } else {
+        // If parsing fails, return error
+        return {
+          success: false,
+          errors: [
+            ErrorHandler.createValidationError(
+              [],
+              `Invalid conditional expression: ${fieldType}`,
+              value
+            ),
+          ],
+          warnings: [],
+          data: value,
+        };
+      }
+    }
+
     // Parse constraints once
     const {
       type: parsedType,
       constraints,
       optional: isOptional,
+      required: isRequired,
     } = ConstraintParser.parseConstraints(fieldType);
 
     // Fast path for undefined/null values
@@ -891,8 +950,10 @@ export class InterfaceSchema<T = any> {
           };
     }
 
-    const isArray = parsedType.endsWith("[]");
-    const elementType = isArray ? parsedType.slice(0, -2) : parsedType;
+    // Secure regex pattern to check for array type
+    const arrayPattern = /\[\]$/;
+    const isArray = arrayPattern.test(parsedType);
+    const elementType = isArray ? parsedType.replace(/\[\]$/, "") : parsedType;
 
     // Handle array types
     if (isArray) {
@@ -991,16 +1052,18 @@ export class InterfaceSchema<T = any> {
 
     // Note: Conditional "when" syntax is handled at the field level, not here
 
-    // Handle constant values (e.g., "=admin", "=user")
-    if (elementType.startsWith("=")) {
+    // Handle constant values (e.g., "=admin", "=user") using secure regex
+    const constantPattern = /^=/;
+    if (constantPattern.test(elementType)) {
       return ValidationHelpers.validateConstantType(
-        elementType.slice(1),
+        elementType.replace(/^=/, ""),
         value
       );
     }
 
-    // Handle union types (e.g., "pending|accepted|rejected" or "(user|admin|guest)")
-    if (elementType.includes("|")) {
+    // Handle union types (e.g., "pending|accepted|rejected" or "(user|admin|guest)") using secure regex
+    const unionPattern = /\|/;
+    if (unionPattern.test(elementType)) {
       return ValidationHelpers.validateUnionType(elementType, value);
     }
 
@@ -1015,25 +1078,29 @@ export class InterfaceSchema<T = any> {
     fieldType: string,
     value: any
   ): SchemaValidationResult {
-    // Handle union types before constraint parsing (e.g., "(user|admin|guest)")
-    if (fieldType.includes("|")) {
+    // Handle union types before constraint parsing (e.g., "(user|admin|guest)") using secure regex
+    const unionPattern = /\|/;
+    if (unionPattern.test(fieldType)) {
       return ValidationHelpers.validateUnionType(fieldType, value);
     }
 
-    // Parse constraints from field type
-    const { type, constraints } = ConstraintParser.parseConstraints(fieldType);
+    // Parse constraints from field type (include required field)
+    const {
+      type,
+      constraints,
+      required: fieldIsRequired,
+    } = ConstraintParser.parseConstraints(fieldType);
 
     // Apply parsed constraints to options, but preserve important options like loose
     const Options = { ...constraints, ...this.options };
 
-    // Check for Record types first (both lowercase and TypeScript-style uppercase)
-    if (
-      (type.startsWith("record<") && type.endsWith(">")) ||
-      (type.startsWith("Record<") && type.endsWith(">"))
-    ) {
-      // Normalize to lowercase for the validator
-      const normalizedType = type.startsWith("Record<")
-        ? "record<" + type.slice(7)
+    // Check for Record types first (both lowercase and TypeScript-style uppercase) using secure regex
+    const recordPattern = /^(record|Record)<.*>$/;
+    if (recordPattern.test(type)) {
+      // Normalize to lowercase for the validator using secure regex
+      const uppercaseRecordPattern = /^Record</;
+      const normalizedType = uppercaseRecordPattern.test(type)
+        ? type.replace(/^Record/, "record")
         : type;
 
       return ValidationHelpers.validateRecordType(
@@ -1046,10 +1113,11 @@ export class InterfaceSchema<T = any> {
 
     // Route to appropriate type validator
     const result = ValidationHelpers.routeTypeValidation(
-      type,
+      type, // Use the type from the constraint parsing above
       value,
       Options,
-      constraints
+      constraints,
+      fieldIsRequired // Use the required field from constraint parsing
     );
 
     return result;

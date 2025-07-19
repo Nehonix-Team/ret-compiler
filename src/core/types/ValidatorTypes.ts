@@ -2,10 +2,7 @@ import { createEnum } from "../utils/arrayToEnum";
 import { UrlArgArray } from "../utils/UrlArgs";
 
 export const SUPPORTED_VALIDATOR_TYPES = [
-  // String types
   "string",
-
-  // Number types
   "number",
   "float",
   "int",
@@ -13,17 +10,11 @@ export const SUPPORTED_VALIDATOR_TYPES = [
   "positive",
   "negative",
   "double",
-
-  // Boolean types
   "boolean",
   "bool",
-
-  // Date/Time types
   "date",
   "datetime",
   "timestamp",
-
-  // Validation types
   "email",
   "uuid",
   "guid",
@@ -32,28 +23,22 @@ export const SUPPORTED_VALIDATOR_TYPES = [
   "username",
   "ip",
   "password",
-
-  // Text/Content types
   "text",
   "json",
   "json.fast",
   "json.secure",
   "object",
-
-  // Special types
   "unknown",
   "void",
   "null",
   "undefined",
   "any",
-
-  // New/Extended types
   "hexcolor",
   "base64",
   "jwt",
   "semver",
-
   "record",
+  "array", // only in additionalValidTypes
 ] as const;
 
 export const VALIDATOR_TYPES = createEnum(SUPPORTED_VALIDATOR_TYPES);
