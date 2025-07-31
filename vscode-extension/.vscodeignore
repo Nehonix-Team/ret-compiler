@@ -1,0 +1,42 @@
+# Source files
+src/**/*.ts
+src/**/*.map
+
+# Build files
+*.tsbuildinfo
+tsconfig.json
+
+# Development files
+.vscode/
+.git/
+.gitignore
+node_modules/
+yarn.lock
+package-lock.json
+
+# Test files
+test/
+**/*.test.*
+**/*.spec.*
+
+# Documentation source
+*.md
+!readme.md
+
+# Development scripts
+ext.build.js
+push.ext.js
+
+# Temporary files
+tmp/
+*.tmp
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~

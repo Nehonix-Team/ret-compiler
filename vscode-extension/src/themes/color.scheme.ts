@@ -7,7 +7,7 @@ export interface FortifyColorScheme {
   colors: {
     // Core types
     basicType: string;
-    formatType: string;
+    formatType: string; 
     numericType: string;
 
     // Conditional syntax

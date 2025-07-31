@@ -67,14 +67,11 @@ class FortifyColorThemeManager {
                     "operator.fortify.logicalOperator": scheme.colors.logicalOperator,
                     "operator.fortify.comparisonOperator": scheme.colors.comparisonOperator,
                     // Functions and methods
-                    function: scheme.colors.method,
                     "function.fortify.method": scheme.colors.method,
                     "function.fortify.methodCall": scheme.colors.methodCall,
                     // Variables and constants
-                    variable: scheme.colors.variable,
                     "variable.fortify.variable": scheme.colors.variable,
                     "variable.fortify.constant": scheme.colors.constant,
-                    "variable.readonly": scheme.colors.constant,
                     // Enum members (union literals and constants)
                     enumMember: scheme.colors.constant,
                     "enumMember.fortify.unionLiteral": scheme.colors.constant,

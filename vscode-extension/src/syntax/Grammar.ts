@@ -15,7 +15,7 @@ export class Grammar {
     return G.generateFortifyGrammar();
   }
 
-  /**
+  /** 
    * Write the generated grammar to file
    */
   public write(outputPath: string): void {

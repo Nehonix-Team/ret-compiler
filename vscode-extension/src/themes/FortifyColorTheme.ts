@@ -13,7 +13,7 @@ import { AllSchemsByName } from "./scheme";
 import { default_scheme } from "../constants/default";
 
 /**
- * Predefined color schemes
+ * Predefined color schemes 
  */
 export class FortifyColorSchemes {
   private static readonly SCHEMES = AllSchemsByName;
@@ -86,15 +86,12 @@ export class FortifyColorThemeManager {
             scheme.colors.comparisonOperator,
 
           // Functions and methods
-          function: scheme.colors.method,
           "function.fortify.method": scheme.colors.method,
           "function.fortify.methodCall": scheme.colors.methodCall,
 
           // Variables and constants
-          variable: scheme.colors.variable,
           "variable.fortify.variable": scheme.colors.variable,
           "variable.fortify.constant": scheme.colors.constant,
-          "variable.readonly": scheme.colors.constant,
 
           // Enum members (union literals and constants)
           enumMember: scheme.colors.constant,
