@@ -204,7 +204,7 @@
     "prettier": "^3.0.3",
     "rimraf": "^6.0.1",
     "rollup": "^3.29.2",
-    "rollup-plugin-dts": "^6.0.2",
+    "rollup-plugin-dts": "^6.2.3",
     "ts-jest": "^29.1.1",
     "typescript": "^5.8.3"
   },
