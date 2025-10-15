@@ -1,6 +1,6 @@
-# Fortify Schema Extensions
+# ReliantType Extensions
 
-Advanced extensions for the Fortify Schema validation library, providing powerful features for schema validation, documentation generation, and real-time validation.
+Advanced extensions for the ReliantType validation library, providing powerful features for schema validation, documentation generation, and real-time validation.
 
 ## Architecture
 
@@ -16,7 +16,7 @@ The extensions are built with a clean, maintainable architecture:
 Automatically infer schema definitions from sample data or TypeScript types.
 
 ```typescript
-import { Smart } from 'fortify-schema';
+import { Smart } from 'reliant-type';
 
 // Infer from sample data
 const sampleUser = {
@@ -48,7 +48,7 @@ const schema = Smart.fromType<User>({
 Create complex validation rules based on field dependencies.
 
 ```typescript
-import { When } from 'fortify-schema';
+import { When } from 'reliant-type';
 
 const OrderSchema = Interface({
   orderType: Make.union("pickup", "delivery"),
@@ -67,7 +67,7 @@ const OrderSchema = Interface({
 Reactive validation for forms and streaming data.
 
 ```typescript
-import { Live } from 'fortify-schema';
+import { Live } from 'reliant-type';
 
 // Form validation
 const formValidator = Live.form(UserSchema);
@@ -85,7 +85,7 @@ streamValidator.onInvalid((data, errors) => logErrors(errors));
 Generate comprehensive documentation from schemas.
 
 ```typescript
-import { Docs } from 'fortify-schema';
+import { Docs } from 'reliant-type';
 
 // Generate OpenAPI specification
 const openApiSpec = Docs.openapi(UserSchema, {
@@ -115,7 +115,7 @@ const interactiveDocs = Docs.interactive(UserSchema, {
 Convert schemas to OpenAPI 3.0 specifications.
 
 ```typescript
-import { OpenAPIConverter } from 'fortify-schema';
+import { OpenAPIConverter } from 'reliant-type';
 
 const openApiSchema = OpenAPIConverter.convertSchema(schema);
 const fullSpec = OpenAPIConverter.generateOpenAPISpec(schema, options);
@@ -126,7 +126,7 @@ const fullSpec = OpenAPIConverter.generateOpenAPISpec(schema, options);
 Generate TypeScript code from schemas.
 
 ```typescript
-import { TypeScriptGenerator } from 'fortify-schema';
+import { TypeScriptGenerator } from 'reliant-type';
 
 const interface = TypeScriptGenerator.generateInterface(schema, options);
 const utilityTypes = TypeScriptGenerator.generateUtilityTypes(schema, "User");
@@ -138,7 +138,7 @@ const module = TypeScriptGenerator.generateModule(schema, options);
 Use the `Quick` object for common operations:
 
 ```typescript
-import { Quick } from 'fortify-schema';
+import { Quick } from 'reliant-type';
 
 // Quick schema inference
 const schema = Quick.fromSample(sampleData);

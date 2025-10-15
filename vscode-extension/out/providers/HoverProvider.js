@@ -1,8 +1,8 @@
 "use strict";
 /**
- * Fortify Schema Hover Provider
+ * ReliantType Hover Provider
  *
- * Provides hover information for Fortify Schema syntax elements
+ * Provides hover information for ReliantType syntax elements
  * Uses centralized syntax definitions for maintainability
  */
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -13,7 +13,7 @@ const DocumentationProvider_1 = require("./DocumentationProvider");
 const CONDITIONAL_KEYWORDS_1 = require("../syntax/mods/definitions/CONDITIONAL_KEYWORDS");
 class FortifyHoverProvider {
     /**
-     * Provide hover information for Fortify Schema elements
+     * Provide hover information for ReliantType elements
      */
     provideHover(document, position, _token) {
         console.log("🔍 Hover provider called at position:", position.line, position.character);
@@ -225,7 +225,7 @@ class FortifyHoverProvider {
             const isOptional = word.includes("?");
             const isArray = word.includes("[]");
             const content = new vscode.MarkdownString();
-            content.appendMarkdown(`**${word}** - Fortify Schema ${typeDefinition.category} Type\n\n`);
+            content.appendMarkdown(`**${word}** - ReliantType ${typeDefinition.category} Type\n\n`);
             content.appendMarkdown(`${typeDefinition.description}\n\n`);
             if (isOptional) {
                 content.appendMarkdown("*This field is optional*\n\n");
@@ -248,7 +248,7 @@ class FortifyHoverProvider {
         const operatorDefinition = FortifyPatterns_1.FortifySyntaxUtils.getOperatorDefinition(word);
         if (operatorDefinition) {
             const content = new vscode.MarkdownString();
-            content.appendMarkdown(`**${word}** - Fortify Schema ${operatorDefinition.category} Operator\n\n`);
+            content.appendMarkdown(`**${word}** - ReliantType ${operatorDefinition.category} Operator\n\n`);
             content.appendMarkdown(`${operatorDefinition.description}\n\n`);
             content.appendMarkdown("**Examples:**\n");
             operatorDefinition.examples.forEach((example) => {
@@ -272,7 +272,7 @@ class FortifyHoverProvider {
         const methodDefinition = FortifyPatterns_1.FortifySyntaxUtils.getMethodDefinition(methodName);
         if (methodDefinition) {
             const content = new vscode.MarkdownString();
-            content.appendMarkdown(`**${word}** - Fortify Schema V2 Method\n\n`);
+            content.appendMarkdown(`**${word}** - ReliantType V2 Method\n\n`);
             content.appendMarkdown(`${methodDefinition.description}\n\n`);
             if (isV2Method) {
                 content.appendMarkdown("*This is the V2 runtime method syntax*\n\n");

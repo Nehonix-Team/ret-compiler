@@ -6,11 +6,11 @@ import {
 } from "./generateSchemaStringBeginPattern";
 
 /**
- * Generate complete TextMate grammar for Fortify Schema with improved conditional parsing
+ * Generate complete TextMate grammar for ReliantType with improved conditional parsing
  */
 export function generateFortifyGrammar(): any {
   return {
-    name: "Nehonix Fortify Schema Embedded",
+    name: "Nehonix ReliantType Embedded",
     scopeName: "source.ts.fortify",
     injectionSelector:
       "L:source.ts -comment -string, L:source.tsx -comment -string",
@@ -62,7 +62,7 @@ export function generateFortifyGrammar(): any {
             contentName: "string.quoted.double.fortify.schema",
             patterns: [
               {
-                include: "#fortify-schema-content",
+                include: "#reliant-type-content",
               },
             ],
           },
@@ -87,7 +87,7 @@ export function generateFortifyGrammar(): any {
             contentName: "string.quoted.single.fortify.schema",
             patterns: [
               {
-                include: "#fortify-schema-content",
+                include: "#reliant-type-content",
               },
             ],
           },
@@ -112,7 +112,7 @@ export function generateFortifyGrammar(): any {
             contentName: "string.template.fortify.schema",
             patterns: [
               {
-                include: "#fortify-schema-content",
+                include: "#reliant-type-content",
               },
               {
                 include: "#fortify-template-expressions",
@@ -147,7 +147,7 @@ export function generateFortifyGrammar(): any {
           },
         ],
       },
-      "fortify-schema-content": {
+      "reliant-type-content": {
         patterns: [
           // CRITICAL: Conditional syntax MUST be first and most specific
           {

@@ -4,7 +4,7 @@
 
 import { Interface } from "../core/schema/mode/interfaces/Interface";
 
-// Fortify Schema - New Types Test Suite
+// ReliantType - New Types Test Suite
 // Testing: json, text, ip, password, object, url types
 
 // Test helper function
@@ -45,7 +45,7 @@ function runTest(
 }
 
 // 1. JSON Type Tests
-console.log("🚀 Starting Fortify Schema New Types Test Suite");
+console.log("🚀 Starting ReliantType New Types Test Suite");
 console.log("=" + "=".repeat(45));
 
 const JsonSchema = Interfaces({
@@ -427,7 +427,7 @@ const CombinedSchema = Interface({
 const testData = {
   config: '{"theme": "dark", "notifications": true}',
   description:
-    "This is a comprehensive test of all new types in Fortify Schema",
+    "This is a comprehensive test of all new types in ReliantType",
   serverIp: "192.168.1.100",
   userPassword: "SecureP@ssw0rd123!",
   metadata: { createdAt: new Date(), version: "1.0.0" },

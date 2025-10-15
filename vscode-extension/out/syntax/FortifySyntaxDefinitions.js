@@ -1,8 +1,8 @@
 "use strict";
 /**
- * Centralized Fortify Schema Syntax Definitions
+ * Centralized ReliantType Syntax Definitions
  *
- * Single source of truth for all Fortify Schema syntax elements.
+ * Single source of truth for all ReliantType syntax elements.
  * This makes it easy to add, edit, or remove syntax features across the entire extension.
  */
 Object.defineProperty(exports, "__esModule", { value: true });

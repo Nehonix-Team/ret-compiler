@@ -19,5 +19,5 @@ export function runGrammar() {
   }
 
   grammar.write(outputPath);
-  console.log("✅ Generated Fortify Schema grammar file");
+  console.log("✅ Generated ReliantType grammar file");
 }

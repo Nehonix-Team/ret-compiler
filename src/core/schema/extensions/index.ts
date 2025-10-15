@@ -1,7 +1,7 @@
 /**
- * Fortify Schema Extensions - Advanced Features
+ * ReliantType Extensions - Advanced Features
  *
- * This module exports all advanced extensions that make Fortify Schema
+ * This module exports all advanced extensions that make ReliantType
  * a powerful schema validation library.
  *
  * Features real, functional implementations without placeholders.

@@ -29,7 +29,7 @@ export function initializePerformanceOptimizations(): void {
     // 4. Configure validation caching
     configureValidationCaching();
 
-    // console.log('✅ Fortify Schema performance optimizations initialized');
+    // console.log('✅ ReliantType performance optimizations initialized');
   } catch (error) {
     // Fail silently to avoid breaking applications
     // console.warn('⚠️  Performance optimizations failed to initialize:', error.message);

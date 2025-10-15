@@ -5,7 +5,7 @@
 
 import { Interface, Make, Mod } from "../src/index";
 
-console.log("🧪 COMPREHENSIVE TESTS FOR FORTIFY SCHEMA FIXES");
+console.log("🧪 COMPREHENSIVE TESTS FOR ReliantType FIXES");
 console.log("=".repeat(60));
 
 let passedTests = 0;

@@ -1,7 +1,7 @@
 /**
- * Fortify Schema Completion Provider
+ * ReliantType Completion Provider
  *
- * Provides intelligent autocompletion for Fortify Schema syntax
+ * Provides intelligent autocompletion for ReliantType syntax
  * Uses centralized syntax definitions for maintainability
  */
 
@@ -15,7 +15,7 @@ export class FortifyCompletionProvider
   implements vscode.CompletionItemProvider
 {
   /**
-   * Provide completion items for Fortify Schema string
+   * Provide completion items for ReliantType string
    */
   provideCompletionItems(
     document: vscode.TextDocument,
@@ -126,9 +126,9 @@ export class FortifyCompletionProvider
         "@fortify-ignore",
         vscode.CompletionItemKind.Snippet
       );
-      ignoreItem.detail = "Disable Fortify Schema validation for this line";
+      ignoreItem.detail = "Disable ReliantType validation for this line";
       ignoreItem.documentation = new vscode.MarkdownString(
-        `**@fortify-ignore** - Disables Fortify Schema validation\n\n` +
+        `**@fortify-ignore** - Disables ReliantType validation\n\n` +
           `Use this comment to suppress validation warnings for specific lines.\n\n` +
           `**Usage:**\n` +
           `\`\`\`typescript\n` +
@@ -154,7 +154,7 @@ export class FortifyCompletionProvider
       commentItem.detail = "Add @fortify-ignore comment";
       commentItem.documentation = new vscode.MarkdownString(
         `**// @fortify-ignore** - Complete comment to disable validation\n\n` +
-          `Adds a complete comment line to disable Fortify Schema validation for the next line.`
+          `Adds a complete comment line to disable ReliantType validation for the next line.`
       );
       commentItem.insertText = new vscode.SnippetString("// @fortify-ignore");
       commentItem.sortText = "1";
@@ -168,7 +168,7 @@ export class FortifyCompletionProvider
       multiLineItem.detail = "Add @fortify-ignore block comment";
       multiLineItem.documentation = new vscode.MarkdownString(
         `**/* @fortify-ignore */** - Block comment to disable validation\n\n` +
-          `Adds a block comment to disable Fortify Schema validation.`
+          `Adds a block comment to disable ReliantType validation.`
       );
       multiLineItem.insertText = new vscode.SnippetString(
         "/* @fortify-ignore */"

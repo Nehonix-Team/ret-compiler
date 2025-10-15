@@ -281,4 +281,4 @@ console.log("✅ Method calls (.in, .exists, .contains) work correctly");
 console.log("✅ Nested conditionals work correctly");
 console.log("✅ Performance is excellent for production use");
 
-console.log("\n🚀 FORTIFY SCHEMA ENHANCED CONDITIONAL VALIDATION IS READY!");
+console.log("\n🚀 ReliantType ENHANCED CONDITIONAL VALIDATION IS READY!");

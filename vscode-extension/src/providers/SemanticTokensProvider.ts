@@ -1,5 +1,5 @@
 /**
- * Semantic Tokens Provider for Fortify Schema
+ * Semantic Tokens Provider for ReliantType
  *
  * Provides enhanced syntax highlighting using VSCode's semantic tokens API
  * - More precise token classification than TextMate grammars
@@ -23,7 +23,7 @@ export enum FortifyTokenModifier {
 }
 
 /**
- * Semantic tokens provider for Fortify Schema syntax
+ * Semantic tokens provider for ReliantType syntax
  */
 export class FortifySemanticTokensProvider
   implements vscode.DocumentSemanticTokensProvider
@@ -67,7 +67,7 @@ export class FortifySemanticTokensProvider
     );
     const text = document.getText();
 
-    // Extract Fortify schema strings ONLY from Interface({...}) blocks
+    // Extract ReliantType strings ONLY from Interface({...}) blocks
     const schemaStrings = this.extractSchemaStrings(text, document);
 
     for (const schemaString of schemaStrings) {
@@ -87,7 +87,7 @@ export class FortifySemanticTokensProvider
   }
 
   /**
-   * Extracts Fortify Schema strings ONLY from Interface({...}) blocks
+   * Extracts ReliantType strings ONLY from Interface({...}) blocks
    * This ensures syntax highlighting is only applied where it's relevant
    */
   private extractSchemaStrings(
@@ -221,7 +221,7 @@ export class FortifySemanticTokensProvider
   }
 
   /**
-   * Determines if a string could potentially be a Fortify schema string
+   * Determines if a string could potentially be a ReliantType string
    */
   private couldBeSchemaString(value: string): boolean {
     // Skip obvious non-schema strings
@@ -248,7 +248,7 @@ export class FortifySemanticTokensProvider
   }
 
   /**
-   * Tokenize a single Fortify schema string
+   * Tokenize a single ReliantType string
    */
   private tokenizeSchemaString(
     document: vscode.TextDocument,

@@ -1,7 +1,7 @@
 /**
  * TypeScript Generator - Generate TypeScript type definitions from schemas
  *
- * This module provides utilities to convert Fortify Schema definitions
+ * This module provides utilities to convert ReliantType definitions
  * to TypeScript type definitions and interfaces.
  */
 

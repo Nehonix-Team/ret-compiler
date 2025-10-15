@@ -1,7 +1,7 @@
 import { OperatorDefinition } from "../../../types";
 
 /**
- * Fortify Schema operators for comparisons, logical conditions, and schema composition.
+ * ReliantType operators for comparisons, logical conditions, and schema composition.
  * Designed for intuitive use in TypeScript-like schemas, simpler than Zod's operator system.
  */
 export const FORTIFY_OPERATORS: OperatorDefinition[] = [

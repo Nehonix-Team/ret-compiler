@@ -4,7 +4,7 @@
 
 import { Interface, Make, Mod } from "../src/index";
 
-console.log("=== FORTIFY SCHEMA ISSUES REPRODUCTION ===\n");
+console.log("=== ReliantType ISSUES REPRODUCTION ===\n");
 
 // ===== ISSUE 1: Make.unionOptional type inference and syntax highlighting =====
 console.log("1. Testing Make.unionOptional issues:"); 

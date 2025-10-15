@@ -1,7 +1,7 @@
 /**
- * Fortify Schema VSCode Extension
+ * ReliantType VSCode Extension
  *
- * Provides syntax highlighting, autocompletion, and validation for Fortify Schema
+ * Provides syntax highlighting, autocompletion, and validation for ReliantType
  * - The revolutionary TypeScript validation library with interface-like syntax
  */
 
@@ -21,7 +21,7 @@ import {
  * Extension activation - called when the extension is activated
  */
 export function activate(context: vscode.ExtensionContext) {
-  console.log("🚀 Fortify Schema extension is now active!");
+  console.log("🚀 ReliantType extension is now active!");
 
   // ENHANCED: Initialize documentation provider for hover and definition support
   DocumentationProvider.initialize(context.extensionPath);
@@ -96,7 +96,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (editor) {
         diagnosticsProvider.validateDocument(editor.document);
         vscode.window.showInformationMessage(
-          "Fortify Schema validation completed!"
+          "ReliantType validation completed!"
         );
       }
     }
@@ -189,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
       );
       outputChannel.clear();
       outputChannel.appendLine(
-        "Nehonix Fortify Schema - Available Color Schemes"
+        "Nehonix ReliantType - Available Color Schemes"
       );
       outputChannel.appendLine("=".repeat(50));
       outputChannel.appendLine("");
@@ -207,7 +207,7 @@ export function activate(context: vscode.ExtensionContext) {
     async () => {
       try {
         const result = await vscode.window.showWarningMessage(
-          "This will remove all Fortify Schema color customizations from your VSCode settings. Would you like to continue?",
+          "This will remove all ReliantType color customizations from your VSCode settings. Would you like to continue?",
           { modal: true },
           "Yes, Remove Themes",
           "Cancel"
@@ -218,11 +218,11 @@ export function activate(context: vscode.ExtensionContext) {
 
           if (success) {
             vscode.window.showInformationMessage(
-              "✅ Fortify Schema themes and settings have been removed successfully!"
+              "✅ ReliantType themes and settings have been removed successfully!"
             );
           } else {
             vscode.window.showErrorMessage(
-              "❌ Failed to remove some Fortify Schema settings. Please check the output panel."
+              "❌ Failed to remove some ReliantType settings. Please check the output panel."
             );
           }
         }
@@ -257,16 +257,16 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Show welcome message
   vscode.window.showInformationMessage(
-    "✨ Fortify Schema extension loaded! Enhanced syntax highlighting and IntelliSense are now active."
+    "✨ ReliantType extension loaded! Enhanced syntax highlighting and IntelliSense are now active."
   );
 }
 
 /**
- * Cleanup all Fortify Schema settings and themes
+ * Cleanup all ReliantType settings and themes
  */
 async function cleanupFortifySettings(): Promise<boolean> {
   try {
-    console.log("🧹 Cleaning up Fortify Schema settings...");
+    console.log("🧹 Cleaning up ReliantType settings...");
 
     // Remove color scheme customizations
     const colorCleanupSuccess =
@@ -326,10 +326,10 @@ async function cleanupFortifySettings(): Promise<boolean> {
       }
     }
 
-    console.log("✅ Fortify Schema settings cleanup completed");
+    console.log("✅ ReliantType settings cleanup completed");
     return colorCleanupSuccess;
   } catch (error) {
-    console.error("❌ Failed to cleanup Fortify Schema settings:", error);
+    console.error("❌ Failed to cleanup ReliantType settings:", error);
     return false;
   }
 }
@@ -339,12 +339,12 @@ async function cleanupFortifySettings(): Promise<boolean> {
  * Now includes automatic cleanup of themes and settings
  */
 export async function deactivate() {
-  console.log("👋 Fortify Schema extension deactivating...");
+  console.log("👋 ReliantType extension deactivating...");
 
   try {
     // Show cleanup option to user
     const shouldCleanup = await vscode.window.showInformationMessage(
-      "Fortify Schema extension is being deactivated. Would you like to remove the color themes and settings?",
+      "ReliantType extension is being deactivated. Would you like to remove the color themes and settings?",
       { modal: false },
       "Yes, Clean Up",
       "No, Keep Settings"
@@ -355,27 +355,27 @@ export async function deactivate() {
 
       if (success) {
         vscode.window.showInformationMessage(
-          "✅ Fortify Schema themes and settings have been removed. Your VSCode theme is now back to default."
+          "✅ ReliantType themes and settings have been removed. Your VSCode theme is now back to default."
         );
       } else {
         vscode.window.showWarningMessage(
-          "⚠️ Some Fortify Schema settings could not be removed automatically. You may need to reset your color theme manually."
+          "⚠️ Some ReliantType settings could not be removed automatically. You may need to reset your color theme manually."
         );
       }
     } else {
       vscode.window.showInformationMessage(
-        "Fortify Schema settings have been kept. You can manually remove them using the 'Fortify: Cleanup Themes' command if needed."
+        "ReliantType settings have been kept. You can manually remove them using the 'Fortify: Cleanup Themes' command if needed."
       );
     }
   } catch (error) {
     console.error("Error during extension deactivation:", error);
   }
 
-  console.log("👋 Fortify Schema extension deactivated");
+  console.log("👋 ReliantType extension deactivated");
 }
 
 /**
- * Utility function to check if a string contains Fortify Schema syntax
+ * Utility function to check if a string contains ReliantType syntax
  */
 export function isFortifySchema(text: string): boolean {
   // Check for common Fortify patterns
@@ -394,7 +394,7 @@ export function isFortifySchema(text: string): boolean {
 }
 
 /**
- * Extract Fortify schema strings from TypeScript code
+ * Extract ReliantType strings from TypeScript code
  */
 export function extractSchemaStrings(
   text: string

@@ -1,8 +1,8 @@
-# Fortify Schema Architecture
+# ReliantType Architecture
 
 ## Overview
 
-Fortify Schema is a TypeScript-first validation library that provides an intuitive, type-safe way to define and validate data schemas. It combines the ease of use of string-based type definitions with the power of TypeScript's type system.
+ReliantType is a TypeScript-first validation library that provides an intuitive, type-safe way to define and validate data schemas. It combines the ease of use of string-based type definitions with the power of TypeScript's type system.
 
 ## Core Architecture
 

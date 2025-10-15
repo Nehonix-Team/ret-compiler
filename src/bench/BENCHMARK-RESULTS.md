@@ -1,11 +1,11 @@
-# Fortify Schema Performance Report
+# ReliantType Performance Report
 
 ## 📊 Executive Summary
 
 **Generated:** 7/18/2025, 8:19:17 AM
 **Node.js Version:** v24.3.0
 **Platform:** linux (x64)
-**Fortify Schema Version:** 2.0.21
+**ReliantType Version:** 2.0.21
 
 ### 🏆 Performance Highlights
 
@@ -207,5 +207,5 @@
 
 ---
 
-*Generated automatically by the Fortify Schema benchmark suite*
+*Generated automatically by the ReliantType benchmark suite*
 *Last updated: 7/18/2025, 8:19:17 AM*

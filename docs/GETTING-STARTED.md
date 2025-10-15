@@ -1,6 +1,6 @@
-# Getting Started with Fortify Schema
+# Getting Started with ReliantType
 
-Welcome to Fortify Schema! This guide will get you up and running in minutes with TypeScript-first validation using interface-native syntax.
+Welcome to ReliantType! This guide will get you up and running in minutes with TypeScript-first validation using interface-native syntax.
  
 ## 🚀 Installation
 
@@ -9,20 +9,20 @@ Welcome to Fortify Schema! This guide will get you up and running in minutes wit
 - **Node.js 14+** (for Node.js projects)
 - **Modern browser** (for browser projects)
 
-### Install Fortify Schema
+### Install ReliantType
 
 ```bash
 # NPM
-npm install fortify-schema
+npm install reliant-type
 
 # Yarn
-yarn add fortify-schema
+yarn add reliant-type
 
 # PNPM
-pnpm add fortify-schema
+pnpm add reliant-type
 
 # Bun
-bun add fortify-schema
+bun add reliant-type
 ```
 
 ### Optional: VS Code Extension
@@ -31,18 +31,18 @@ For the best development experience, install our VS Code extension:
 
 ```bash
 # Download and install
-curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
-code --install-extension fortify-schema.vsix
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/reliant-type.vsix -o reliant-type.vsix
+code --install-extension reliant-type.vsix
 ```
 
 ## 🎯 Your First Schema
 
-Let's create your first Fortify Schema in just 3 steps:
+Let's create your first ReliantType in just 3 steps:
 
-### Step 1: Import Fortify Schema
+### Step 1: Import ReliantType
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 ```
 
 ### Step 2: Define Your Schema
@@ -80,13 +80,13 @@ if (result.success) {
 }
 ```
 
-That's it! You've created and used your first Fortify Schema.
+That's it! You've created and used your first ReliantType.
 
 ## 🎓 Core Concepts
 
 ### Interface-Native Syntax
 
-Fortify Schema uses familiar TypeScript interface syntax:
+ReliantType uses familiar TypeScript interface syntax:
 
 ```typescript
 // Looks like a TypeScript interface!
@@ -214,7 +214,7 @@ const UnionSchema = Interface({
 
 ## 🔥 V2 Conditional Validation
 
-Fortify Schema V2 introduces powerful conditional validation with runtime property checking:
+ReliantType V2 introduces powerful conditional validation with runtime property checking:
 
 ### Basic Conditional Validation
 
@@ -263,7 +263,7 @@ const V2MethodsSchema = Interface({
 Let's build a complete user registration schema:
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const UserRegistrationSchema = Interface({
   // Basic information
@@ -387,8 +387,8 @@ Now that you have the basics, explore more advanced features:
 
 ## 🤝 Need Help?
 
-- **[GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)** - Bug reports and feature requests
-- **[GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)** - Community Q&A
+- **[GitHub Issues](https://github.com/Nehonix-Team/reliant-type/issues)** - Bug reports and feature requests
+- **[GitHub Discussions](https://github.com/Nehonix-Team/reliant-type/discussions)** - Community Q&A
 - **[Documentation](./README.md)** - Complete documentation index
 
-Welcome to the Fortify Schema community! 🎉
+Welcome to the ReliantType community! 🎉

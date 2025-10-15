@@ -1,5 +1,5 @@
 /**
- * Fortify Schema Pattern Generators
+ * ReliantType Pattern Generators
  *
  * Generates regex patterns and validation rules from centralized syntax definitions.
  * This ensures consistency across all extension features.
@@ -209,7 +209,7 @@ export class FortifyPatterns {
   }
 
   /**
-   * Check if text contains Fortify schema syntax
+   * Check if text contains ReliantType syntax
    * Uses centralized type definitions for better extensibility
    */
   static containsSchemaPattern(text: string): boolean {

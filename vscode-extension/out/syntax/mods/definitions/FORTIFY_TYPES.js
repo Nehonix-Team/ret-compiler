@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FORTIFY_TYPES = void 0;
 /**
- * Fortify Schema type definitions, providing a TypeScript-like validation system
+ * ReliantType type definitions, providing a TypeScript-like validation system
  * that's simpler and more intuitive. Types support constraints, optional
  * markers, and arrays for flexible schema definitions.
  * Note: Custom types may be supported via runtime extensions (see documentation).

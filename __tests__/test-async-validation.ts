@@ -5,7 +5,7 @@
 
 import { Interface } from "../core/schema/mode/interfaces/Interface";
 
-console.log("=== FORTIFY SCHEMA ASYNC VALIDATION TESTS ===\n");
+console.log("=== ReliantType ASYNC VALIDATION TESTS ===\n");
 
 // Define a test schema
 const UserSchema = Interface({

@@ -1,7 +1,7 @@
 /**
- * Fortify Schema Hover Provider
+ * ReliantType Hover Provider
  *
- * Provides hover information for Fortify Schema syntax elements
+ * Provides hover information for ReliantType syntax elements
  * Uses centralized syntax definitions for maintainability
  */
 
@@ -12,7 +12,7 @@ import { FORTIFY_CONDITIONAL_KEYWORDS } from "../syntax/mods/definitions/CONDITI
 
 export class FortifyHoverProvider implements vscode.HoverProvider {
   /**
-   * Provide hover information for Fortify Schema elements
+   * Provide hover information for ReliantType elements
    */
   provideHover(
     document: vscode.TextDocument,
@@ -294,7 +294,7 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
 
       const content = new vscode.MarkdownString();
       content.appendMarkdown(
-        `**${word}** - Fortify Schema ${typeDefinition.category} Type\n\n`
+        `**${word}** - ReliantType ${typeDefinition.category} Type\n\n`
       );
       content.appendMarkdown(`${typeDefinition.description}\n\n`);
 
@@ -327,7 +327,7 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
     if (operatorDefinition) {
       const content = new vscode.MarkdownString();
       content.appendMarkdown(
-        `**${word}** - Fortify Schema ${operatorDefinition.category} Operator\n\n`
+        `**${word}** - ReliantType ${operatorDefinition.category} Operator\n\n`
       );
       content.appendMarkdown(`${operatorDefinition.description}\n\n`);
       content.appendMarkdown("**Examples:**\n");
@@ -360,7 +360,7 @@ export class FortifyHoverProvider implements vscode.HoverProvider {
 
     if (methodDefinition) {
       const content = new vscode.MarkdownString();
-      content.appendMarkdown(`**${word}** - Fortify Schema V2 Method\n\n`);
+      content.appendMarkdown(`**${word}** - ReliantType V2 Method\n\n`);
       content.appendMarkdown(`${methodDefinition.description}\n\n`);
 
       if (isV2Method) {

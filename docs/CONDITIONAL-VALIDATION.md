@@ -1,6 +1,6 @@
 # Conditional Validation Guide
 
-Complete guide to Fortify Schema's conditional validation - from basic V1 syntax to advanced V2 runtime methods.
+Complete guide to ReliantType's conditional validation - from basic V1 syntax to advanced V2 runtime methods.
 
 ## 📚 Table of Contents
 
@@ -14,7 +14,7 @@ Complete guide to Fortify Schema's conditional validation - from basic V1 syntax
 
 ## Introduction
 
-Conditional validation allows you to create dynamic validation rules based on the values of other fields or runtime properties. Fortify Schema supports both V1 (legacy) and V2 (current) conditional validation syntax.
+Conditional validation allows you to create dynamic validation rules based on the values of other fields or runtime properties. ReliantType supports both V1 (legacy) and V2 (current) conditional validation syntax.
 
 ### Basic Concept
 
@@ -631,7 +631,7 @@ const Schema = Interface({
 
 ## 🔗 Related Documentation
 
-- **[Getting Started](./GETTING-STARTED.md)** - Basic Fortify Schema usage
+- **[Getting Started](./GETTING-STARTED.md)** - Basic ReliantType usage
 - **[Field Types Reference](./FIELD-TYPES.md)** - Complete type reference
 - **[Examples Collection](./EXAMPLES.md)** - Real-world usage patterns
 - **[Quick Reference](./QUICK-REFERENCE.md)** - Syntax cheat sheet

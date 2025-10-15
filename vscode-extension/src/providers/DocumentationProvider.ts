@@ -1,7 +1,7 @@
 /**
- * Documentation Provider for Fortify Schema
+ * Documentation Provider for ReliantType
  *
- * Provides hover documentation and definition links for Fortify Schema types and utilities.
+ * Provides hover documentation and definition links for ReliantType types and utilities.
  */
 
 import * as vscode from "vscode";
@@ -38,7 +38,7 @@ export class DocumentationProvider {
       console.log("Loading documentation from:", this.documentationPath);
       if (!fs.existsSync(this.documentationPath)) {
         console.warn(
-          "Fortify Schema documentation file not found at:",
+          "ReliantType documentation file not found at:",
           this.documentationPath
         );
         return;
@@ -52,7 +52,7 @@ export class DocumentationProvider {
         this.documentationCache.size
       );
     } catch (error) {
-      console.error("Failed to load Fortify Schema documentation:", error);
+      console.error("Failed to load ReliantType documentation:", error);
     }
   }
 

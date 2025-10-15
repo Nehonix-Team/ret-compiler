@@ -238,7 +238,7 @@ console.log("✅ Method calls (.in, .exists, .contains) work correctly");
 console.log("✅ Array handling works correctly");
 console.log("✅ Performance is excellent for production use");
 
-console.log("\n🚀 FORTIFY SCHEMA ENHANCED CONDITIONAL VALIDATION IS FULLY INTEGRATED AND WORKING!");
+console.log("\n🚀 ReliantType ENHANCED CONDITIONAL VALIDATION IS FULLY INTEGRATED AND WORKING!");
 
 // Test 6: Comparison with Original Test Issues
 console.log("\n\n6. ORIGINAL TEST ISSUES RESOLVED");
@@ -258,4 +258,4 @@ console.log("   - Full TypeScript integration");
 console.log("   - Comprehensive debugging and analysis tools");
 console.log("   - Proper test data alignment with conditional logic");
 
-console.log("\n🏆 FORTIFY SCHEMA IS NOW PRODUCTION-READY!");
+console.log("\n🏆 ReliantType IS NOW PRODUCTION-READY!");

@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We are committed to maintaining the security of Fortify Schema. The following versions are currently supported with security updates:
+We are committed to maintaining the security of ReliantType. The following versions are currently supported with security updates:
 
 | Version | Supported          | Status        |
 | ------- | ------------------ | ------------- |
@@ -11,11 +11,11 @@ We are committed to maintaining the security of Fortify Schema. The following ve
 | 1.x.x   | :x:                | End of life   |
 | < 1.0   | :x:                | End of life   |
 
-**Note**: As Fortify Schema is actively developed, we maintain support for the current minor version series (2.1.x) and the most recent major version (2.0.x) for long-term support. The current stable release is **2.1.2**.
+**Note**: As ReliantType is actively developed, we maintain support for the current minor version series (2.1.x) and the most recent major version (2.0.x) for long-term support. The current stable release is **2.1.2**.
 
 ## Security Features
 
-Fortify Schema incorporates several built-in security measures:
+ReliantType incorporates several built-in security measures:
 
 - **Secure Regex Patterns**: All string operations use secure regex patterns instead of potentially vulnerable methods
 - **Input Sanitization**: Automatic validation prevents common injection attacks
@@ -25,12 +25,12 @@ Fortify Schema incorporates several built-in security measures:
 
 ## Reporting a Vulnerability
 
-We take security vulnerabilities seriously. If you discover a security vulnerability in Fortify Schema, please follow these steps:
+We take security vulnerabilities seriously. If you discover a security vulnerability in ReliantType, please follow these steps:
 
 ### Where to Report
 
 - **Email**: Send details to `fortifyschema@gmail.com`
-- **GitHub**: For non-critical issues, you may also use [GitHub Security Advisories](https://github.com/Nehonix-Team/fortify-schema/security/advisories)
+- **GitHub**: For non-critical issues, you may also use [GitHub Security Advisories](https://github.com/Nehonix-Team/reliant-type/security/advisories)
 
 ### What to Include
 
@@ -41,7 +41,7 @@ Please include the following information in your report:
 3. **Impact Assessment**: Potential security impact and affected components
 4. **Proof of Concept**: Code example demonstrating the vulnerability (if applicable)
 5. **Suggested Fix**: If you have ideas for remediation (optional)
-6. **Environment**: Fortify Schema version, Node.js version, TypeScript version
+6. **Environment**: ReliantType version, Node.js version, TypeScript version
 
 ### Response Timeline
 
@@ -65,12 +65,12 @@ Please include the following information in your report:
 
 ## Security Best Practices
 
-When using Fortify Schema in production:
+When using ReliantType in production:
 
 1. **Keep Updated**: Always use the latest stable version
 2. **Validate Depth**: Configure appropriate depth limits for nested objects
 3. **Monitor Performance**: Watch for unusual validation patterns that might indicate attacks
-4. **Sanitize Inputs**: Use Fortify Schema as part of a comprehensive input validation strategy
+4. **Sanitize Inputs**: Use ReliantType as part of a comprehensive input validation strategy
 5. **Error Handling**: Implement proper error handling to prevent information leakage
 
 ## Responsible Disclosure
@@ -87,8 +87,8 @@ We follow responsible disclosure practices:
 For security-related questions or concerns:
 
 - **Security Team**: `support@nehonix.space`
-- **General Issues**: [GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)
-- **Community Discussion**: [GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)
+- **General Issues**: [GitHub Issues](https://github.com/Nehonix-Team/reliant-type/issues)
+- **Community Discussion**: [GitHub Discussions](https://github.com/Nehonix-Team/reliant-type/discussions)
 
 ---
 

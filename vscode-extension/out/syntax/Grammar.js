@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Grammar Generator for Fortify Schema
+ * Grammar Generator for ReliantType
  *
  * Generates TextMate grammar from centralized syntax definitions
  */
@@ -10,7 +10,7 @@ const G = require("./mods/grammar");
 const runGrammar_1 = require("./mods/grammar/runGrammar");
 class Grammar {
     /**
-     * Generate complete TextMate grammar for Fortify Schema
+     * Generate complete TextMate grammar for ReliantType
      */
     generate() {
         return G.generateFortifyGrammar();

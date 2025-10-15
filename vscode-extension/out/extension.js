@@ -1,8 +1,8 @@
 "use strict";
 /**
- * Fortify Schema VSCode Extension
+ * ReliantType VSCode Extension
  *
- * Provides syntax highlighting, autocompletion, and validation for Fortify Schema
+ * Provides syntax highlighting, autocompletion, and validation for ReliantType
  * - The revolutionary TypeScript validation library with interface-like syntax
  */
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -19,7 +19,7 @@ const FortifyColorTheme_1 = require("./themes/FortifyColorTheme");
  * Extension activation - called when the extension is activated
  */
 function activate(context) {
-    console.log("🚀 Fortify Schema extension is now active!");
+    console.log("🚀 ReliantType extension is now active!");
     // ENHANCED: Initialize documentation provider for hover and definition support
     DocumentationProvider_1.DocumentationProvider.initialize(context.extensionPath);
     // Register completion provider for TypeScript files
@@ -60,7 +60,7 @@ function activate(context) {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             diagnosticsProvider.validateDocument(editor.document);
-            vscode.window.showInformationMessage("Fortify Schema validation completed!");
+            vscode.window.showInformationMessage("ReliantType validation completed!");
         }
     });
     const generateTypesCommand = vscode.commands.registerCommand("fortify.generateTypes", () => {
@@ -112,7 +112,7 @@ function activate(context) {
         // Show in output channel for better formatting
         const outputChannel = vscode.window.createOutputChannel("Fortify Color Schemes");
         outputChannel.clear();
-        outputChannel.appendLine("Nehonix Fortify Schema - Available Color Schemes");
+        outputChannel.appendLine("Nehonix ReliantType - Available Color Schemes");
         outputChannel.appendLine("=".repeat(50));
         outputChannel.appendLine("");
         schemes.forEach((scheme, index) => {
@@ -124,14 +124,14 @@ function activate(context) {
     });
     const cleanupThemesCommand = vscode.commands.registerCommand("fortify.cleanupThemes", async () => {
         try {
-            const result = await vscode.window.showWarningMessage("This will remove all Fortify Schema color customizations from your VSCode settings. Would you like to continue?", { modal: true }, "Yes, Remove Themes", "Cancel");
+            const result = await vscode.window.showWarningMessage("This will remove all ReliantType color customizations from your VSCode settings. Would you like to continue?", { modal: true }, "Yes, Remove Themes", "Cancel");
             if (result === "Yes, Remove Themes") {
                 const success = await cleanupFortifySettings();
                 if (success) {
-                    vscode.window.showInformationMessage("✅ Fortify Schema themes and settings have been removed successfully!");
+                    vscode.window.showInformationMessage("✅ ReliantType themes and settings have been removed successfully!");
                 }
                 else {
-                    vscode.window.showErrorMessage("❌ Failed to remove some Fortify Schema settings. Please check the output panel.");
+                    vscode.window.showErrorMessage("❌ Failed to remove some ReliantType settings. Please check the output panel.");
                 }
             }
         }
@@ -148,15 +148,15 @@ function activate(context) {
         FortifyColorTheme_1.FortifyColorThemeManager.applyColorScheme(currentScheme);
     }
     // Show welcome message
-    vscode.window.showInformationMessage("✨ Fortify Schema extension loaded! Enhanced syntax highlighting and IntelliSense are now active.");
+    vscode.window.showInformationMessage("✨ ReliantType extension loaded! Enhanced syntax highlighting and IntelliSense are now active.");
 }
 exports.activate = activate;
 /**
- * Cleanup all Fortify Schema settings and themes
+ * Cleanup all ReliantType settings and themes
  */
 async function cleanupFortifySettings() {
     try {
-        console.log("🧹 Cleaning up Fortify Schema settings...");
+        console.log("🧹 Cleaning up ReliantType settings...");
         // Remove color scheme customizations
         const colorCleanupSuccess = await FortifyColorTheme_1.FortifyColorThemeManager.removeColorScheme(vscode.ConfigurationTarget.Global);
         // Remove Fortify-specific configuration settings
@@ -188,11 +188,11 @@ async function cleanupFortifySettings() {
                 await allConfig.update("editor.semanticTokenColorCustomizations", { ...semanticTokens, rules: cleanedRules }, vscode.ConfigurationTarget.Global);
             }
         }
-        console.log("✅ Fortify Schema settings cleanup completed");
+        console.log("✅ ReliantType settings cleanup completed");
         return colorCleanupSuccess;
     }
     catch (error) {
-        console.error("❌ Failed to cleanup Fortify Schema settings:", error);
+        console.error("❌ Failed to cleanup ReliantType settings:", error);
         return false;
     }
 }
@@ -201,31 +201,31 @@ async function cleanupFortifySettings() {
  * Now includes automatic cleanup of themes and settings
  */
 async function deactivate() {
-    console.log("👋 Fortify Schema extension deactivating...");
+    console.log("👋 ReliantType extension deactivating...");
     try {
         // Show cleanup option to user
-        const shouldCleanup = await vscode.window.showInformationMessage("Fortify Schema extension is being deactivated. Would you like to remove the color themes and settings?", { modal: false }, "Yes, Clean Up", "No, Keep Settings");
+        const shouldCleanup = await vscode.window.showInformationMessage("ReliantType extension is being deactivated. Would you like to remove the color themes and settings?", { modal: false }, "Yes, Clean Up", "No, Keep Settings");
         if (shouldCleanup === "Yes, Clean Up") {
             const success = await cleanupFortifySettings();
             if (success) {
-                vscode.window.showInformationMessage("✅ Fortify Schema themes and settings have been removed. Your VSCode theme is now back to default.");
+                vscode.window.showInformationMessage("✅ ReliantType themes and settings have been removed. Your VSCode theme is now back to default.");
             }
             else {
-                vscode.window.showWarningMessage("⚠️ Some Fortify Schema settings could not be removed automatically. You may need to reset your color theme manually.");
+                vscode.window.showWarningMessage("⚠️ Some ReliantType settings could not be removed automatically. You may need to reset your color theme manually.");
             }
         }
         else {
-            vscode.window.showInformationMessage("Fortify Schema settings have been kept. You can manually remove them using the 'Fortify: Cleanup Themes' command if needed.");
+            vscode.window.showInformationMessage("ReliantType settings have been kept. You can manually remove them using the 'Fortify: Cleanup Themes' command if needed.");
         }
     }
     catch (error) {
         console.error("Error during extension deactivation:", error);
     }
-    console.log("👋 Fortify Schema extension deactivated");
+    console.log("👋 ReliantType extension deactivated");
 }
 exports.deactivate = deactivate;
 /**
- * Utility function to check if a string contains Fortify Schema syntax
+ * Utility function to check if a string contains ReliantType syntax
  */
 function isFortifySchema(text) {
     // Check for common Fortify patterns
@@ -243,7 +243,7 @@ function isFortifySchema(text) {
 }
 exports.isFortifySchema = isFortifySchema;
 /**
- * Extract Fortify schema strings from TypeScript code
+ * Extract ReliantType strings from TypeScript code
  */
 function extractSchemaStrings(text) {
     const results = [];

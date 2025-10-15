@@ -1,8 +1,8 @@
 "use strict";
 /**
- * Documentation Provider for Fortify Schema
+ * Documentation Provider for ReliantType
  *
- * Provides hover documentation and definition links for Fortify Schema types and utilities.
+ * Provides hover documentation and definition links for ReliantType types and utilities.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DocumentationProvider = void 0;
@@ -24,7 +24,7 @@ class DocumentationProvider {
         try {
             console.log("Loading documentation from:", this.documentationPath);
             if (!fs.existsSync(this.documentationPath)) {
-                console.warn("Fortify Schema documentation file not found at:", this.documentationPath);
+                console.warn("ReliantType documentation file not found at:", this.documentationPath);
                 return;
             }
             const content = fs.readFileSync(this.documentationPath, "utf8");
@@ -33,7 +33,7 @@ class DocumentationProvider {
             console.log("Documentation parsed, cache size:", this.documentationCache.size);
         }
         catch (error) {
-            console.error("Failed to load Fortify Schema documentation:", error);
+            console.error("Failed to load ReliantType documentation:", error);
         }
     }
     /**

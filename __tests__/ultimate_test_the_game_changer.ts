@@ -1,12 +1,12 @@
 /**
  * Ultimate Test: The Game Changer
  *
- * This test is designed to push the limits of the Fortify Schema system
+ * This test is designed to push the limits of the ReliantType system
  * It includes complex, real-world scenarios that challenge the system's capabilities
  * The goal is to identify and fix any remaining bugs or performance issues
  *
  * This test is the final step before a major release and a celebration!
- * If this passes, we're ready to unleash Fortify Schema on the world!
+ * If this passes, we're ready to unleash ReliantType on the world!
  */
 
 import { Interface } from "../core/schema/mode/interfaces/Interface";

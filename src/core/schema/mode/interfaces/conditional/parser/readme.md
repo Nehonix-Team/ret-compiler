@@ -1,8 +1,8 @@
-# Fortify Schema Conditional Parser - Complete Guide
+# ReliantType Conditional Parser - Complete Guide
 
 ## Overview
 
-The `ConditionalParser` is responsible for parsing conditional validation expressions in Fortify Schema into an Abstract Syntax Tree (AST). It handles complex syntax like:
+The `ConditionalParser` is responsible for parsing conditional validation expressions in ReliantType into an Abstract Syntax Tree (AST). It handles complex syntax like:
 
 ```typescript
 "when role=admin *? string[] : string[]?"
@@ -403,4 +403,4 @@ const errorResult = parser.parse("when field= *? string"); // Missing value
 const nestedResult = parser.parse("when a=1 *? when b=2 *? string : number : boolean");
 ```
 
-This parser is the core of Fortify Schema's conditional validation system, enabling powerful, readable validation logic with full TypeScript support.
+This parser is the core of ReliantType's conditional validation system, enabling powerful, readable validation logic with full TypeScript support.

@@ -1,4 +1,4 @@
-# Quick Fortify Schema VSCode Cleanup
+# Quick ReliantType VSCode Cleanup
 # One-liner script for immediate cleanup
 
 $settingsPath = "$env:APPDATA\Code\User\settings.json"

@@ -5,7 +5,7 @@
  *
  * @example
  * ```typescript
- * import { Interface as IF} from "fortify-schema";
+ * import { Interface as IF} from "reliant-type";
  *
  * // Define schema like a TypeScript interface
  * const UserSchema = IF({
@@ -144,7 +144,7 @@ function convertMakeObjectsToStrings(definition: any): any {
  *     quantity: "int"
  *   }]
  * });
- * ```
+ * ``` 
  */
 export function Interface<const T extends SchemaInterface>(
   definition: T,

@@ -15,7 +15,7 @@ function runGrammar() {
         fs.mkdirSync(syntaxesDir, { recursive: true });
     }
     grammar.write(outputPath);
-    console.log("✅ Generated Fortify Schema grammar file");
+    console.log("✅ Generated ReliantType grammar file");
 }
 exports.runGrammar = runGrammar;
 //# sourceMappingURL=runGrammar.js.map

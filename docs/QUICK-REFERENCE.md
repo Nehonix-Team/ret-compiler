@@ -1,11 +1,11 @@
 # Quick Reference
 
-Fast reference guide for Fortify Schema syntax, types, and patterns.
+Fast reference guide for ReliantType syntax, types, and patterns.
 
 ## 🚀 Basic Usage
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const Schema = Interface({
   // Your schema definition

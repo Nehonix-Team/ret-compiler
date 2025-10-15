@@ -1,5 +1,5 @@
 {
-  "name": "fortify-schema",
+  "name": "reliant-type",
   "version": "2.1.2",
   "description": "A modern TypeScript validation library designed around familiar interface syntax and powerful conditional validation. Experience schema validation that feels natural to TypeScript developers while unlocking advanced runtime validation capabilities.",
   "main": "dist/cjs/index.js",
@@ -182,12 +182,12 @@
   "license": "MIT License",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nehonix-Team/fortify-schema.git"
+    "url": "https://github.com/Nehonix-Team/reliant-type.git"
   },
   "bugs": {
-    "url": "https://github.com/Nehonix-Team/fortify-schema/issues"
+    "url": "https://github.com/Nehonix-Team/reliant-type/issues"
   },
-  "homepage": "https://github.com/Nehonix-Team/fortify-schema#readme",
+  "homepage": "https://github.com/Nehonix-Team/reliant-type#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-json": "^6.0.0",

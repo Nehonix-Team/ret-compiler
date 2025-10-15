@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Semantic Tokens Provider for Fortify Schema
+ * Semantic Tokens Provider for ReliantType
  *
  * Provides enhanced syntax highlighting using VSCode's semantic tokens API
  * - More precise token classification than TextMate grammars
@@ -24,7 +24,7 @@ var FortifyTokenModifier;
     FortifyTokenModifier["Async"] = "async";
 })(FortifyTokenModifier = exports.FortifyTokenModifier || (exports.FortifyTokenModifier = {}));
 /**
- * Semantic tokens provider for Fortify Schema syntax
+ * Semantic tokens provider for ReliantType syntax
  */
 class FortifySemanticTokensProvider {
     /**
@@ -33,7 +33,7 @@ class FortifySemanticTokensProvider {
     provideDocumentSemanticTokens(document, token) {
         const tokensBuilder = new vscode.SemanticTokensBuilder(FortifySemanticTokensProvider.legend);
         const text = document.getText();
-        // Extract Fortify schema strings ONLY from Interface({...}) blocks
+        // Extract ReliantType strings ONLY from Interface({...}) blocks
         const schemaStrings = this.extractSchemaStrings(text, document);
         for (const schemaString of schemaStrings) {
             if (token.isCancellationRequested) {
@@ -45,7 +45,7 @@ class FortifySemanticTokensProvider {
         return tokensBuilder.build();
     }
     /**
-     * Extracts Fortify Schema strings ONLY from Interface({...}) blocks
+     * Extracts ReliantType strings ONLY from Interface({...}) blocks
      * This ensures syntax highlighting is only applied where it's relevant
      */
     extractSchemaStrings(text, document) {
@@ -145,7 +145,7 @@ class FortifySemanticTokensProvider {
         return blocks.some((block) => lineIndex >= block.start && lineIndex <= block.end);
     }
     /**
-     * Determines if a string could potentially be a Fortify schema string
+     * Determines if a string could potentially be a ReliantType string
      */
     couldBeSchemaString(value) {
         // Skip obvious non-schema strings
@@ -166,7 +166,7 @@ class FortifySemanticTokensProvider {
         return true;
     }
     /**
-     * Tokenize a single Fortify schema string
+     * Tokenize a single ReliantType string
      */
     tokenizeSchemaString(document, schemaText, startPosition, tokensBuilder) {
         // Calculate the absolute offset from the position

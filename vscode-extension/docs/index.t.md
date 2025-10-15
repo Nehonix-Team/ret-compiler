@@ -1,13 +1,13 @@
-# Fortify Schema Reference Documentation
+# ReliantType Reference Documentation
 
-Fortify Schema is a TypeScript-first validation library designed around familiar interface syntax and powerful conditional validation. This reference documentation provides a comprehensive guide to all available types, modifiers, constraints, utility functions, union types, and conditional logic supported by Fortify Schema.
+ReliantType is a TypeScript-first validation library designed around familiar interface syntax and powerful conditional validation. This reference documentation provides a comprehensive guide to all available types, modifiers, constraints, utility functions, union types, and conditional logic supported by ReliantType.
 
 _Powered by [Nehonix](https://nehonix.space) - Empowering developers since 2025._
-_See full documentation on [GitHub](https://github.com/Nehonix-Team/fortify-schema) or via [lab.nehonix.space](https://lab.nehonix.space)_
+_See full documentation on [GitHub](https://github.com/Nehonix-Team/reliant-type) or via [lab.nehonix.space](https://lab.nehonix.space)_
 
 ## 🆕 Latest Features
 
-Fortify Schema is constantly evolving to provide the best developer experience. The latest features include:
+ReliantType is constantly evolving to provide the best developer experience. The latest features include:
 
 - **Required Fields (`!`)**: Enforce non-empty strings and non-zero numbers
 - **Object Types**: Validate generic object structures with `"object"`

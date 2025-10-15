@@ -1,7 +1,7 @@
 import { MethodDefinition } from "../../../types";
 
 /**
- * Fortify Schema methods for conditional validation, providing TypeScript-like
+ * ReliantType methods for conditional validation, providing TypeScript-like
  * method syntax that's more intuitive.
  */
 export const FORTIFY_METHODS: MethodDefinition[] = [

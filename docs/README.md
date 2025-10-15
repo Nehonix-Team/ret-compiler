@@ -1,6 +1,6 @@
-# Fortify Schema Documentation
+# ReliantType Documentation
 
-Welcome to the comprehensive documentation for Fortify Schema - the TypeScript-first validation library with interface-native syntax.
+Welcome to the comprehensive documentation for ReliantType - the TypeScript-first validation library with interface-native syntax.
 
 ## 📚 Documentation Index
 
@@ -37,7 +37,7 @@ Welcome to the comprehensive documentation for Fortify Schema - the TypeScript-f
 
 ## 🚀 Quick Navigation
 
-### **New to Fortify Schema?**
+### **New to ReliantType?**
 
 1. Start with **[Getting Started](./GETTING-STARTED.md)**
 2. Learn the basics with **[Basic Examples](./BASIC-EXAMPLES.md)**
@@ -71,7 +71,7 @@ Welcome to the comprehensive documentation for Fortify Schema - the TypeScript-f
 
 ### **Interface-Native Syntax**
 
-Fortify Schema uses TypeScript interface-like syntax for intuitive schema definition:
+ReliantType uses TypeScript interface-like syntax for intuitive schema definition:
 
 ```typescript
 const UserSchema = Interface({
@@ -175,8 +175,8 @@ Built-in performance tracking and optimization:
 
 ### **Getting Help**
 
-- **[GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)** - Bug reports and feature requests
-- **[GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)** - Community Q&A
+- **[GitHub Issues](https://github.com/Nehonix-Team/reliant-type/issues)** - Bug reports and feature requests
+- **[GitHub Discussions](https://github.com/Nehonix-Team/reliant-type/discussions)** - Community Q&A
 - **[Examples Collection](./EXAMPLES.md)** - Real-world usage patterns
 
 ### **Contributing**
@@ -189,7 +189,7 @@ Built-in performance tracking and optimization:
 
 - **[Enterprise Features](./ENTERPRISE.md)** - Enterprise-specific capabilities
 - **[API Stability](./API-STABILITY.md)** - Production guarantees
-- **Email**: https://github.com/Nehonix-Team/fortify-schema/discussions
+- **Email**: https://github.com/Nehonix-Team/reliant-type/discussions
 
 ## 🎉 Ready to Start?
 

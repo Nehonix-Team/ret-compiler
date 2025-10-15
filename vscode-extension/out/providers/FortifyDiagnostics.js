@@ -4,17 +4,17 @@ exports.FortifyDiagnosticsProvider = void 0;
 const vscode = require("vscode");
 const FortifySyntaxDefinitions_1 = require("../syntax/FortifySyntaxDefinitions");
 /**
- * Provides diagnostics for Fortify Schema strings in TypeScript/JavaScript files.
+ * Provides diagnostics for ReliantType strings in TypeScript/JavaScript files.
  * Validates schema syntax with a focus on simplicity and accuracy, ensuring a
  * TypeScript-like experience that's easier than alternatives like Zod.
  */
 class FortifyDiagnosticsProvider {
     constructor() {
         this.diagnosticCollection =
-            vscode.languages.createDiagnosticCollection("fortify-schema");
+            vscode.languages.createDiagnosticCollection("reliant-type");
     }
     /**
-     * Updates diagnostics for the given document by analyzing Fortify Schema strings.
+     * Updates diagnostics for the given document by analyzing ReliantType strings.
      * @param document The text document to analyze
      */
     updateDiagnostics(document) {
@@ -42,10 +42,10 @@ class FortifyDiagnosticsProvider {
         const errorCount = diagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Error).length;
         const warningCount = diagnostics.filter((d) => d.severity === vscode.DiagnosticSeverity.Warning).length;
         if (errorCount === 0 && warningCount === 0) {
-            vscode.window.showInformationMessage("✅ No Fortify Schema issues found!");
+            vscode.window.showInformationMessage("✅ No ReliantType issues found!");
         }
         else {
-            vscode.window.showWarningMessage(`Found ${errorCount} error(s) and ${warningCount} warning(s) in Fortify Schema`);
+            vscode.window.showWarningMessage(`Found ${errorCount} error(s) and ${warningCount} warning(s) in ReliantType`);
         }
     }
     /**
@@ -156,7 +156,7 @@ class FortifyDiagnosticsProvider {
         return false;
     }
     /**
-     * Extracts Fortify Schema strings from the document, ensuring only strings within
+     * Extracts ReliantType strings from the document, ensuring only strings within
      * Interface({...}) blocks are considered for validation.
      * @param text The document text
      * @returns Array of schema strings with their ranges
@@ -330,7 +330,7 @@ class FortifyDiagnosticsProvider {
         return makeUnionPattern.test(beforeString);
     }
     /**
-     * Determines if a string could potentially be a Fortify schema string.
+     * Determines if a string could potentially be a ReliantType string.
      * More permissive than the original containsSchemaPattern for Interface contexts.
      */
     couldBeSchemaString(value) {
@@ -352,7 +352,7 @@ class FortifyDiagnosticsProvider {
         return true;
     }
     /**
-     * Validates a Fortify Schema string, delegating to specific validation methods
+     * Validates a ReliantType string, delegating to specific validation methods
      * based on schema type (conditional, union, constant, or regular).
      * @param schema The schema string to validate
      * @param range The range of the schema string in the document

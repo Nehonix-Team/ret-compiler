@@ -1,7 +1,7 @@
 /**
  * Automaticly publish ext to sdk.
- * Src: https://sdk.nehonix.space/sdks/pkgs/mods/vscode/['version' or 'latest']/fortify-schema.vsix
- * VFile: fortify-schema-vscode-0.1.0.vsix
+ * Src: https://sdk.nehonix.space/sdks/pkgs/mods/vscode/['version' or 'latest']/reliant-type.vsix
+ * VFile: reliant-type-vscode-0.1.0.vsix
  */
 
 const fs = require("fs");
@@ -14,7 +14,7 @@ console.log("Pushing extension 👨‍🦼🏃‍♂️");
 const src = "./pkgs/mods/vscode";
 
 //name for the ext
-const extName = "fortify-schema-vscode";
+const extName = "reliant-type-vscode";
 
 const extModule = ".";
 
@@ -43,7 +43,7 @@ try {
 try {
   const stockVersion = [version, "latest"];
   for (const v of stockVersion) {
-    const stockPath = p.join(__dirname, src, `${v}/fortify-schema.vsix`);
+    const stockPath = p.join(__dirname, src, `${v}/reliant-type.vsix`);
     const stockDir = p.dirname(stockPath);
     console.log("Storing to: ", stockDir);
     if (!fs.existsSync(stockDir)) {

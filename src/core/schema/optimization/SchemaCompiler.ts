@@ -257,8 +257,21 @@ export class SchemaCompiler {
     return (value: any) => {
       if (!InterfaceSchema) {
         // Lazy load InterfaceSchema to avoid circular dependency
-        InterfaceSchema =
-          require("../mode/interfaces/InterfaceSchema").InterfaceSchema;
+        try {
+          // Use dynamic import for better compatibility
+          const module = eval('require')("../mode/interfaces/InterfaceSchema");
+          InterfaceSchema = module.InterfaceSchema;
+        } catch (e) {
+          // Fallback - this shouldn't happen in normal operation
+          console.warn("Could not load InterfaceSchema:", e);
+          return {
+            success: false,
+            errors: [{ message: "Schema compilation failed", path: [], code: "COMPILATION_ERROR" }],
+            warnings: [],
+            data: value,
+          };
+        }
+
         tempSchema = new InterfaceSchema(schema, {
           ...options,
           skipOptimization: true,
@@ -285,8 +298,7 @@ export class SchemaCompiler {
 
         const initializeSchema = () => {
           if (!InterfaceSchema) {
-            InterfaceSchema =
-              require("../mode/interfaces/InterfaceSchema").InterfaceSchema;
+            InterfaceSchema = eval('require')("../mode/interfaces/InterfaceSchema").InterfaceSchema;
             tempSchema = new InterfaceSchema(
               { temp: fieldType },
               {

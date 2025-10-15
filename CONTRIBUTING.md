@@ -1,6 +1,6 @@
-# Contributing to Fortify Schema
+# Contributing to ReliantType
 
-Thank you for your interest in contributing to Fortify Schema. This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to ReliantType. This document provides guidelines and information for contributors.
 
 ## Table of Contents
 
@@ -32,8 +32,8 @@ We are committed to providing a welcoming and inclusive environment for all cont
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/your-username/fortify-schema.git
-   cd fortify-schema
+   git clone https://github.com/your-username/reliant-type.git
+   cd reliant-type
    ```
 
 3. Install dependencies:
@@ -325,4 +325,4 @@ Contributors are recognized in:
 - Release notes for significant contributions
 - GitHub contributor graphs
 
-Thank you for contributing to Fortify Schema and helping make TypeScript validation better for everyone.
+Thank you for contributing to ReliantType and helping make TypeScript validation better for everyone.

@@ -1,6 +1,6 @@
 # Examples Collection
 
-Real-world examples and patterns for Fortify Schema usage across different domains and use cases.
+Real-world examples and patterns for ReliantType usage across different domains and use cases.
 
 ## 📚 Table of Contents
 
@@ -18,7 +18,7 @@ Real-world examples and patterns for Fortify Schema usage across different domai
 ### User Registration Schema
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const UserRegistrationSchema = Interface({
   // Basic information
@@ -873,4 +873,4 @@ const EmployeeSchema = Interface({
 });
 ```
 
-These examples demonstrate real-world usage patterns across various domains, showing how Fortify Schema can handle complex validation requirements while maintaining type safety and readability.
+These examples demonstrate real-world usage patterns across various domains, showing how ReliantType can handle complex validation requirements while maintaining type safety and readability.

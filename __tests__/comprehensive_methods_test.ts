@@ -1,7 +1,7 @@
 /**
  * COMPREHENSIVE CONDITIONAL METHODS TEST
  *
- * This test systematically validates ALL conditional validation methods in Fortify Schema V2
+ * This test systematically validates ALL conditional validation methods in ReliantType V2
  * Each method is tested with multiple scenarios including edge cases and error conditions
  *
  * METHODS TESTED:

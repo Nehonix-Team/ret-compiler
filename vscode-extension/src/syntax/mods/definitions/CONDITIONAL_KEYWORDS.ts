@@ -1,7 +1,7 @@
 import { ConditionalKeyword } from "../../../types";
 
 /**
- * Fortify Schema conditional keywords for defining dynamic validation rules.
+ * ReliantType conditional keywords for defining dynamic validation rules.
  * Provides a straightforward, TypeScript-like syntax for conditionals
  */
 export const FORTIFY_CONDITIONAL_KEYWORDS: ConditionalKeyword[] = [

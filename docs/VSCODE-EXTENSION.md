@@ -1,6 +1,6 @@
 # VS Code Extension Guide
 
-Complete guide to the Fortify Schema VS Code extension - your professional development companion for TypeScript-first validation.
+Complete guide to the ReliantType VS Code extension - your professional development companion for TypeScript-first validation.
 
 ## 🚀 Installation
 
@@ -8,10 +8,10 @@ Complete guide to the Fortify Schema VS Code extension - your professional devel
 
 ```bash
 # Download the latest extension
-curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
+curl -L https://sdk.nehonix.space/pkgs/mods/vscode/latest/reliant-type.vsix -o reliant-type.vsix
 
 # Install in VS Code
-code --install-extension fortify-schema.vsix
+code --install-extension reliant-type.vsix
 ```
 
 ### Method 2: VS Code Marketplace 
@@ -21,7 +21,7 @@ The extension will be available on the VS Code Marketplace soon. For now, use th
 ### Verification
 
 After installation, you should see:
-- ✅ "Fortify Schema extension loaded!" notification
+- ✅ "ReliantType extension loaded!" notification
 - ✅ Enhanced syntax highlighting in TypeScript files
 - ✅ IntelliSense suggestions in `Interface({...})` blocks
 
@@ -33,7 +33,7 @@ After installation, you should see:
 - **Professional color themes** - Multiple color schemes to choose from
 
 ### 🧠 Intelligent IntelliSense
-- **Type autocompletion** - All Fortify Schema types with constraints
+- **Type autocompletion** - All ReliantType types with constraints
 - **V2 method completion** - Smart suggestions for `.$method()` syntax
 - **Property suggestions** - Auto-complete schema properties in conditionals
 - **Context-aware** - Only suggests relevant completions
@@ -59,7 +59,7 @@ After installation, you should see:
 
 ### Syntax Highlighting
 
-The extension provides professional syntax highlighting that activates only within Fortify Schema contexts:
+The extension provides professional syntax highlighting that activates only within ReliantType contexts:
 
 ```typescript
 const UserSchema = Interface({
@@ -191,7 +191,7 @@ const Schema = Interface({
 
 ### Hover Documentation
 
-Hover over any Fortify Schema element for detailed information:
+Hover over any ReliantType element for detailed information:
 
 #### Type Documentation
 
@@ -446,13 +446,13 @@ Remove from `.vscode/settings.json`:
 
 ## 🔗 Related Documentation
 
-- **[Getting Started](./GETTING-STARTED.md)** - Basic Fortify Schema usage
+- **[Getting Started](./GETTING-STARTED.md)** - Basic ReliantType usage
 - **[Field Types Reference](./FIELD-TYPES.md)** - Complete type reference
 - **[Conditional Validation](./CONDITIONAL-VALIDATION.md)** - V2 conditional syntax
 - **[Quick Reference](./QUICK-REFERENCE.md)** - Syntax cheat sheet
 
 ## 🤝 Support
 
-- **[GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)** - Bug reports and feature requests
-- **[GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)** - Community Q&A
+- **[GitHub Issues](https://github.com/Nehonix-Team/reliant-type/issues)** - Bug reports and feature requests
+- **[GitHub Discussions](https://github.com/Nehonix-Team/reliant-type/discussions)** - Community Q&A
 - **Email**: support@nehonix.space

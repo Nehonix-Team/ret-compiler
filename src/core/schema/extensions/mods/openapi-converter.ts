@@ -1,7 +1,7 @@
 /**
  * OpenAPI Converter - Convert schemas to OpenAPI specifications
  * 
- * This module provides utilities to convert Fortify Schema definitions
+ * This module provides utilities to convert ReliantType definitions
  * to OpenAPI 3.0 specifications for API documentation.
  */
 

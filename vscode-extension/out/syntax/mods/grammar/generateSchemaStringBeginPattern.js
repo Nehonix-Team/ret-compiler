@@ -26,7 +26,7 @@ function generateSchemaStringBeginPattern() {
 exports.generateSchemaStringBeginPattern = generateSchemaStringBeginPattern;
 /**
  * Generate the begin pattern for single quote schema strings
- * ENHANCED: Support single quotes for Fortify schema strings
+ * ENHANCED: Support single quotes for ReliantType strings
  */
 function generateSchemaSingleQuoteBeginPattern() {
     // Create a lookahead pattern that matches single-quoted strings containing any Fortify syntax

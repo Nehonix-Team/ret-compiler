@@ -1,5 +1,5 @@
 /**
- * Grammar Generator for Fortify Schema
+ * Grammar Generator for ReliantType
  *
  * Generates TextMate grammar from centralized syntax definitions
  */
@@ -9,7 +9,7 @@ import { runGrammar } from "./mods/grammar/runGrammar";
 
 export class Grammar { 
   /**
-   * Generate complete TextMate grammar for Fortify Schema
+   * Generate complete TextMate grammar for ReliantType
    */
   public generate(): any {
     return G.generateFortifyGrammar();

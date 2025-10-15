@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { FortifySyntaxUtils } from "../syntax/FortifySyntaxDefinitions";
 
 /**
- * Provides diagnostics for Fortify Schema strings in TypeScript/JavaScript files.
+ * Provides diagnostics for ReliantType strings in TypeScript/JavaScript files.
  * Validates schema syntax with a focus on simplicity and accuracy, ensuring a
  * TypeScript-like experience that's easier than alternatives like Zod.
  */
@@ -11,11 +11,11 @@ export class FortifyDiagnosticsProvider {
 
   constructor() {
     this.diagnosticCollection =
-      vscode.languages.createDiagnosticCollection("fortify-schema");
+      vscode.languages.createDiagnosticCollection("reliant-type");
   }
 
   /**
-   * Updates diagnostics for the given document by analyzing Fortify Schema strings.
+   * Updates diagnostics for the given document by analyzing ReliantType strings.
    * @param document The text document to analyze
    */
   public updateDiagnostics(document: vscode.TextDocument): void {
@@ -55,11 +55,11 @@ export class FortifyDiagnosticsProvider {
 
     if (errorCount === 0 && warningCount === 0) {
       vscode.window.showInformationMessage(
-        "✅ No Fortify Schema issues found!"
+        "✅ No ReliantType issues found!"
       );
     } else {
       vscode.window.showWarningMessage(
-        `Found ${errorCount} error(s) and ${warningCount} warning(s) in Fortify Schema`
+        `Found ${errorCount} error(s) and ${warningCount} warning(s) in ReliantType`
       );
     }
   }
@@ -201,7 +201,7 @@ export class FortifyDiagnosticsProvider {
   }
 
   /**
-   * Extracts Fortify Schema strings from the document, ensuring only strings within
+   * Extracts ReliantType strings from the document, ensuring only strings within
    * Interface({...}) blocks are considered for validation.
    * @param text The document text
    * @returns Array of schema strings with their ranges
@@ -430,7 +430,7 @@ export class FortifyDiagnosticsProvider {
   }
 
   /**
-   * Determines if a string could potentially be a Fortify schema string.
+   * Determines if a string could potentially be a ReliantType string.
    * More permissive than the original containsSchemaPattern for Interface contexts.
    */
   private couldBeSchemaString(value: string): boolean {
@@ -458,7 +458,7 @@ export class FortifyDiagnosticsProvider {
   }
 
   /**
-   * Validates a Fortify Schema string, delegating to specific validation methods
+   * Validates a ReliantType string, delegating to specific validation methods
    * based on schema type (conditional, union, constant, or regular).
    * @param schema The schema string to validate
    * @param range The range of the schema string in the document

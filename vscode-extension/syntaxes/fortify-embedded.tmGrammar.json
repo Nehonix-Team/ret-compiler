@@ -1,5 +1,5 @@
 {
-  "name": "Nehonix Fortify Schema Embedded",
+  "name": "Nehonix ReliantType Embedded",
   "scopeName": "source.ts.fortify",
   "injectionSelector": "L:source.ts -comment -string, L:source.tsx -comment -string",
   "patterns": [
@@ -49,7 +49,7 @@
           "contentName": "string.quoted.double.fortify.schema",
           "patterns": [
             {
-              "include": "#fortify-schema-content"
+              "include": "#reliant-type-content"
             }
           ]
         },
@@ -73,7 +73,7 @@
           "contentName": "string.quoted.single.fortify.schema",
           "patterns": [
             {
-              "include": "#fortify-schema-content"
+              "include": "#reliant-type-content"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "contentName": "string.template.fortify.schema",
           "patterns": [
             {
-              "include": "#fortify-schema-content"
+              "include": "#reliant-type-content"
             },
             {
               "include": "#fortify-template-expressions"
@@ -130,7 +130,7 @@
         }
       ]
     },
-    "fortify-schema-content": {
+    "reliant-type-content": {
       "patterns": [
         {
           "include": "#fortify-conditional-syntax"

@@ -664,7 +664,7 @@ export class Mod {
   /**
    * Create a strict version of a schema that rejects any additional properties
    *
-   * By default, Fortify Schema ignores extra properties in the input data (they're
+   * By default, ReliantType ignores extra properties in the input data (they're
    * simply not included in the validated output). The `strict()` method changes this
    * behavior to actively reject any properties that aren't defined in the schema,
    * making validation fail with an error.
@@ -785,7 +785,7 @@ export class Mod {
   /**
    * Create a passthrough version of a schema that preserves additional properties
    *
-   * By default, Fortify Schema ignores extra properties in the input data (they're
+   * By default, ReliantType ignores extra properties in the input data (they're
    * not included in the validated output). The `passthrough()` method changes this
    * behavior to explicitly include all additional properties in the validated result,
    * effectively making the schema more permissive.

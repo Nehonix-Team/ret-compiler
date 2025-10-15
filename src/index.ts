@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Fortify Schema - TypeScript Interface-like Schema Validation
+ *  ReliantType - TypeScript Interface-like Schema Validation
  *
  * @file index.ts
  *
@@ -29,14 +29,14 @@
  ****************************************************************************/
 
 /**
- * Fortify Schema - TypeScript Interface-like Schema Validation
+ * ReliantType - TypeScript Interface-like Schema Validation
  *
  * A schema validation system with TypeScript interface-like syntax
  * that's incredibly easy to use and much safer than traditional schema libraries.
  *
  * @example Interface-based (Recommended)
  * ```typescript
- * import { Interface, Make, Mod } from 'fortify-schema';
+ * import { Interface, Make, Mod } from 'reliant-type';
  *
  * const UserSchema = Interface({
  *   id: "number",
@@ -56,7 +56,7 @@
  *
  * @example Traditional Fluent API
  * ```typescript
- * import { Schema } from 'fortify-schema';
+ * import { Schema } from 'reliant-type';
  *
  * const UserSchema = Schema.object({
  *   id: Schema.number().int().positive(),

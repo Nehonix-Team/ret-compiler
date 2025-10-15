@@ -1,5 +1,5 @@
 /**
- * Comprehensive Edge Case Test Suite for Fortify Schema
+ * Comprehensive Edge Case Test Suite for ReliantType
  *
  * These tests focus on boundary conditions and edge cases that could break the system
  */

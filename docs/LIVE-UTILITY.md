@@ -1,6 +1,6 @@
 # Live Utility - Comprehensive Guide
 
-The Live utility transforms Fortify Schema into a powerful real-time validation system with full EventEmitter-like interface, data transformation pipelines, and stream control methods. This guide covers all features and use cases.
+The Live utility transforms ReliantType into a powerful real-time validation system with full EventEmitter-like interface, data transformation pipelines, and stream control methods. This guide covers all features and use cases.
 
 ## Table of Contents
 
@@ -48,7 +48,7 @@ The Live utility provides three main components:
 ## Installation & Setup
 
 ```typescript
-import { Live, Interface } from "fortify-schema";
+import { Live, Interface } from "reliant-type";
 
 // Define your schema
 const UserSchema = Interface({

@@ -1,8 +1,8 @@
 # FortiFySchema VSCode Extension
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/NEHONIX.fortify-schema-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.fortify-schema-vscode)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/NEHONIX.fortify-schema-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.fortify-schema-vscode)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/NEHONIX.fortify-schema-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.fortify-schema-vscode)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/NEHONIX.reliant-type-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.reliant-type-vscode)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/NEHONIX.reliant-type-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.reliant-type-vscode)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/NEHONIX.reliant-type-vscode)](https://marketplace.visualstudio.com/items?itemName=NEHONIX.reliant-type-vscode)
 
 **Professional TypeScript validation with intelligent IDE support**
 
@@ -57,19 +57,19 @@ This extension is designed to be **non-intrusive** and **context-aware**:
 **From Command Line:**
 
 ```bash
-code --install-extension NEHONIX.fortify-schema-vscode
+code --install-extension NEHONIX.reliant-type-vscode
 ```
 
 ### 2. Install FortiFySchema
 
 ```bash
-npm install fortify-schema
+npm install reliant-type
 ```
 
 ### 3. Start Using
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const UserSchema = Interface({
   id: "int(1,)", // 🎨 Syntax highlighted
@@ -191,20 +191,20 @@ The extension is optimized for performance:
 
 ## 📚 Documentation
 
-- **[FortiFySchema Documentation](https://github.com/Nehonix-Team/fortify-schema)**
-- **[Conditional Validation Guide](https://github.com/Nehonix-Team/fortify-schema/blob/main/docs/CONDITIONAL_VALIDATION_GUIDE.md)**
-- **[Type Reference](https://github.com/Nehonix-Team/fortify-schema/blob/main/docs/OPERATIONS-REFERENCE.md)**
+- **[FortiFySchema Documentation](https://github.com/Nehonix-Team/reliant-type)**
+- **[Conditional Validation Guide](https://github.com/Nehonix-Team/reliant-type/blob/main/docs/CONDITIONAL_VALIDATION_GUIDE.md)**
+- **[Type Reference](https://github.com/Nehonix-Team/reliant-type/blob/main/docs/OPERATIONS-REFERENCE.md)**
 
 ## 🤝 Contributing
 
 We welcome contributions!
 
-- **Report bugs**: [GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)
-- **Feature requests**: [GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)
-- **Pull requests**: [Contributing Guide](https://github.com/Nehonix-Team/fortify-schema/blob/main/CONTRIBUTING.md)
+- **Report bugs**: [GitHub Issues](https://github.com/Nehonix-Team/reliant-type/issues)
+- **Feature requests**: [GitHub Discussions](https://github.com/Nehonix-Team/reliant-type/discussions)
+- **Pull requests**: [Contributing Guide](https://github.com/Nehonix-Team/reliant-type/blob/main/CONTRIBUTING.md)
 
 ## 📄 License
 
-MIT © [Nehonix Team](https://github.com/Nehonix-Team/fortify-schema)
+MIT © [Nehonix Team](https://github.com/Nehonix-Team/reliant-type)
 
 ---

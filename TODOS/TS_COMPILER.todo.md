@@ -1,6 +1,6 @@
-# Fortify Schema - TODO & Contributing Guide
+# ReliantType - TODO & Contributing Guide
  
-This document outlines the current development status, high-priority tasks, and guidelines for contributing to Fortify Schema.
+This document outlines the current development status, high-priority tasks, and guidelines for contributing to ReliantType.
 
 ## Current Development Status
 
@@ -149,7 +149,7 @@ The following features are under development and not ready for public use:
 ### 2. Development Setup
 ```bash
 git clone <repository>
-cd fortify-schema
+cd reliant-type
 npm install
 npm run test
 ```
@@ -224,7 +224,7 @@ const schema = Interface({
 
 ## Contributors
 
-Thank you to all contributors helping improve Fortify Schema!
+Thank you to all contributors helping improve ReliantType!
 
 <!-- Contributors will be added here automatically -->
 

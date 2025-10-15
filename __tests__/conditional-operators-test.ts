@@ -5,7 +5,7 @@ import { Interface } from "../core/schema/mode/interfaces/Interface";
 // Testing all "when *?" syntax operators with real-world scenarios
 // ====================================================================
 
-console.log("🧪 Starting Fortify Schema Conditional Operators Test Suite\n");
+console.log("🧪 Starting ReliantType Conditional Operators Test Suite\n");
 
 // ====================================================================
 // 1. BASIC COMPARISON OPERATORS TEST

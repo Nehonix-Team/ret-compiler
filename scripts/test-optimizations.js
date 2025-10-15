@@ -7,7 +7,7 @@
 
 const { performance } = require('perf_hooks');
 
-// Import Fortify Schema
+// Import ReliantType
 let Interface, PerformanceMonitor, SchemaCompiler, ObjectValidationCache, UnionCache;
 try {
   const fortify = require('../dist/cjs/index.js');
@@ -19,7 +19,7 @@ try {
   ObjectValidationCache = require('../dist/cjs/core/schema/optimization/ObjectValidationCache.js').ObjectValidationCache;
   UnionCache = require('../dist/cjs/core/schema/mode/interfaces/validators/UnionCache.js').UnionCache;
 } catch (error) {
-  console.log('❌ Fortify Schema not found. Please run: npm run build');
+  console.log('❌ ReliantType not found. Please run: npm run build');
   console.error(error);
   process.exit(1);
 }

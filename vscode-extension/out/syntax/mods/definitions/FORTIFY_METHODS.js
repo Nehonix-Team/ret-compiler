@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FORTIFY_METHODS = void 0;
 /**
- * Fortify Schema methods for conditional validation, providing TypeScript-like
+ * ReliantType methods for conditional validation, providing TypeScript-like
  * method syntax that's more intuitive.
  */
 exports.FORTIFY_METHODS = [

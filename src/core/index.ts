@@ -8,7 +8,7 @@
  *
  * ### 1. Interface-based (Recommended - TypeScript-like)
  * ```typescript
- * import { Interface } from "fortify-schema";
+ * import { Interface } from "reliant-type";
  *
  * const UserSchema = Interface({
  *   id: "number",
@@ -25,7 +25,7 @@
  *
  * ### 2. Fluent API (Traditional)
  * ```typescript
- * import { Schema } from "fortify-schema";
+ * import { Schema } from "reliant-type";
  *
  * const UserSchema = Schema.object({
  *   id: Schema.number().int().positive(),

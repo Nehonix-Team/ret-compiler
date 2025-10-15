@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Fortify Schema are documented in this file, following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adhering to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to ReliantType are documented in this file, following the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adhering to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -88,10 +88,10 @@ For users upgrading from pre-release versions:
 
    ```typescript
    // Old
-   import { Interface, SchemaHelpers } from "fortify-schema";
+   import { Interface, SchemaHelpers } from "reliant-type";
 
    // New
-   import { Interface, Make, Mod } from "fortify-schema";
+   import { Interface, Make, Mod } from "reliant-type";
    ```
 
 2. **Update Helper Usage**

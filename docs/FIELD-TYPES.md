@@ -1,6 +1,6 @@
 # Field Types Reference
 
-Complete guide to all field types available in Fortify Schema, with examples and constraints.
+Complete guide to all field types available in ReliantType, with examples and constraints.
 
 ## 📚 Table of Contents
 
@@ -229,7 +229,7 @@ const FormatSchema = Interface({
 
 ### URL Validation with Arguments
 
-Fortify Schema provides powerful URL validation with specialized arguments for different use cases. Each URL argument enforces specific protocol and security restrictions.
+ReliantType provides powerful URL validation with specialized arguments for different use cases. Each URL argument enforces specific protocol and security restrictions.
 
 #### Available URL Arguments
 

@@ -1,8 +1,8 @@
 {
-  "name": "fortify-schema-vscode",
-  "displayName": "Fortify Schema",
-  "description": "VSCode extension for Fortify Schema - The Future of TypeScript Validation",
-  "version": "0.1.23",
+  "name": "reliant-type-vscode",
+  "displayName": "ReliantType",
+  "description": "VSCode extension for ReliantType - The Future of TypeScript Validation",
+  "version": "0.1.30",
   "publisher": "NEHONIX",
   "icon": "public/assets/ms-icon-144x144.png",
   "engines": {
@@ -52,7 +52,7 @@
     "commands": [
       {
         "command": "fortify.validateSchema",
-        "title": "Validate Fortify Schema",
+        "title": "Validate ReliantType",
         "category": "Fortify"
       },
       {
@@ -82,12 +82,12 @@
       }
     ],
     "configuration": {
-      "title": "Fortify Schema",
+      "title": "ReliantType",
       "properties": {
         "fortify.enableSyntaxHighlighting": {
           "type": "boolean",
           "default": true,
-          "description": "Enable syntax highlighting for Fortify Schema strings"
+          "description": "Enable syntax highlighting for ReliantType strings"
         },
         "fortify.enableAutocompletion": {
           "type": "boolean",
@@ -133,11 +133,11 @@
   "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/Nehonix-Team/fortify-schema.git"
+    "url": "https://github.com/Nehonix-Team/reliant-type.git"
   },
   "bugs": {
-    "url": "https://github.com/Nehonix-Team/fortify-schema/issues"
+    "url": "https://github.com/Nehonix-Team/reliant-type/issues"
   },
-  "homepage": "https://github.com/Nehonix-Team/fortify-schema#readme",
+  "homepage": "https://github.com/Nehonix-Team/reliant-type#readme",
   "license": "MIT"
 }

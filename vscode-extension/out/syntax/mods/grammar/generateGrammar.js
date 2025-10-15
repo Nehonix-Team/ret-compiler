@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateFortifyGrammar = void 0;
 /**
- * Generate complete TextMate grammar for Fortify Schema with improved conditional parsing
+ * Generate complete TextMate grammar for ReliantType with improved conditional parsing
  */
 function generateFortifyGrammar() {
     return {
-        name: "Nehonix Fortify Schema Embedded",
+        name: "Nehonix ReliantType Embedded",
         scopeName: "source.ts.fortify",
         injectionSelector: "L:source.ts -comment -string, L:source.tsx -comment -string",
         patterns: [
@@ -57,7 +57,7 @@ function generateFortifyGrammar() {
                         contentName: "string.quoted.double.fortify.schema",
                         patterns: [
                             {
-                                include: "#fortify-schema-content",
+                                include: "#reliant-type-content",
                             },
                         ],
                     },
@@ -82,7 +82,7 @@ function generateFortifyGrammar() {
                         contentName: "string.quoted.single.fortify.schema",
                         patterns: [
                             {
-                                include: "#fortify-schema-content",
+                                include: "#reliant-type-content",
                             },
                         ],
                     },
@@ -107,7 +107,7 @@ function generateFortifyGrammar() {
                         contentName: "string.template.fortify.schema",
                         patterns: [
                             {
-                                include: "#fortify-schema-content",
+                                include: "#reliant-type-content",
                             },
                             {
                                 include: "#fortify-template-expressions",
@@ -142,7 +142,7 @@ function generateFortifyGrammar() {
                     },
                 ],
             },
-            "fortify-schema-content": {
+            "reliant-type-content": {
                 patterns: [
                     // CRITICAL: Conditional syntax MUST be first and most specific
                     {

@@ -1,5 +1,5 @@
 /**
- * Definition Provider for Fortify Schema
+ * Definition Provider for ReliantType
  *
  * Provides go-to-definition functionality for variables in conditional expressions
  * - Ctrl+click on "property" in "when property=premium" jumps to the property definition
@@ -296,7 +296,7 @@ export class FortifyDefinitionProvider implements vscode.DefinitionProvider {
   }
 
   /**
-   * ENHANCED: Get documentation location for Fortify Schema types
+   * ENHANCED: Get documentation location for ReliantType types
    * Provides Ctrl+Click functionality to open documentation
    */
   private async getDocumentationLocation(

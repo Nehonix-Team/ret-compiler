@@ -1,5 +1,5 @@
 /**
- * Grammar Utilities for Fortify Schema
+ * Grammar Utilities for ReliantType
  */
 
 // Generate grammar if run directly

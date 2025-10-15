@@ -29,7 +29,7 @@ import { ObjectValidationCache } from "../../optimization/ObjectValidationCache"
 import { PerformanceMonitor } from "../../optimization/PerformanceMonitor";
 
 // Import precompilation system
-import {
+import { 
   SchemaPrecompiler,
   PrecompiledValidator,
   OptimizationLevel,

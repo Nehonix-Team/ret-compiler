@@ -1,13 +1,13 @@
-# Fortify Schema
+# ReliantType
 
-[![npm version](https://badge.fury.io/js/fortify-schema.svg)](https://badge.fury.io/js/fortify-schema)
+[![npm version](https://badge.fury.io/js/reliant-type.svg)](https://badge.fury.io/js/reliant-type)
 [![TypeScript](https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg)](http://www.typescriptlang.org/)
-[![Build Status](https://github.com/Nehonix-Team/fortify-schema/workflows/CI/badge.svg)](https://github.com/Nehonix-Team/fortify-schema/actions)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/fortify-schema)](https://bundlephobia.com/package/fortify-schema)
-[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension%20Available-blue)](https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix)
+[![Build Status](https://github.com/nehonisteam/ReliantType/workflows/CI/badge.svg)](https://github.com/nehonisteam/ReliantType/actions)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/reliant-type)](https://bundlephobia.com/package/reliant-type)
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension%20Available-blue)](https://sdk.nehonix.space/pkgs/mods/vscode/latest/reliant-type.vsix)
 
 <div align="center">
-  <img src="https://sdk.nehonix.space/sdks/assets/fortify%20schema.jpg" alt="Fortify Schema Logo" width="250" />
+  <img src="https://sdk.nehonix.space/sdks/assets/reliant-type.jpg" alt="ReliantType Logo" width="250" />
 </div>
 
 <div align="center">
@@ -17,6 +17,10 @@
 **TypeScript Schema Validation with Interface-Like Syntax**
 
 A modern TypeScript validation library designed around familiar interface syntax and powerful conditional validation. Experience schema validation that feels natural to TypeScript developers while unlocking advanced runtime validation capabilities.
+
+> **Formerly Fortify Schema** - Originally developed at [github.com/Nehonix-Team/fortify-schema](https://github.com/Nehonix-Team/fortify-schema)
+
+⚠️ **Migration Notice**: The `fortify-schema` package will be deprecated in favor of `reliant-type`. While `fortify-schema` will continue to receive critical security updates, new features and improvements will only be available in `reliant-type`. We recommend migrating to `reliant-type` for the best experience and ongoing support.
 
 ## 🆕 What's New
 
@@ -29,11 +33,11 @@ A modern TypeScript validation library designed around familiar interface syntax
 ## Quick Start
 
 ```bash
-npm install fortify-schema
+npm install reliant-type
 ```
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 // Define schemas with familiar TypeScript-like syntax
 const UserSchema = Interface({
@@ -97,16 +101,16 @@ _Note: you may have tsx installed if using this command. "npm i -g tsx"._
 
 ```bash
 # NPM
-npm install fortify-schema
+npm install reliant-type
 
 # Yarn
-yarn add fortify-schema
+yarn add reliant-type
 
 # PNPM
-pnpm add fortify-schema
+pnpm add reliant-type
 
 # Bun
-bun add fortify-schema
+bun add reliant-type
 ```
 
 ### VS Code Extension
@@ -115,7 +119,7 @@ Enhance your development workflow with our dedicated VS Code extension featuring
 
 #### **🎨 Enhanced Features**
 
-- **Syntax Highlighting**: Full syntax highlighting for all Fortify Schema types and utilities
+- **Syntax Highlighting**: Full syntax highlighting for all Reliant Type types and utilities
 - **Hover Documentation**: Detailed type information, examples, and use cases on hover
 - **Go-to-Definition**: Ctrl+Click on types to open comprehensive documentation
 - **IntelliSense Support**: Smart autocomplete for schema definitions
@@ -135,10 +139,10 @@ When you hover over any type in `Interface({...})` blocks, you'll see:
 
 ```bash
 # Download and install
-curl https://sdk.nehonix.space/pkgs/mods/vscode/latest/fortify-schema.vsix -o fortify-schema.vsix
-code --install-extension fortify-schema.vsix
+curl https://sdk.nehonix.space/pkgs/mods/vscode/latest/reliant-type.vsix -o reliant-type.vsix
+code --install-extension reliant-type.vsix
 
-# Or just search for "fortify-schema" in the vscode marketplace
+# Or just search for "reliant-type" in the vscode marketplace
 ```
 
 ## Core Features
@@ -146,7 +150,7 @@ code --install-extension fortify-schema.vsix
 ### Intuitive Schema Definition
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const ProductSchema = Interface({
   id: "uuid",
@@ -258,14 +262,14 @@ const UserProfileSchema = Interface({
 
 ### Utility Functions
 
-Fortify Schema provides powerful utility functions for advanced schema definition:
+Reliant Type provides powerful utility functions for advanced schema definition:
 
 #### **Make.const() - Constant Values**
 
 Create schemas that validate against exact constant values:
 
 ```typescript
-import { Interface, Make } from "fortify-schema";
+import { Interface, Make } from "reliant-type";
 
 const ConfigSchema = Interface({
   // Exact string constants
@@ -339,7 +343,7 @@ const data = {
 
 ## Conditional Validation
 
-Fortify Schema's standout feature: advanced conditional validation based on runtime properties and business logic.
+Reliant Type's standout feature: advanced conditional validation based on runtime properties and business logic.
 
 ```typescript
 const SmartUserSchema = Interface({
@@ -406,7 +410,7 @@ const RuntimeMethodsSchema = Interface({
 
 ## Live Utility - Real-time Validation (still in progress so not recommended for production use yet)
 
-The Live utility transforms Fortify Schema into a powerful real-time validation system with EventEmitter-like interface, data transformation pipelines, and stream control methods. Perfect for modern applications requiring reactive validation.
+The Live utility transforms Reliant Type into a powerful real-time validation system with EventEmitter-like interface, data transformation pipelines, and stream control methods. Perfect for modern applications requiring reactive validation.
 
 ### Key Features
 
@@ -421,7 +425,7 @@ The Live utility transforms Fortify Schema into a powerful real-time validation 
 ### Quick Example
 
 ```typescript
-import { Live, Interface } from "fortify-schema";
+import { Live, Interface } from "reliant-type";
 
 const UserSchema = Interface({
   name: "string(2,50)",
@@ -555,7 +559,7 @@ const ECommerceProductSchema = Interface({
 
 ## Performance Excellence
 
-Fortify Schema is engineered for high-performance validation with multiple optimization strategies:
+Reliant Type is engineered for high-performance validation with multiple optimization strategies:
 
 ### Performance Architecture
 
@@ -602,7 +606,7 @@ View detailed [benchmark results](./src/bench/BENCHMARK-RESULTS.md) for comprehe
 ### Schema Transformation
 
 ```typescript
-import { Mod } from "fortify-schema";
+import { Mod } from "reliant-type";
 
 const BaseUserSchema = Interface({
   id: "uuid",
@@ -679,7 +683,7 @@ const UserSchema = Interface({
 });
 ```
 
-## What Sets Fortify Schema Apart
+## What Sets Reliant Type Apart
 
 ### Design Philosophy
 
@@ -700,7 +704,7 @@ const UserSchema = Interface({
 
 ### Community and Growth
 
-We're building Fortify Schema with transparency and community feedback at its core. We welcome:
+We're building Reliant Type with transparency and community feedback at its core. We welcome:
 
 - **Real-world usage feedback** and performance insights
 - **Issue reports** with detailed reproduction cases
@@ -854,7 +858,7 @@ const CombinedSchema = Mod.merge(UserSchema, ProfileSchema);
 
 ### Available Extensions
 
-Fortify Schema provides powerful extensions for enhanced functionality:
+ReliantType provides powerful extensions for enhanced functionality:
 
 ```typescript
 // Import extensions for advanced features
@@ -866,13 +870,13 @@ export {
   Extensions, // Extension utilities and helpers
   Quick, // Quick access utilities for common operations
   TypeScriptGenerator, // TypeScript code generation from schemas
-} from "fortify-schema";
+} from "reliant-type";
 ```
 
 #### Smart Inference
 
 ```typescript
-import { Smart } from "fortify-schema";
+import { Smart } from "reliant-type";
 
 // Infer schema from sample data
 const sampleUser = {
@@ -889,7 +893,7 @@ const UserSchema = Smart.fromSample(sampleUser);
 #### Conditional Builder
 
 ```typescript
-import { When } from "fortify-schema";
+import { When } from "reliant-type";
 
 const OrderSchema = Interface({
   orderType: "pickup|delivery",
@@ -908,7 +912,7 @@ const OrderSchema = Interface({
 The Live utility provides comprehensive real-time validation with full EventEmitter-like interface, data transformation pipelines, and stream control methods. Perfect for forms, streaming data, and reactive applications.
 
 ```typescript
-import { Live } from "fortify-schema";
+import { Live } from "reliant-type";
 
 const UserSchema = Interface({
   id: "number",
@@ -1169,7 +1173,7 @@ console.log("Results match:", interfaceResult.success === liveResult.isValid);
 #### Documentation Generation
 
 ```typescript
-import { Docs } from "fortify-schema"; //in beta
+import { Docs } from "reliant-type"; //in beta
 
 // Generate OpenAPI specification
 const openApiSpec = Docs.openapi(UserSchema, {
@@ -1188,7 +1192,7 @@ const typeDefinitions = Docs.typescript(UserSchema, {
 #### Quick Utilities
 
 ```typescript
-import { Quick } from "fortify-schema";
+import { Quick } from "reliant-type";
 
 // Quick schema inference
 const schema = Quick.fromSample(sampleData);
@@ -1217,7 +1221,7 @@ const FlexibleSchema = UserSchema.loose() // Enable automatic type coercion
 
 ## Contributing
 
-By contributing to Fortify Schema, you help fortify-schema to:
+By contributing to ReliantType, you help reliant-type to:
 
 - Improve the quality of TypeScript validation
 - Expand the reach of TypeScript in the JavaScript ecosystem
@@ -1228,8 +1232,8 @@ By contributing to Fortify Schema, you help fortify-schema to:
 
 ```bash
 # Repository setup
-git clone https://github.com/Nehonix-Team/fortify-schema.git
-cd fortify-schema
+git clone https://github.com/Nehonix-Team/reliant-type.git
+cd reliant-type
 
 # Dependency installation
 npm install
@@ -1267,7 +1271,7 @@ npm run build
 
 For effective issue resolution, please provide:
 
-- **Environment Details**: Fortify Schema, TypeScript, and Node.js versions
+- **Environment Details**: Reliant Type, TypeScript, and Node.js versions
 - **Reproduction Case**: Minimal code example demonstrating the issue
 - **Expected Behavior**: Clear description of intended functionality
 - **Actual Behavior**: Detailed explanation of observed behavior
@@ -1284,12 +1288,12 @@ MIT License - see [LICENSE](./LICENSE) file for complete terms.
 ## Support Resources
 
 - **Complete Documentation**: [Full documentation](./docs/)
-- **Issue Tracking**: [GitHub Issues](https://github.com/Nehonix-Team/fortify-schema/issues)
-- **Community Discussions**: [GitHub Discussions](https://github.com/Nehonix-Team/fortify-schema/discussions)
+- **Issue Tracking**: [GitHub Issues](https://github.com/Nehonix-Team/reliant-type/issues)
+- **Community Discussions**: [GitHub Discussions](https://github.com/Nehonix-Team/reliant-type/discussions)
 
 ---
 
-**Development Status**: Fortify Schema is in active development with a focus on production readiness. We maintain transparency about capabilities and limitations while continuously improving based on community feedback and real-world usage patterns.
+**Development Status**: Reliant Type is in active development with a focus on production readiness. We maintain transparency about capabilities and limitations while continuously improving based on community feedback and real-world usage patterns.
 
 <div align="center">
   <p><strong>Built by Nehonix</strong></p>

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FORTIFY_OPERATORS = void 0;
 /**
- * Fortify Schema operators for comparisons, logical conditions, and schema composition.
+ * ReliantType operators for comparisons, logical conditions, and schema composition.
  * Designed for intuitive use in TypeScript-like schemas, simpler than Zod's operator system.
  */
 exports.FORTIFY_OPERATORS = [

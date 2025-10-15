@@ -2,7 +2,7 @@
 /**
  * Fortify Color Theme Module
  *
- * Manages semantic token colors and theme configurations for Fortify Schema
+ * Manages semantic token colors and theme configurations for ReliantType
  * - Provides multiple color schemes (default, vibrant, minimal)
  * - Handles automatic theme application
  * - Maintains color consistency across different VSCode themes
@@ -32,7 +32,7 @@ class FortifyColorSchemes {
 exports.FortifyColorSchemes = FortifyColorSchemes;
 FortifyColorSchemes.SCHEMES = scheme_1.AllSchemsByName;
 /**
- * Color theme manager for Fortify Schema
+ * Color theme manager for ReliantType
  */
 class FortifyColorThemeManager {
     /**

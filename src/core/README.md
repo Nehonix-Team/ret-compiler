@@ -47,7 +47,7 @@ const UserSchema = Interface({
 **TypeScript interface syntax with runtime validation**
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const UserSchema = Interface({
   id: "number",
@@ -70,7 +70,7 @@ const UserSchema = Interface({
 **Chainable method syntax for complex validation**
 
 ```typescript
-import { Schema } from "fortify-schema";
+import { Schema } from "reliant-type";
 
 const UserSchema = Schema.object({
   id: Schema.number().int().positive(),
@@ -163,7 +163,7 @@ const UserSchema = Schema.object({
 ### Constant Values (Safe Syntax)
 
 ```typescript
-import { Make } from "fortify-schema";
+import { Make } from "reliant-type";
 
 {
   version: Make.const("1.0"),     // Safe constant string
@@ -338,7 +338,7 @@ const BadSchema = Interface({
 
 ```typescript
 // ✅ SAFE - Crystal clear what's a type vs constant
-import { Interface, Make } from "fortify-schema";
+import { Interface, Make } from "reliant-type";
 
 const GoodSchema = Interface({
   // Clear type definitions
@@ -376,11 +376,11 @@ const GoodSchema = Interface({
 ## 🎉 Get Started
 
 ```bash
-npm install fortify-schema
+npm install reliant-type
 ```
 
 ```typescript
-import { Interface } from "fortify-schema";
+import { Interface } from "reliant-type";
 
 const MySchema = Interface({
   id: "number",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Fortify Schema Performance Benchmark
+ * ReliantType Performance Benchmark
  * Comprehensive performance testing focused on library capabilities
  */
 
@@ -9,7 +9,7 @@ const { performance } = require("perf_hooks");
 const fs = require("fs");
 const path = require("path");
 
-// Import Fortify Schema
+// Import ReliantType
 let Interface;
 try {
   Interface = require("../dist/cjs/index.js").Interface;
@@ -17,15 +17,15 @@ try {
   try {
     Interface = require("../dist/esm/index.js").Interface;
   } catch (error2) {
-    console.log("❌ Fortify Schema not found. Please run: npm run build");
+    console.log("❌ ReliantType not found. Please run: npm run build");
     console.log("Error:", error.message);
     process.exit(1);
   }
 }
 
-console.log("=== FORTIFY SCHEMA PERFORMANCE BENCHMARK ===\n");
+console.log("=== ReliantType PERFORMANCE BENCHMARK ===\n");
 console.log(
-  "🎯 Testing Fortify Schema's validation performance across different scenarios\n"
+  "🎯 Testing ReliantType's validation performance across different scenarios\n"
 );
 
 /**
@@ -574,14 +574,14 @@ function generateBenchmarkReport(results, memDiff, schemaCount) {
 function generateMarkdownPerformanceReport(jsonReport) {
   const { metadata, summary, detailedResults } = jsonReport;
 
-  return `# Fortify Schema Performance Report
+  return `# ReliantType Performance Report
 
 ## 📊 Executive Summary
 
 **Generated:** ${new Date(metadata.timestamp).toLocaleString()}
 **Node.js Version:** ${metadata.nodeVersion}
 **Platform:** ${metadata.platform} (${metadata.arch})
-**Fortify Schema Version:** ${metadata.fortifyVersion}
+**ReliantType Version:** ${metadata.fortifyVersion}
 
 ### 🏆 Performance Highlights
 
@@ -677,13 +677,13 @@ ${detailedResults
 
 ---
 
-*Generated automatically by the Fortify Schema benchmark suite*
+*Generated automatically by the ReliantType benchmark suite*
 *Last updated: ${new Date(metadata.timestamp).toLocaleString()}*
 `;
 }
 
 /**
- * Get Fortify Schema version
+ * Get ReliantType version
  */
 function getFortifyVersion() {
   try {

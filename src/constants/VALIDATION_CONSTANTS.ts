@@ -4,7 +4,7 @@
  *  CENTRALIZED VALIDATION SYSTEM - SUCCESSFULLY IMPLEMENTED
  *
  * This module provides centralized configuration for all validation limits
- * across the Fortify Schema system. All validation components now use these
+ * across the ReliantType system. All validation components now use these
  * constants, making the system easy to maintain and configure.
  *
  *  ACHIEVEMENT: Replaced scattered hardcoded limits with centralized control
