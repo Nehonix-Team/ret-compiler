@@ -1,0 +1,34 @@
+# Répertoire de compilation
+/target/
+
+# Fichiers de sortie temporaires
+**/*.rs.bk
+
+# Fichiers de débogage et journaux
+*.log
+
+# Fichiers de configuration sensibles
+.env
+
+# Fichiers générés par Cargo
+Cargo.lock
+
+# Fichiers d’éditeurs populaires
+# VS Code
+.vscode/
+# IntelliJ / CLion / RustRover
+.idea/
+# Emacs
+*~
+# JetBrains workspace files
+*.iml
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Sauvegardes et fichiers temporaires
+*.swp
+*.bak
+.DS_Store
+Thumbs.db
+
