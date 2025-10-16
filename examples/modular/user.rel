@@ -1,9 +1,6 @@
-# User schema that imports BaseEntity
-
-import { BaseEntity } from "./base.rel"
+# User schema - standalone, no imports needed
 
 define User {
-  # Inherit base fields (conceptually - actual implementation pending)
   id: uuid
   createdAt: date
   updatedAt: date

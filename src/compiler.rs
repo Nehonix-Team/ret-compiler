@@ -109,7 +109,9 @@ impl relCompiler {
             .map_err(|e| format!("Dependency resolution failed: {}", e))?;
 
         // Get merged AST with all dependencies in correct order
-        let ast_nodes = resolver.get_merged_ast(&dependencies);
+        // Only includes schemas that are exported or used by exported schemas
+        let ast_nodes = resolver.get_merged_ast(&dependencies, file_path)
+            .map_err(|e| format!("Import/Export analysis failed: {}", e))?;
 
         // Generate TypeScript
         let mut generator = TypeScriptGenerator::new();

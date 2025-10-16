@@ -1,9 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::fs;
-use crate::ast::{ASTNode, ImportNode};
+use crate::ast::{ASTNode, ImportNode, ExportNode};
 use crate::lexer::Lexer;
 use crate::parser::Parser;
+use crate::import_tracker::{ImportTracker, analyze_imports_exports};
 
 pub struct ModuleResolver {
     /// Map of file path -> parsed AST
@@ -70,37 +71,142 @@ impl ModuleResolver {
     }
 
     /// Get the merged AST for all dependencies in correct order
-    pub fn get_merged_ast(&self, dependencies: &[PathBuf]) -> Vec<ASTNode> {
+    /// Only includes schemas that are in the export chain
+    pub fn get_merged_ast(&self, dependencies: &[PathBuf], main_file: &Path) -> Result<Vec<ASTNode>, String> {
         let mut merged = Vec::new();
         let mut seen_schemas = HashSet::new();
+        let mut required_schemas = HashSet::new();
 
+        // Canonicalize main_file path to match what's in modules
+        let main_file_canonical = self.canonicalize_path(main_file)
+            .map_err(|e| format!("Cannot canonicalize main file: {}", e))?;
+
+        // Get the main file's exports (what we actually want to export)
+        if let Some(main_ast) = self.modules.get(&main_file_canonical) {
+            for node in main_ast {
+                if let ASTNode::Export(export) = node {
+                    for name in &export.items {
+                        required_schemas.insert(name.clone());
+                    }
+                }
+            }
+        }
+        
+
+        // Build dependency graph: which schemas depend on which imported types
+        let mut schema_dependencies: HashMap<String, HashSet<String>> = HashMap::new();
+        
         for dep in dependencies {
             if let Some(ast) = self.modules.get(dep) {
+                // Analyze imports/exports and check for unused imports
+                let tracker = analyze_imports_exports(ast)
+                    .map_err(|e| format!("Error in {:?}: {}", dep, e))?;
+
                 for node in ast {
-                    // Skip duplicate schema definitions
                     match node {
                         ASTNode::Schema(schema) => {
-                            if !seen_schemas.contains(&schema.name) {
+                            let mut deps = HashSet::new();
+                            
+                            // Track what this schema depends on
+                            for field in &schema.fields {
+                                self.collect_type_dependencies(&field.field_type, &mut deps);
+                            }
+                            
+                            schema_dependencies.insert(schema.name.clone(), deps);
+                        }
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+        // Expand required_schemas to include all transitive dependencies
+        let mut to_process: Vec<String> = required_schemas.iter().cloned().collect();
+        while let Some(schema_name) = to_process.pop() {
+            if let Some(deps) = schema_dependencies.get(&schema_name) {
+                for dep in deps {
+                    if !required_schemas.contains(dep) {
+                        required_schemas.insert(dep.clone());
+                        to_process.push(dep.clone());
+                    }
+                }
+            }
+        }
+
+        // Now collect only the required schemas
+        for dep in dependencies {
+            if let Some(ast) = self.modules.get(dep) {
+                let is_main_file = dep == &main_file_canonical;
+                
+                for node in ast {
+                    match node {
+                        ASTNode::Schema(schema) => {
+                            // Only include if it's required
+                            if required_schemas.contains(&schema.name) && !seen_schemas.contains(&schema.name) {
                                 seen_schemas.insert(schema.name.clone());
                                 merged.push(node.clone());
                             }
                         }
                         ASTNode::Enum(enum_node) => {
-                            if !seen_schemas.contains(&enum_node.name) {
+                            if required_schemas.contains(&enum_node.name) && !seen_schemas.contains(&enum_node.name) {
                                 seen_schemas.insert(enum_node.name.clone());
                                 merged.push(node.clone());
                             }
                         }
-                        // Skip import statements in merged output
-                        ASTNode::Import(_) => {}
-                        // Include everything else
+                        // Only include exports from the main file
+                        ASTNode::Export(export) if is_main_file => {
+                            merged.push(node.clone());
+                        }
+                        // Skip imports and exports from dependencies
+                        ASTNode::Import(_) | ASTNode::Export(_) => {}
+                        // Include other nodes
                         _ => merged.push(node.clone()),
                     }
                 }
             }
         }
 
-        merged
+        Ok(merged)
+    }
+
+    /// Collect type dependencies (imported types used in a type definition)
+    fn collect_type_dependencies(&self, type_node: &crate::ast::TypeNode, deps: &mut HashSet<String>) {
+        use crate::ast::TypeNode;
+        
+        match type_node {
+            TypeNode::Identifier(name) => {
+                // This might be an imported type
+                deps.insert(name.clone());
+            }
+            TypeNode::Array(inner) => {
+                self.collect_type_dependencies(inner, deps);
+            }
+            TypeNode::Union(types) => {
+                for t in types {
+                    self.collect_type_dependencies(t, deps);
+                }
+            }
+            TypeNode::Generic(_, args) => {
+                for arg in args {
+                    self.collect_type_dependencies(arg, deps);
+                }
+            }
+            TypeNode::Constrained { base_type, .. } => {
+                self.collect_type_dependencies(base_type, deps);
+            }
+            TypeNode::Conditional(cond) => {
+                self.collect_type_dependencies(&cond.then_value, deps);
+                if let Some(else_val) = &cond.else_value {
+                    self.collect_type_dependencies(else_val, deps);
+                }
+            }
+            TypeNode::InlineObject(fields) => {
+                for field in fields {
+                    self.collect_type_dependencies(&field.field_type, deps);
+                }
+            }
+            _ => {}
+        }
     }
 
     fn parse_file(&self, path: &Path) -> Result<Vec<ASTNode>, String> {

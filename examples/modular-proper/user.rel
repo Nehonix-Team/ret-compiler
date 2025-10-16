@@ -1,0 +1,10 @@
+# User schema
+
+define User {
+  id: uuid
+  email: email
+  username: string
+  role: admin | user | guest
+}
+
+export User

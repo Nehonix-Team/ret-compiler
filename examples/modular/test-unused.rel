@@ -1,0 +1,12 @@
+# Test file with unused import - should error
+
+import { User } from "./user.rel"
+import { BaseEntity } from "./base.rel"
+
+define Product {
+  id: uuid
+  name: string
+  # Not using User or BaseEntity!
+}
+
+export Product

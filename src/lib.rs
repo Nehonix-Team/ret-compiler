@@ -11,6 +11,7 @@ pub mod ast;
 pub mod generator;
 pub mod compiler;
 pub mod resolver;
+pub mod import_tracker;
 
 // Re-export main types for easy usage
 pub use compiler::{rel, relCompiler, CompilerOptions};

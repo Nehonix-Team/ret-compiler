@@ -1,0 +1,9 @@
+# Base types
+
+define BaseEntity {
+  id: uuid
+  createdAt: date
+  updatedAt: date
+}
+
+export BaseEntity

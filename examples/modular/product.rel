@@ -1,6 +1,4 @@
-# Product schema that imports User
-
-import { User } from "./user.rel"
+# Product schema - standalone
 
 define Product {
   id: uuid

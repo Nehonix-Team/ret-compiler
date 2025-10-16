@@ -1,0 +1,9 @@
+# Product schema - only exports Product
+
+define Product {
+  id: uuid
+  name: string
+  price: number & positive
+}
+
+export Product
