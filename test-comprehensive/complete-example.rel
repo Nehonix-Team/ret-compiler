@@ -1,0 +1,105 @@
+# Complete Example - All ret-compiler Features
+# This demonstrates 99% of ReliantType feature coverage
+
+define CompleteExample {
+  # === BASIC TYPES ===
+  name: string
+  age: number
+  active: boolean
+  created: date
+  data: any
+  obj: object
+  unknown: unknown
+  
+  # === CONSTRAINED TYPES ===
+  username: string & min(3) & max(20)
+  password: string & min(8) & max(100)
+  score: number & min(0) & max(100)
+  rating: number & min(1) & max(5)
+  
+  # === NUMBER TYPES ===
+  id: positive
+  count: int
+  balance: integer
+  temperature: float
+  precision: double
+  debt: negative
+  
+  # === FORMAT TYPES ===
+  email: email
+  website: url
+  uuid: uuid
+  phone: phone
+  ip: ip
+  config: json
+  color: hexcolor
+  encoded: base64
+  token: jwt
+  version: semver
+  slug: slug
+  description: text
+  userPass: password
+  
+  # === OPTIONAL TYPES ===
+  nickname: string?
+  bio: string & max(500)?
+  avatar: url?
+  middleName: string?
+  
+  # === UNION TYPES ===
+  role: admin | user | moderator | guest
+  status: active | inactive | suspended | pending
+  priority: low | medium | high | urgent
+  
+  # === ARRAY TYPES ===
+  tags: string[]
+  scores: number[]
+  flags: boolean[]
+  
+  # === ARRAY CONSTRAINTS ===
+  requiredTags: string[] & min(1)
+  limitedCategories: string[] & max(10)
+  rangedScores: number[] & min(3) & max(5)
+  optionalPerms: string[] & min(1) & max(20)?
+  
+  # === RECORD/GENERIC TYPES ===
+  metadata: record<string, any>
+  headers: record<string, string>
+  counts: record<string, number>
+  settings: record<string, any>?
+  
+  # === REGEX PATTERNS ===
+  zipCode: string & matches(r"^\d{5}$")
+  phoneNum: string & matches(r"^\+?[1-9]\d{1,14}$")
+  hexColor: string & matches(r"^#[0-9A-Fa-f]{6}$")
+  sku: string & matches(r"^[A-Z]{3}-\d{6}$")
+  
+  # === LITERAL VALUES ===
+  apiVersion: =2
+  environment: =production
+  isEnabled: =true
+  defaultRole: =user
+}
+
+# Example with all features combined
+define RealWorldUser {
+  id: uuid
+  email: email
+  username: string & min(3) & max(30)
+  password: string & min(8)
+  displayName: string & max(100)?
+  bio: string & max(500)?
+  age: number & min(13) & max(120)
+  role: admin | user | moderator
+  status: active | inactive | suspended
+  permissions: string[] & min(1) & max(50)
+  tags: string[] & max(20)?
+  metadata: record<string, any>?
+  website: url?
+  phone: phone?
+  zipCode: string & matches(r"^\d{5}$")?
+  createdAt: date
+  isVerified: boolean
+  loginCount: positive
+  score: int
+}

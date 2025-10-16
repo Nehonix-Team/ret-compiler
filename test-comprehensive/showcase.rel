@@ -1,0 +1,77 @@
+# Comprehensive Showcase of ret-compiler Features
+# This file demonstrates all supported ReliantType features
+
+define User {
+  # Basic types
+  id: uuid
+  email: email
+  name: string
+  age: number
+  isActive: boolean
+  createdAt: date
+  
+  # Optional fields
+  nickname: string?
+  bio: string?
+  avatar: url?
+  
+  # Constrained types
+  username: string & min(3) & max(20)
+  password: string & min(8)
+  score: number & min(0) & max(100)
+  
+  # Number types
+  points: positive
+  balance: int
+  rating: float
+  
+  # Union types
+  role: admin | user | moderator | guest
+  status: active | inactive | suspended
+  
+  # Arrays
+  tags: string[]
+  permissions: string[]
+  scores: number[]
+  
+  # Format types
+  website: url?
+  phone: phone?
+  ipAddress: ip?
+  
+  # Record types
+  metadata: record<string, any>
+  settings: record<string, string>
+  
+  # Regex patterns
+  zipCode: string & matches(r"^\d{5}$")
+  phoneNumber: string & matches(r"^\+?[1-9]\d{1,14}$")
+}
+
+define Config {
+  # Literal values
+  version: =1.0
+  environment: =production
+  apiVersion: =2
+  isEnabled: =true
+  isLegacy: =false
+  defaultRole: =user
+}
+
+define Product {
+  # Complex combination
+  id: positive
+  sku: string & matches(r"^[A-Z]{3}-\d{6}$")
+  name: string & min(1) & max(100)
+  description: string & max(500)?
+  price: number & min(0.01)
+  category: electronics | clothing | food | books
+  inStock: boolean
+  tags: string[]
+  metadata: record<string, any>?
+  
+  # More format types
+  barcode: string & matches(r"^\d{12,13}$")
+  weight: float?
+  dimensions: record<string, number>?
+}

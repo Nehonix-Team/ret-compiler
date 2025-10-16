@@ -1,0 +1,13 @@
+define ArrayConstraints {
+  # Array with min items
+  tags: string[] & min(1)
+  
+  # Array with max items
+  categories: string[] & max(10)
+  
+  # Array with both min and max
+  scores: number[] & min(3) & max(5)
+  
+  # Optional array with constraints
+  permissions: string[] & min(1) & max(20)?
+}
