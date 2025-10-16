@@ -1,0 +1,16 @@
+# Test type aliases
+
+declare var maxAge: number = 120
+declare var minAge: number = 18
+
+declare type Age = number & min(::minAge) & max(::maxAge)
+declare type Email = string & matches(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+declare type Username = string & minLength(3) & maxLength(20)
+
+define User {
+  age: Age
+  email: Email
+  username: Username
+}
+
+export User

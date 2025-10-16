@@ -185,6 +185,12 @@ impl TypeScriptGenerator {
     fn expand_type_inline(&mut self, type_node: &TypeNode) -> String {
         match type_node {
             TypeNode::Identifier(name) => {
+                // First check if it's a type alias
+                if let Some(type_def) = self.context.get_type_alias(name).cloned() {
+                    // Recursively expand the type alias
+                    return self.expand_type_inline(&type_def);
+                }
+                
                 // Check if this is a reference to another schema
                 if let Some(schema) = self.schema_definitions.get(name).cloned() {
                     // Inline expand the schema
