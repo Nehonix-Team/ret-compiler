@@ -1,0 +1,6 @@
+{
+  "name": "my-rel-project",
+  "version": "1.0.0",
+  "schemas": "./schemas",
+  "output": "./generated"
+}

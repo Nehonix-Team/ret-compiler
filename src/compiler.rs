@@ -119,7 +119,7 @@ impl relCompiler {
         if let Err(errors) = validation::validate_ast(&ast_nodes) {
             eprintln!("\n{}", colors::error("Validation errors:"));
             for error in &errors {
-                eprintln!("  {} {}", colors::error("•"), error.message);
+                eprintln!("  {} {}", colors::error("•"), error);
             }
             return Err(format!("Validation failed with {} error(s)", errors.len()).into());
         }

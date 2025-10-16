@@ -15,6 +15,13 @@ pub mod import_tracker;
 pub mod validation;
 pub mod colors;
 pub mod context;
+pub mod interpreter;
+
+// New modular structure
+pub mod commands;
+pub mod project;
+pub mod run;
+pub mod watch;
 
 // Re-export main types for easy usage
 pub use compiler::{rel, relCompiler, CompilerOptions};
