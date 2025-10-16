@@ -50,7 +50,8 @@ impl Parser {
             TokenType::Type => self.parse_type_alias(),
             TokenType::Let => self.parse_variable(),
             TokenType::Mixin => self.parse_mixin(),
-            _ => Err(self.error("Expected top-level declaration (define, import, export, enum, type, let, or mixin)")),
+            TokenType::Identifier if self.peek().value == "validate" => self.parse_top_level_validation(),
+            _ => Err(self.error("Expected top-level declaration (define, import, export, enum, type, let, mixin, or validate)")),
         }
     }
 
@@ -86,9 +87,25 @@ impl Parser {
 
         let mut fields = Vec::new();
         while !self.check(TokenType::RBrace) && !self.is_at_end() {
-            fields.push(self.parse_field()?);
-            // Optional comma between fields
-            self.match_token(TokenType::Comma);
+            if self.check(TokenType::When) {
+                // Parse conditional block
+                let conditional = self.parse_conditional()?;
+                // Convert conditional to a field-like structure
+                let conditional_field = FieldNode {
+                    name: format!("conditional_{}", fields.len()),
+                    field_type: TypeNode::Conditional(Box::new(conditional)),
+                    optional: false,
+                    default_value: None,
+                    computed_value: None,
+                    validations: Vec::new(),
+                    conditionals: Vec::new(),
+                };
+                fields.push(conditional_field);
+            } else {
+                fields.push(self.parse_field()?);
+                // Optional comma between fields
+                self.match_token(TokenType::Comma);
+            }
         }
 
         self.consume(TokenType::RBrace, "Expected '}' after schema body")?;
@@ -99,6 +116,7 @@ impl Parser {
             extends,
             mixins,
             generics,
+            validations: Vec::new(), // Will be populated later
         }))
     }
 
@@ -223,7 +241,13 @@ impl Parser {
     }
 
     fn parse_base_type(&mut self) -> Result<TypeNode, ParseError> {
-        let type_name = self.consume_identifier("Expected type name")?;
+        // Accept both Identifier and TypeName tokens
+        let type_name = if self.check(TokenType::TypeName) {
+            self.advance().value
+        } else {
+            self.consume_identifier("Expected type name")?
+        };
+
         match type_name.as_str() {
             "string" => Ok(TypeNode::String),
             "number" => Ok(TypeNode::Number),
@@ -253,7 +277,14 @@ impl Parser {
     }
 
     fn parse_constraint(&mut self) -> Result<ConstraintNode, ParseError> {
-        let name = self.consume_identifier("Expected constraint name")?;
+        // Accept Identifier, Constraint, and TypeName tokens (for dual-use tokens like 'positive')
+        let name = if self.check(TokenType::Constraint) {
+            self.advance().value
+        } else if self.check(TokenType::TypeName) {
+            self.advance().value
+        } else {
+            self.consume_identifier("Expected constraint name")?
+        };
         let constraint_type = match name.as_str() {
             "min" => ConstraintType::Min,
             "max" => ConstraintType::Max,
@@ -300,27 +331,46 @@ impl Parser {
 fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
     let condition = self.parse_expression()?;
     self.consume(TokenType::LBrace, "Expected '{' after condition")?;
-    let then_value = self.parse_type()?;
+
+    // Parse multiple fields in the conditional block
+    let mut fields = Vec::new();
+    while !self.check(TokenType::RBrace) && !self.is_at_end() {
+        fields.push(self.parse_field()?);
+        // Optional comma between fields
+        self.match_token(TokenType::Comma);
+    }
+
     self.consume(TokenType::RBrace, "Expected '}' after then block")?;
+
+    // For now, we'll create a synthetic type that represents the conditional fields
+    // This needs to be handled differently in the AST
+    let then_value = if fields.len() == 1 {
+        // Single field - use its type
+        fields[0].field_type.clone()
+    } else {
+        // Multiple fields - this should be handled as a conditional block, not a type
+        // For now, we'll use Object as a placeholder
+        TypeNode::Object
+    };
 
     let else_value = if self.match_token(TokenType::Else) {
         if self.match_token(TokenType::When) {
-            // else when condition
-            let else_condition = self.parse_expression()?;
-            self.consume(TokenType::LBrace, "Expected '{' after else when condition")?;
-            let else_then_value = self.parse_type()?;
-            self.consume(TokenType::RBrace, "Expected '}' after else when block")?;
-            Some(TypeNode::Conditional(Box::new(ConditionalNode {
-                condition: else_condition,
-                then_value: else_then_value,
-                else_value: None,
-            })))
+            // else when condition - recursively parse another conditional
+            let nested_conditional = self.parse_conditional()?;
+            Some(TypeNode::Conditional(Box::new(nested_conditional)))
         } else {
-            // else block
+            // else block - parse fields
             self.consume(TokenType::LBrace, "Expected '{' after else")?;
-            let else_type = self.parse_type()?;
+            let mut else_fields = Vec::new();
+            while !self.check(TokenType::RBrace) && !self.is_at_end() {
+                else_fields.push(self.parse_field()?);
+                // Optional comma between fields
+                self.match_token(TokenType::Comma);
+            }
             self.consume(TokenType::RBrace, "Expected '}' after else block")?;
-            Some(else_type)
+
+            // For now, use Object as placeholder for else block
+            Some(TypeNode::Object)
         }
     } else {
         None
@@ -685,6 +735,12 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         self.consume(TokenType::RBrace, "Expected '}' after mixin body")?;
 
         Ok(ASTNode::Mixin(MixinNode { name, fields }))
+    }
+
+    fn parse_top_level_validation(&mut self) -> Result<ASTNode, ParseError> {
+        self.consume_identifier("Expected 'validate'")?; // consume 'validate'
+        let validation = self.parse_validation()?;
+        Ok(ASTNode::ValidationStatement(validation))
     }
 
     fn is_expression_start(&self) -> bool {

@@ -133,7 +133,7 @@ async function validateDocument(document: vscode.TextDocument): Promise<void> {
 
     try {
         // Run compiler in validation mode
-        const result = await runCompiler(['validate', filePath]);
+        const result = await runCompiler(['validate', '--input', filePath]);
 
         if (result.stderr) {
             // Parse errors from stderr
@@ -158,7 +158,7 @@ async function compileDocument(document: vscode.TextDocument): Promise<void> {
     const outputDir = vscode.workspace.getConfiguration('rel').get('outputDirectory') as string;
 
     try {
-        const result = await runCompiler(['compile', filePath, '--output', outputDir]);
+        const result = await runCompiler(['build', '--input', filePath, '--output', outputDir]);
         outputChannel.appendLine(result.stdout);
 
         if (result.stderr) {
@@ -289,7 +289,17 @@ function getHoverInfo(document: vscode.TextDocument, position: vscode.Position):
         'url': 'URL with built-in validation',
         'min': 'Minimum value constraint',
         'max': 'Maximum value constraint',
-        'matches': 'Regular expression pattern matching'
+        'matches': 'Regular expression pattern matching',
+        'positive': 'Positive number constraint',
+        'negative': 'Negative number constraint',
+        'integer': 'Integer number constraint',
+        'float': 'Floating point number constraint',
+        'minLength': 'Minimum length constraint',
+        'maxLength': 'Maximum length constraint',
+        'hasUppercase': 'At least one uppercase letter constraint',
+        'hasLowercase': 'At least one lowercase letter constraint',
+        'hasNumber': 'At least one number constraint',
+        'hasSpecialChar': 'At least one special character constraint'
     };
 
     const info = hoverMap[word];

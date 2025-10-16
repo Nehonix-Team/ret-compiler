@@ -1,13 +1,12 @@
 define User {
   id: number
-  email: email
   name: string
-  age: number & min0) & max(120)
-  role: admin | user |z
+  age: number & min(0) & max(120)
+  role: admin | user | guest
 }
 
 define Product {
-  id: number # primary key
+  id: number
   name: string
   price: number & positive
   category: electronics | clothing | food
@@ -21,7 +20,6 @@ define Product {
   } else {
     organic: boolean?
   }
-} 
+}
 
 validate User.age >= 18
-# test

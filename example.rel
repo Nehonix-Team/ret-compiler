@@ -14,7 +14,7 @@ define User {
   tags: string[]
   metadata: record<string, any> 
 }
-
+ 
 # Define an enum for user roles
 enum UserRole {
   admin 

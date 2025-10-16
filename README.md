@@ -23,7 +23,7 @@ The **ReliantType Compiler** (`rel`) is a high-performance command-line tool wri
 
 ```bash
 # Clone the repository
-git clone https://github.com/Nehonix-Team/reliant-type.git
+git clone https://github.com/Nehonix-Team/ret-compiler
 cd reliant-type/ret-compiler
 
 # Build the compiler
@@ -260,7 +260,7 @@ We welcome contributions! Please see our [Contributing Guide](../CONTRIBUTING.md
 
 ```bash
 # Clone and setup
-git clone https://github.com/Nehonix-Team/reliant-type.git
+git clone https://github.com/Nehonix-Team/ret-compiler
 cd reliant-type/ret-compiler
 
 # Run tests

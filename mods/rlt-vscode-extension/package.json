@@ -2,7 +2,7 @@
   "name": "retc-vscode-extension",
   "displayName": "ReTC - ReliantType Compiler",
   "description": "VSCode extension for .rel files with real-time type checking and syntax highlighting",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "NEHONIX",
   "icon": "assets/ms-icon-144x144.png",
   "engines": {

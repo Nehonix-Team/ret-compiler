@@ -129,7 +129,7 @@ async function validateDocument(document) {
     const diagnostics = [];
     try {
         // Run compiler in validation mode
-        const result = await runCompiler(['validate', filePath]);
+        const result = await runCompiler(['validate', '--input', filePath]);
         if (result.stderr) {
             // Parse errors from stderr
             const errors = parseCompilerErrors(result.stderr);
@@ -147,7 +147,7 @@ async function compileDocument(document) {
     const filePath = document.uri.fsPath;
     const outputDir = vscode.workspace.getConfiguration('rel').get('outputDirectory');
     try {
-        const result = await runCompiler(['compile', filePath, '--output', outputDir]);
+        const result = await runCompiler(['build', '--input', filePath, '--output', outputDir]);
         outputChannel.appendLine(result.stdout);
         if (result.stderr) {
             outputChannel.appendLine(`Warnings: ${result.stderr}`);

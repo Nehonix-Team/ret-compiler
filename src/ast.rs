@@ -14,6 +14,7 @@ pub enum ASTNode {
     TypeAlias(TypeAliasNode),
     Variable(VariableNode),
     Mixin(MixinNode),
+    ValidationStatement(ValidationNode),
 
     // Schema components
     Field(FieldNode),
@@ -29,6 +30,7 @@ pub struct SchemaNode {
     pub extends: Option<String>,
     pub mixins: Vec<String>,
     pub generics: Vec<String>, // Generic type parameters like <T, U>
+    pub validations: Vec<ValidationNode>, // Top-level validations
 }
 
 #[derive(Debug, Clone, PartialEq)]
