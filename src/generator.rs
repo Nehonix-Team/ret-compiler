@@ -467,6 +467,11 @@ impl TypeScriptGenerator {
             }
         }
         
+        // Handle nested conditionals (else when blocks)
+        if let Some(TypeNode::Conditional(nested)) = &conditional.else_value {
+            output.push_str(&self.generate_conditional_fields(nested));
+        }
+        
         output
     }
 

@@ -32,6 +32,9 @@ export const ProductSchema = Interface({
   category: "electronics|clothing|books",
   warranty: "when category === electronics *? number : any?",
   specs: "when category === electronics *? record<string,string> : any?",
+  size: "when category === clothing *? S|M|L|XL : any?",
+  material: "when category === clothing *? string : any?",
+  organic: "when !(category === clothing) *? boolean : any?",
 });
 
 
