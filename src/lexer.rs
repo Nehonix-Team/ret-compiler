@@ -105,6 +105,8 @@ pub struct Lexer {
     line: usize,
     column: usize,
     current_token_start: usize,
+    current_token_line: usize,    // Track line where token started
+    current_token_column: usize,  // Track column where token started
     tokens: Vec<Token>,
     errors: Vec<LexerError>,
 }
@@ -117,6 +119,8 @@ impl Lexer {
             line: 1,
             column: 1,
             current_token_start: 0,
+            current_token_line: 1,
+            current_token_column: 1,
             tokens: Vec::new(),
             errors: Vec::new(),
         }
@@ -125,6 +129,8 @@ impl Lexer {
     pub fn tokenize(mut self) -> Result<Vec<Token>, Vec<LexerError>> {
         while !self.is_at_end() {
             self.current_token_start = self.position;
+            self.current_token_line = self.line;
+            self.current_token_column = self.column;
             self.scan_token();
         }
 
@@ -140,6 +146,11 @@ impl Lexer {
 
     fn scan_token(&mut self) {
         let char = self.advance();
+        
+        // Update token start position AFTER advancing past whitespace/first char
+        // This ensures we capture the correct line/column for the actual token
+        self.current_token_line = self.line;
+        self.current_token_column = self.column - 1; // -1 because we just advanced
 
         match char {
             '#' => self.scan_comment(),
@@ -456,8 +467,14 @@ impl Lexer {
     fn is_builtin_type(name: &str) -> bool {
         matches!(
             name,
-            "string" | "number" | "boolean" | "object" | "array" | "date" | "email" | "url" |
-            "uuid" | "positive" | "negative" | "integer" | "float" | "any" | "unknown"
+            // Basic types
+            "string" | "number" | "boolean" | "object" | "array" | "date" | "any" | "unknown" |
+            // Format types
+            "email" | "url" | "uuid" | "phone" | "ip" | "json" | "hexcolor" | "base64" | "jwt" | "semver" | "slug" | "text" | "password" | "username" |
+            // Number types
+            "positive" | "negative" | "integer" | "float" | "int" | "double" |
+            // Special types
+            "record"
         )
     }
 
@@ -511,12 +528,16 @@ impl Lexer {
     }
 
     fn add_token(&mut self, token_type: TokenType, value: &str) {
+        // For most tokens, current_token_line/column are set correctly in tokenize()
+        // But we need to handle the case where whitespace was skipped
+        // The token actually starts at current_token_start position
+        // So we should use the line/column that were captured there
         self.tokens.push(Token {
             token_type,
             value: value.to_string(),
             position: self.current_token_start,
-            line: self.line,
-            column: self.column - 1, // Adjust for the current character
+            line: self.current_token_line,
+            column: self.current_token_column,
         });
     }
 
@@ -524,8 +545,8 @@ impl Lexer {
         self.errors.push(LexerError {
             message,
             position: self.current_token_start,
-            line: self.line,
-            column: self.column - 1,
+            line: self.current_token_line,      // Use line where token/error started
+            column: self.current_token_column,  // Use column where token/error started
         });
     }
 }

@@ -802,7 +802,9 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
     }
 
     fn consume_identifier(&mut self, message: &str) -> Result<String, ParseError> {
-        if self.check(TokenType::Identifier) {
+        // Accept both Identifier and TypeName tokens as identifiers
+        // This allows using type names as field names (e.g., email: email)
+        if self.check(TokenType::Identifier) || self.check(TokenType::TypeName) {
             Ok(self.advance().value)
         } else {
             Err(self.error(message))
@@ -825,6 +827,7 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
             line: token.line,
             column: token.column,
             context: None,
+            file_path: None,
         }
     }
 

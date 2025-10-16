@@ -1,0 +1,67 @@
+define BasicTypes {
+  name: string
+  age: number
+  isActive: boolean
+  createdAt: date
+  metadata: any
+  data: object
+}
+
+define ConstrainedTypes {
+  username: string & min(3) & max(20)
+  password: string & min(8)
+  score: number & min(0) & max(100)
+  count: integer
+  id: positive
+  debt: negative
+  temperature: float
+}
+
+define FormatTypes {
+  email: email
+  website: url
+  userId: uuid
+  mobile: phone
+  server: ip
+  config: json
+  color: hexcolor
+  encodedData: base64
+  authToken: jwt
+  appVersion: semver
+  urlSlug: slug
+}
+
+define UnionTypes {
+  status: active | inactive | pending
+  role: admin | user | guest
+}
+
+define ArrayTypes {
+  tags: string[]
+  scores: number[]
+  flags: boolean[]
+}
+
+define OptionalTypes {
+  nickname: string?
+  bio: string?
+  avatar: url?
+  rating: number?
+  verified: boolean?
+}
+
+define ComplexSchema {
+  id: uuid
+  email: email
+  username: string & min(3) & max(30)
+  displayName: string?
+  bio: string & max(500)?
+  age: number & min(18) & max(120)
+  score: positive
+  role: admin | user | moderator
+  status: active | inactive | suspended
+  tags: string[]
+  permissions: string[]
+  website: url?
+  phone: phone?
+}

@@ -1,0 +1,9 @@
+define Test {
+  id: number
+  name: string
+  
+  when category = electronics {
+    warranty: number
+    specs: record<string, INVALID_TYPE_HERE>
+  }
+}

@@ -29,16 +29,32 @@ impl relCompiler {
 
     pub fn compile(&self) -> Result<(), Box<dyn std::error::Error>> {
         println!("rel Compiler starting...");
-        println!("Input directory: {:?}", self.options.input_dir);
-
-        // Find all .rel files
-        let rel_files = self.find_rel_files(&self.options.input_dir)?;
-        println!("Found {} .rel files", rel_files.len());
-
-        if rel_files.is_empty() {
-            println!("No .rel files found in {:?}", self.options.input_dir);
-            return Ok(());
-        }
+        
+        let input_path = &self.options.input_dir;
+        
+        // Check if input is a file or directory
+        let rel_files = if input_path.is_file() {
+            // Single file mode
+            if input_path.extension().and_then(|s| s.to_str()) == Some("rel") {
+                println!("Input file: {:?}", input_path);
+                vec![input_path.clone()]
+            } else {
+                return Err(format!("Input file must have .rel extension: {:?}", input_path).into());
+            }
+        } else if input_path.is_dir() {
+            // Directory mode
+            println!("Input directory: {:?}", input_path);
+            let files = self.find_rel_files(input_path)?;
+            println!("Found {} .rel files", files.len());
+            
+            if files.is_empty() {
+                println!("No .rel files found in {:?}", input_path);
+                return Ok(());
+            }
+            files
+        } else {
+            return Err(format!("Input path does not exist: {:?}", input_path).into());
+        };
 
         // Compile each file
         for file_path in rel_files {

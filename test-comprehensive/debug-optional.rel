@@ -1,0 +1,5 @@
+define OptionalTest {
+  required: string
+  optional: string?
+  optionalWithConstraint: string & max(100)?
+}

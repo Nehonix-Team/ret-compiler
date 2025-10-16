@@ -1,0 +1,39 @@
+define AllFormatTypes {
+  # Basic types
+  name: string
+  age: number
+  active: boolean
+  created: date
+  data: any
+  obj: object
+  unknown: unknown
+  
+  # Format types
+  email: email
+  website: url
+  id: uuid
+  mobile: phone
+  server: ip
+  config: json
+  color: hexcolor
+  encoded: base64
+  token: jwt
+  version: semver
+  urlSlug: slug
+  description: text
+  userPassword: password
+  username: username
+  
+  # Number types
+  count: int
+  positiveNum: positive
+  negativeNum: negative
+  floatNum: float
+  doubleNum: double
+  integerNum: integer
+  
+  # Record types
+  metadata: record<string, any>
+  headers: record<string, string>
+  counts: record<string, number>
+}

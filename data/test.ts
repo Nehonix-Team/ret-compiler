@@ -1,28 +1,16 @@
-export interface User {
-  id: number;
-  name: string;
-  age: number;
-  role: admin | user | guest;
-}
+import { Interface } from 'reliant-type';
 
 export const UserSchema = Interface({
-  id: number(),
-  name: string(),
-  age: number().min(0).max(120),
-  role: union([literal("admin"), literal("user"), literal("guest")]),
+  id: "number",
+  name: "string",
+  age: "number(0,120)",
+  role: "admin|user|guest",
 });
 
 
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  category: electronics | clothing | food;
-}
-
 export const ProductSchema = Interface({
-  id: number(),
-  name: string(),
-  price: number().positive(),
-  category: union([literal("electronics"), literal("clothing"), literal("food")]),
+  id: "number",
+  name: "string",
+  price: "positive",
+  category: "electronics|clothing|food",
 });

@@ -474,6 +474,7 @@ fn perform_semantic_validation(ast_nodes: &[crate::ast::ASTNode]) -> Result<(), 
                             line: 0, // TODO: Track actual line numbers in AST nodes
                             column: 0,
                             context: Some(format!("Field '{}' already defined in schema '{}'", field.name, schema.name)),
+                            file_path: None,
                         });
                     }
 
@@ -494,6 +495,7 @@ fn perform_semantic_validation(ast_nodes: &[crate::ast::ASTNode]) -> Result<(), 
                             line: 0,
                             column: 0,
                             context: Some(format!("Value '{}' already defined in enum '{}'", value, enum_node.name)),
+                            file_path: None,
                         });
                     }
                 }
@@ -515,6 +517,7 @@ fn perform_semantic_validation(ast_nodes: &[crate::ast::ASTNode]) -> Result<(), 
                 line: 0,
                 column: 0,
                 context: Some(format!("Type '{}' is not defined in this scope", used_type)),
+                file_path: None,
             });
         }
     }

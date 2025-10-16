@@ -1,0 +1,4 @@
+define Test {
+  required: string
+  optional: string?
+}

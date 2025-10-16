@@ -1,7 +1,7 @@
 /**
  * rel TypeScript Code Generator
  *
- * Converts AST nodes to TypeScript interfaces and validation schemas
+ * Converts AST nodes to ReliantType interfaces and validation schemas
  */
 
 use crate::ast::*;
@@ -17,6 +17,12 @@ impl TypeScriptGenerator {
 
     pub fn generate(&mut self, nodes: &[ASTNode]) -> String {
         let mut output = String::new();
+        
+        // Add import statement for ReliantType Interface
+        let has_schema = nodes.iter().any(|node| matches!(node, ASTNode::Schema(_)));
+        if has_schema {
+            output.push_str("import { Interface } from 'reliant-type';\n\n");
+        }
 
         for node in nodes {
             match node {
@@ -66,23 +72,21 @@ impl TypeScriptGenerator {
     fn generate_schema(&mut self, schema: &SchemaNode) -> String {
         let mut output = String::new();
 
-        // Generate interface
-        output.push_str(&format!("export interface {} {{\n", schema.name));
-        self.indent_level += 1;
-
-        for field in &schema.fields {
-            output.push_str(&self.generate_field(field));
-        }
-
-        self.indent_level -= 1;
-        output.push_str("}\n\n");
-
-        // Generate schema
+        // Generate schema only (no TypeScript interface)
         output.push_str(&format!("export const {}Schema = Interface({{\n", schema.name));
         self.indent_level += 1;
 
         for field in &schema.fields {
-            output.push_str(&self.generate_field_schema(field));
+            // Handle conditional fields specially
+            if field.name.starts_with("conditional_") {
+                // This is a conditional block - currently not fully supported
+                // TODO: Implement proper conditional field generation
+                let indent = self.get_indent();
+                output.push_str(&format!("{}// TODO: Conditional fields not yet implemented\n", indent));
+                output.push_str(&format!("{}// when <condition> {{ ... }}\n", indent));
+            } else {
+                output.push_str(&self.generate_field_schema(field));
+            }
         }
 
         self.indent_level -= 1;
@@ -116,12 +120,23 @@ impl TypeScriptGenerator {
         let indent = self.get_indent();
         let mut output = format!("{}{}: ", indent, field.name);
 
-        output.push_str(&self.generate_type_schema(&field.field_type));
-
+        let mut type_str = self.generate_type_schema(&field.field_type);
+        
+        // Add optional marker if field is optional
+        // For quoted types, insert ? before the closing quote
         if field.optional {
-            output.push_str(".optional()");
+            if type_str.starts_with('"') && type_str.ends_with('"') {
+                // Remove closing quote, add ?, then add quote back
+                type_str.pop();
+                type_str.push('?');
+                type_str.push('"');
+            } else {
+                // For non-quoted types (shouldn't happen in Interface mode)
+                type_str.push('?');
+            }
         }
-
+        
+        output.push_str(&type_str);
         output.push_str(",\n");
         output
     }
@@ -168,37 +183,161 @@ impl TypeScriptGenerator {
 
     fn generate_type_schema(&mut self, type_node: &TypeNode) -> String {
         match type_node {
-            TypeNode::String => "string()".to_string(),
-            TypeNode::Number => "number()".to_string(),
-            TypeNode::Boolean => "boolean()".to_string(),
-            TypeNode::Object => "object({})".to_string(),
-            TypeNode::Null => "null()".to_string(),
-            TypeNode::Undefined => "undefined()".to_string(),
-            TypeNode::Any => "any()".to_string(),
-            TypeNode::Unknown => "unknown()".to_string(),
-            TypeNode::Identifier(name) => format!("{}Schema", name),
-            TypeNode::Array(inner) => format!("array({})", self.generate_type_schema(inner)),
+            TypeNode::String => "\"string\"".to_string(),
+            TypeNode::Number => "\"number\"".to_string(),
+            TypeNode::Boolean => "\"boolean\"".to_string(),
+            TypeNode::Object => "\"object\"".to_string(),
+            TypeNode::Null => "\"null\"".to_string(),
+            TypeNode::Undefined => "\"undefined\"".to_string(),
+            TypeNode::Any => "\"any\"".to_string(),
+            TypeNode::Unknown => "\"unknown\"".to_string(),
+            TypeNode::Identifier(name) => format!("\"{}\"", name),
+            TypeNode::Array(inner) => format!("\"{}[]\"", self.generate_type_name(inner)),
             TypeNode::Union(types) => {
-                let schema_strings: Vec<String> = types.iter().map(|t| {
+                let union_parts: Vec<String> = types.iter().map(|t| {
                     match t {
-                        TypeNode::Identifier(name) => format!("literal(\"{}\")", name),
-                        _ => self.generate_type_schema(t),
+                        TypeNode::Identifier(name) => name.clone(),
+                        _ => self.generate_type_name(t),
                     }
                 }).collect();
-                format!("union([{}])", schema_strings.join(", "))
+                format!("\"{}\"", union_parts.join("|"))
             }
             TypeNode::Generic(name, type_args) => {
-                let arg_strings: Vec<String> = type_args.iter().map(|t| self.generate_type_schema(t)).collect();
-                format!("{}Schema({})", name, arg_strings.join(", "))
+                let arg_strings: Vec<String> = type_args.iter().map(|t| self.generate_type_name(t)).collect();
+                format!("\"{}<{}>\"", name, arg_strings.join(","))
             }
             TypeNode::Constrained { base_type, constraints } => {
-                let mut schema = self.generate_type_schema(base_type);
-                for constraint in constraints {
-                    schema.push_str(&self.generate_constraint(constraint));
+                let base_str = self.generate_type_name(base_type);
+                
+                if constraints.is_empty() {
+                    return format!("\"{}\"", base_str);
                 }
-                schema
+
+                // Build constraint string based on ReliantType syntax
+                let mut min_val = None;
+                let mut max_val = None;
+                let mut has_special_type = false;
+                let mut special_type = String::new();
+
+                for constraint in constraints {
+                    match constraint.constraint_type {
+                        ConstraintType::Min => min_val = Some(self.generate_constraint_string(constraint)),
+                        ConstraintType::Max => max_val = Some(self.generate_constraint_string(constraint)),
+                        // These are standalone types in ReliantType, not constraints
+                        ConstraintType::Positive => {
+                            has_special_type = true;
+                            special_type = "positive".to_string();
+                        }
+                        ConstraintType::Negative => {
+                            has_special_type = true;
+                            special_type = "negative".to_string();
+                        }
+                        ConstraintType::Integer => {
+                            has_special_type = true;
+                            special_type = "int".to_string();
+                        }
+                        ConstraintType::Float => {
+                            has_special_type = true;
+                            special_type = "double".to_string();
+                        }
+                        _ => {
+                            // Other constraints not yet handled
+                        }
+                    }
+                }
+
+                // Generate proper ReliantType constraint syntax
+                if has_special_type {
+                    // Special types like "positive", "negative", "int", "double" are standalone
+                    // If there are also min/max constraints, combine them
+                    if min_val.is_some() || max_val.is_some() {
+                        let min = min_val.unwrap_or_else(|| String::new());
+                        let max = max_val.unwrap_or_else(|| String::new());
+                        format!("\"{}({},{})\"", special_type, min, max)
+                    } else {
+                        format!("\"{}\"", special_type)
+                    }
+                } else if min_val.is_some() || max_val.is_some() {
+                    // Min/max constraints: "number(min,max)"
+                    let min = min_val.unwrap_or_else(|| String::new());
+                    let max = max_val.unwrap_or_else(|| String::new());
+                    format!("\"{}({},{})\"", base_str, min, max)
+                } else {
+                    format!("\"{}\"", base_str)
+                }
             }
             TypeNode::Conditional(conditional) => self.generate_conditional_schema(conditional),
+        }
+    }
+
+    fn generate_type_name(&mut self, type_node: &TypeNode) -> String {
+        match type_node {
+            TypeNode::String => "string".to_string(),
+            TypeNode::Number => "number".to_string(),
+            TypeNode::Boolean => "boolean".to_string(),
+            TypeNode::Object => "object".to_string(),
+            TypeNode::Null => "null".to_string(),
+            TypeNode::Undefined => "undefined".to_string(),
+            TypeNode::Any => "any".to_string(),
+            TypeNode::Unknown => "unknown".to_string(),
+            TypeNode::Identifier(name) => name.clone(),
+            TypeNode::Array(inner) => format!("{}[]", self.generate_type_name(inner)),
+            TypeNode::Union(types) => {
+                let union_parts: Vec<String> = types.iter().map(|t| self.generate_type_name(t)).collect();
+                union_parts.join("|")
+            }
+            TypeNode::Generic(name, type_args) => {
+                let arg_strings: Vec<String> = type_args.iter().map(|t| self.generate_type_name(t)).collect();
+                format!("{}<{}>", name, arg_strings.join(", "))
+            }
+            TypeNode::Constrained { base_type, constraints } => {
+                let base_str = self.generate_type_name(base_type);
+                let mut constraint_strs = Vec::new();
+
+                for constraint in constraints {
+                    constraint_strs.push(self.generate_constraint_string(constraint));
+                }
+
+                if constraint_strs.is_empty() {
+                    base_str
+                } else {
+                    format!("{}({})", base_str, constraint_strs.join(","))
+                }
+            }
+            TypeNode::Conditional(_) => "any".to_string(), // Fallback for conditional types
+        }
+    }
+
+    fn generate_constraint_string(&mut self, constraint: &ConstraintNode) -> String {
+        match constraint.constraint_type {
+            // For min/max, we need to track position in the constraint list
+            // This will be handled in generate_type_schema
+            ConstraintType::Min => self.generate_expression_value(&constraint.value),
+            ConstraintType::Max => self.generate_expression_value(&constraint.value),
+            ConstraintType::MinLength => self.generate_expression_value(&constraint.value),
+            ConstraintType::MaxLength => self.generate_expression_value(&constraint.value),
+            ConstraintType::Matches => self.generate_expression_value(&constraint.value),
+            ConstraintType::Contains => self.generate_expression_value(&constraint.value),
+            ConstraintType::StartsWith => self.generate_expression_value(&constraint.value),
+            ConstraintType::EndsWith => self.generate_expression_value(&constraint.value),
+            ConstraintType::HasUppercase => String::new(),
+            ConstraintType::HasLowercase => String::new(),
+            ConstraintType::HasNumber => String::new(),
+            ConstraintType::HasSpecialChar => String::new(),
+            ConstraintType::Between => self.generate_expression_value(&constraint.value),
+            ConstraintType::In => self.generate_expression_value(&constraint.value),
+            ConstraintType::NotIn => self.generate_expression_value(&constraint.value),
+            ConstraintType::Exists => String::new(),
+            ConstraintType::Empty => String::new(),
+            ConstraintType::Null => String::new(),
+            ConstraintType::Future => String::new(),
+            ConstraintType::Past => String::new(),
+            ConstraintType::Before => self.generate_expression_value(&constraint.value),
+            ConstraintType::After => self.generate_expression_value(&constraint.value),
+            ConstraintType::Integer => "int".to_string(),
+            ConstraintType::Positive => "positive".to_string(),
+            ConstraintType::Negative => "negative".to_string(),
+            ConstraintType::Float => "float".to_string(),
         }
     }
 
@@ -335,17 +474,18 @@ impl TypeScriptGenerator {
         output.push_str(&value_strings.join(" | "));
         output.push_str(";\n\n");
 
-        // Generate enum schema
-        output.push_str(&format!("export const {}Schema = union([\n", enum_node.name));
+        // Generate enum schema using Make.const for each value
+        output.push_str(&format!("export const {}Schema = Interface({{\n", enum_node.name));
         self.indent_level += 1;
 
-        for value in &enum_node.values {
+        for (i, value) in enum_node.values.iter().enumerate() {
             let indent = self.get_indent();
-            output.push_str(&format!("{}{}(\"{}\"),\n", indent, "literal", value));
+            let field_name = format!("value{}", i);
+            output.push_str(&format!("{}{}: Make.const(\"{}\"),\n", indent, field_name, value));
         }
 
         self.indent_level -= 1;
-        output.push_str("]);\n");
+        output.push_str("});\n");
 
         output
     }
