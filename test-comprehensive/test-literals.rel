@@ -1,0 +1,13 @@
+define LiteralValues {
+  # String literals
+  role: =admin
+  environment: =production
+  
+  # Number literals
+  version: =1
+  apiVersion: =2.0
+  
+  # Boolean literals
+  isEnabled: =true
+  isLegacy: =false
+}

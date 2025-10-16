@@ -1,0 +1,10 @@
+define LiteralTest {
+  # Try using default values as literals
+  version: number = 1
+  environment: string = production
+  isEnabled: boolean = true
+  
+  # Try using equals syntax (might not parse yet)
+  # role: =admin
+  # apiVersion: =2
+}

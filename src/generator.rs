@@ -163,6 +163,11 @@ impl TypeScriptGenerator {
             }
             TypeNode::Constrained { base_type, .. } => self.generate_type(base_type),
             TypeNode::Conditional(conditional) => self.generate_conditional_type(conditional),
+            TypeNode::Literal(expr) => {
+                // Generate literal value for types
+                let value_str = self.generate_expression_value(&Some(expr.clone()));
+                format!("={}", value_str)
+            }
         }
     }
 
@@ -267,6 +272,11 @@ impl TypeScriptGenerator {
                 }
             }
             TypeNode::Conditional(conditional) => self.generate_conditional_schema(conditional),
+            TypeNode::Literal(expr) => {
+                // Generate literal value: =value
+                let value_str = self.generate_expression_value(&Some(expr.clone()));
+                format!("\"={}\"", value_str)
+            }
         }
     }
 
@@ -305,6 +315,11 @@ impl TypeScriptGenerator {
                 }
             }
             TypeNode::Conditional(_) => "any".to_string(), // Fallback for conditional types
+            TypeNode::Literal(expr) => {
+                // Generate literal value without quotes for type names
+                let value_str = self.generate_expression_value(&Some(expr.clone()));
+                format!("={}", value_str)
+            }
         }
     }
 

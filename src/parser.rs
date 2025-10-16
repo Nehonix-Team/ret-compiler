@@ -241,6 +241,12 @@ impl Parser {
     }
 
     fn parse_base_type(&mut self) -> Result<TypeNode, ParseError> {
+        // Check for literal values (=value syntax)
+        if self.match_token(TokenType::Equals) {
+            let literal_expr = self.parse_expression()?;
+            return Ok(TypeNode::Literal(literal_expr));
+        }
+        
         // Accept both Identifier and TypeName tokens
         let type_name = if self.check(TokenType::TypeName) {
             self.advance().value

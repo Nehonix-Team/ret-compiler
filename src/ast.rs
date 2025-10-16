@@ -72,6 +72,9 @@ pub enum TypeNode {
 
     // Conditional types
     Conditional(Box<ConditionalNode>),
+    
+    // Literal/Constant values
+    Literal(ExpressionNode),
 }
 
 #[derive(Debug, Clone, PartialEq)]
