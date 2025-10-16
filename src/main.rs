@@ -11,8 +11,8 @@ use std::path::PathBuf;
 use std::sync::mpsc::channel;
 
 #[derive(Parser)]
-#[command(name = "rlt")]
-#[command(about = "Nehonix ReliantType Compiler - Compile .rlt files to TypeScript schemas")]
+#[command(name = "rel")]
+#[command(about = "Nehonix ReliantType Compiler - Compile .rel files to TypeScript schemas")]
 #[command(version = "0.1.0")]
 struct Cli {
     #[command(subcommand)]
@@ -21,9 +21,9 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Compile .rlt files to TypeScript
+    /// Compile .rel files to TypeScript
     Build {
-        /// Input .rlt file or directory
+        /// Input .rel file or directory
         #[arg(short, long)]
         input: PathBuf,
 
@@ -35,21 +35,21 @@ enum Commands {
         #[arg(long)]
         watch: bool,
     },
-    /// Initialize a new rlt project
+    /// Initialize a new rel project
     Init {
         /// Project directory (defaults to current directory)
         #[arg(short, long)]
         dir: Option<PathBuf>,
     },
-    /// Check .rlt files without generating output
+    /// Check .rel files without generating output
     Check {
-        /// Input .rlt file or directory
+        /// Input .rel file or directory
         #[arg(short, long)]
         input: PathBuf,
     },
     /// Watch mode - rebuild on file changes
     Watch {
-        /// Input .rlt file or directory
+        /// Input .rel file or directory
         #[arg(short, long)]
         input: PathBuf,
 
@@ -57,9 +57,9 @@ enum Commands {
         #[arg(short, long)]
         output: Option<PathBuf>,
     },
-    /// Validate .rlt files without generating output
+    /// Validate .rel files without generating output
     Validate {
-        /// Input .rlt file or directory
+        /// Input .rel file or directory
         #[arg(short, long)]
         input: PathBuf,
     },
@@ -91,7 +91,7 @@ fn main() {
                 watch,
             };
 
-            let compiler = compiler::rltCompiler::new(options);
+            let compiler = compiler::relCompiler::new(options);
             if let Err(e) = compiler.compile() {
                 eprintln!("Compilation failed: {}", e);
                 std::process::exit(1);
@@ -99,28 +99,28 @@ fn main() {
         }
         Commands::Init { dir } => {
             let dir = dir.unwrap_or_else(|| PathBuf::from("."));
-            println!("Initializing rlt project in: {:?}", dir);
+            println!("Initializing rel project in: {:?}", dir);
             if let Err(e) = init_project(&dir) {
                 eprintln!("Failed to initialize project: {}", e);
                 std::process::exit(1);
             }
         }
         Commands::Check { input } => {
-            println!("Checking rlt files in: {:?}", input);
+            println!("Checking rel files in: {:?}", input);
             if let Err(e) = check_files(&input) {
                 eprintln!("Check failed: {}", e);
                 std::process::exit(1);
             }
         }
         Commands::Validate { input } => {
-            println!("Validating rlt files in: {:?}", input);
+            println!("Validating rel files in: {:?}", input);
             if let Err(e) = validate_files(&input) {
                 eprintln!("Validation failed: {}", e);
                 std::process::exit(1);
             }
         }
         Commands::Watch { input, output } => {
-            println!("Watching rlt files in: {:?} for changes", input);
+            println!("Watching rel files in: {:?} for changes", input);
             if let Err(e) = watch_files(&input, output.as_ref()) {
                 eprintln!("Watch failed: {}", e);
                 std::process::exit(1);
@@ -257,14 +257,14 @@ fn test_generator(input: &str) {
 }
 
 fn init_project(dir: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Creating rlt project structure...");
+    println!("Creating rel project structure...");
 
     // Create schemas directory
     let schemas_dir = dir.join("schemas");
     fs::create_dir_all(&schemas_dir)?;
 
     // Create example schema file
-    let example_schema = schemas_dir.join("User.rlt");
+    let example_schema = schemas_dir.join("User.rel");
     let example_content = r#"# Example User Schema
 define User {
   id: number
@@ -280,17 +280,17 @@ export User
 "#;
     fs::write(&example_schema, example_content)?;
 
-    // Create rlt.json config file
+    // Create rel.json config file
     let config_content = r#"{
-  "name": "my-rlt-project",
+  "name": "my-rel-project",
   "version": "1.0.0",
   "schemas": "./schemas",
   "output": "./generated"
 }"#;
-    fs::write(dir.join("rlt.json"), config_content)?;
+    fs::write(dir.join("rel.json"), config_content)?;
 
     // Create README
-    let readme_content = r#"# rlt Project
+    let readme_content = r#"# rel Project
 
 This is a ReliantType Compiler project.
 
@@ -298,43 +298,43 @@ This is a ReliantType Compiler project.
 
 ```bash
 # Build schemas
-rlt build
+rel build
 
 # Watch for changes
-rlt watch
+rel watch
 
 # Validate schemas
-rlt check
+rel check
 ```
 
 ## Project Structure
 
-- `schemas/` - Your .rlt schema files
+- `schemas/` - Your .rel schema files
 - `generated/` - Generated TypeScript interfaces and schemas
-- `rlt.json` - Project configuration
+- `rel.json` - Project configuration
 "#;
     fs::write(dir.join("README.md"), readme_content)?;
 
-    println!("✅ rlt project initialized successfully!");
+    println!("✅ rel project initialized successfully!");
     println!("📁 Created directories: schemas/");
-    println!("📄 Created files: schemas/User.rlt, rlt.json, README.md");
+    println!("📄 Created files: schemas/User.rel, rel.json, README.md");
 
     Ok(())
 }
 
 fn check_files(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Checking rlt files...");
+    println!("Checking rel files...");
 
-    let compiler = compiler::rltCompiler::new(compiler::CompilerOptions {
+    let compiler = compiler::relCompiler::new(compiler::CompilerOptions {
         input_dir: input.clone(),
         output_dir: None,
         watch: false,
     });
 
     // For check, we just validate parsing without generating output
-    let rlt_files = compiler.find_rlt_files(input)?;
+    let rel_files = compiler.find_rel_files(input)?;
 
-    for file_path in rlt_files {
+    for file_path in rel_files {
         println!("Checking: {:?}", file_path);
 
         let content = fs::read_to_string(&file_path)?;
@@ -354,18 +354,18 @@ fn check_files(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn validate_files(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Validating rlt files with enhanced validation...");
+    println!("Validating rel files with enhanced validation...");
 
-    let compiler = compiler::rltCompiler::new(compiler::CompilerOptions {
+    let compiler = compiler::relCompiler::new(compiler::CompilerOptions {
         input_dir: input.clone(),
         output_dir: None,
         watch: false,
     });
 
     // For validation, we compile to check for semantic errors
-    let rlt_files = compiler.find_rlt_files(input)?;
+    let rel_files = compiler.find_rel_files(input)?;
 
-    for file_path in rlt_files {
+    for file_path in rel_files {
         println!("Validating: {:?}", file_path);
 
         let content = fs::read_to_string(&file_path)?;
@@ -400,7 +400,7 @@ fn validate_files(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn watch_files(input: &PathBuf, output: Option<&PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
-    println!("Watching rlt files in: {:?} for changes", input);
+    println!("Watching rel files in: {:?} for changes", input);
 
     let (tx, rx) = channel();
 
@@ -417,7 +417,7 @@ fn watch_files(input: &PathBuf, output: Option<&PathBuf>) -> Result<(), Box<dyn 
                     notify::Event { kind: notify::EventKind::Modify(_), paths, .. } => {
                         for path in paths {
                             if let Some(ext) = path.extension() {
-                                if ext == "rlt" {
+                                if ext == "rel" {
                                     println!("🔄 File changed: {:?}", path);
                                     println!("🔨 Recompiling...");
 
@@ -427,7 +427,7 @@ fn watch_files(input: &PathBuf, output: Option<&PathBuf>) -> Result<(), Box<dyn 
                                         watch: false,
                                     };
 
-                                    let compiler = compiler::rltCompiler::new(options);
+                                    let compiler = compiler::relCompiler::new(options);
                                     if let Err(e) = compiler.compile() {
                                         eprintln!("❌ Compilation failed: {}", e);
                                     } else {

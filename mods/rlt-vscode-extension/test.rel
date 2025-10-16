@@ -1,0 +1,27 @@
+define User {
+  id: number
+  email: email
+  name: string
+  age: number & min0) & max(120)
+  role: admin | user |z
+}
+
+define Product {
+  id: number # primary key
+  name: string
+  price: number & positive
+  category: electronics | clothing | food
+
+  when category = electronics {
+    warranty: number
+    specs: record<string, string>
+  } else when category = clothing {
+    size: S | M | L | XL
+    material: string
+  } else {
+    organic: boolean?
+  }
+} 
+
+validate User.age >= 18
+# test

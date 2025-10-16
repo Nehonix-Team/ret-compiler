@@ -82,5 +82,5 @@ pids
 private
 
 *.private.*
-fsc-compiler/fsc/target
+rel-compiler/rel/target
 ret-compiler/*

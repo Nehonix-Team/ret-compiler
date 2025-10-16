@@ -1,5 +1,5 @@
 /**
- * rlt Compiler - Main compiler class that orchestrates the compilation process
+ * rel Compiler - Main compiler class that orchestrates the compilation process
  */
 
 use std::collections::HashMap;
@@ -18,30 +18,30 @@ pub struct CompilerOptions {
     pub watch: bool,
 }
 
-pub struct rltCompiler {
+pub struct relCompiler {
     options: CompilerOptions,
 }
 
-impl rltCompiler {
+impl relCompiler {
     pub fn new(options: CompilerOptions) -> Self {
         Self { options }
     }
 
     pub fn compile(&self) -> Result<(), Box<dyn std::error::Error>> {
-        println!("rlt Compiler starting...");
+        println!("rel Compiler starting...");
         println!("Input directory: {:?}", self.options.input_dir);
 
-        // Find all .rlt files
-        let rlt_files = self.find_rlt_files(&self.options.input_dir)?;
-        println!("Found {} .rlt files", rlt_files.len());
+        // Find all .rel files
+        let rel_files = self.find_rel_files(&self.options.input_dir)?;
+        println!("Found {} .rel files", rel_files.len());
 
-        if rlt_files.is_empty() {
-            println!("No .rlt files found in {:?}", self.options.input_dir);
+        if rel_files.is_empty() {
+            println!("No .rel files found in {:?}", self.options.input_dir);
             return Ok(());
         }
 
         // Compile each file
-        for file_path in rlt_files {
+        for file_path in rel_files {
             self.compile_file(&file_path)?;
         }
 
@@ -49,7 +49,7 @@ impl rltCompiler {
         Ok(())
     }
 
-    pub fn find_rlt_files(&self, dir: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
+    pub fn find_rel_files(&self, dir: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
         let mut files = Vec::new();
 
         fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
@@ -61,7 +61,7 @@ impl rltCompiler {
                     if path.is_dir() {
                         visit_dir(&path, files)?;
                     } else if let Some(extension) = path.extension() {
-                        if extension == "rlt" {
+                        if extension == "rel" {
                             files.push(path);
                         }
                     }
@@ -126,12 +126,12 @@ impl rltCompiler {
     }
 }
 
-// Runtime API for direct usage (like the rlt class mentioned in the design)
-pub struct rlt {
+// Runtime API for direct usage (like the rel class mentioned in the design)
+pub struct rel {
     schemas: HashMap<String, String>, // Schema name -> TypeScript code
 }
 
-impl rlt {
+impl rel {
     pub fn new() -> Self {
         Self {
             schemas: HashMap::new(),
@@ -170,7 +170,7 @@ impl rlt {
 
     pub fn load(&mut self, dir_path: &str) -> Result<(), Box<dyn std::error::Error>> {
         let path = Path::new(dir_path);
-        let files = Self::find_rlt_files_static(path)?;
+        let files = Self::find_rel_files_static(path)?;
 
         for file_path in files {
             self.build(file_path.to_str().unwrap())?;
@@ -179,7 +179,7 @@ impl rlt {
         Ok(())
     }
 
-    fn find_rlt_files_static(dir: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
+    fn find_rel_files_static(dir: &Path) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
         let mut files = Vec::new();
 
         fn visit_dir(dir: &Path, files: &mut Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
@@ -191,7 +191,7 @@ impl rlt {
                     if path.is_dir() {
                         visit_dir(&path, files)?;
                     } else if let Some(extension) = path.extension() {
-                        if extension == "rlt" {
+                        if extension == "rel" {
                             files.push(path);
                         }
                     }
@@ -205,7 +205,7 @@ impl rlt {
     }
 }
 
-impl Default for rlt {
+impl Default for rel {
     fn default() -> Self {
         Self::new()
     }

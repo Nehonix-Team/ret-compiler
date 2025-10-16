@@ -1,0 +1,179 @@
+{
+  "schema": {
+    "prefix": "schema",
+    "body": [
+      "define ${1:SchemaName} {",
+      "\t${2:id}: number",
+      "\t${3:name}: string",
+      "\t${4:createdAt}: date",
+      "}"
+    ],
+    "description": "Basic schema template"
+  },
+  "schema-validation": {
+    "prefix": "schema-validation",
+    "body": [
+      "define ${1:SchemaName} {",
+      "\t${2:id}: number",
+      "\t${3:name}: string & minLength(1)",
+      "\t${4:email}: email",
+      "\t${5:age}: number & min(0) & max(120)",
+      "",
+      "\tvalidate ${6:age} >= 18",
+      "}"
+    ],
+    "description": "Schema with validation rules"
+  },
+  "conditional-schema": {
+    "prefix": "conditional-schema",
+    "body": [
+      "define ${1:Product} {",
+      "\ttype: ${2:physical} | ${3:digital}",
+      "\tname: string",
+      "\tprice: number & positive",
+      "",
+      "\twhen type = ${2:physical} {",
+      "\t\tweight: number & positive",
+      "\t\tdimensions: string",
+      "\t} else when type = ${3:digital} {",
+      "\t\tdownloadUrl: url",
+      "\t\tfileSize: number & positive",
+      "\t}",
+      "}"
+    ],
+    "description": "Schema with conditional fields"
+  },
+  "enum": {
+    "prefix": "enum",
+    "body": [
+      "enum ${1:Status} {",
+      "\t${2:pending}",
+      "\t${3:active}",
+      "\t${4:inactive}",
+      "}"
+    ],
+    "description": "Enum definition"
+  },
+  "type-alias": {
+    "prefix": "type-alias",
+    "body": [
+      "type ${1:EmailString} = string & matches(r\"^[\\^\\s@]+@[\\^\\s@]+\\.[\\^\\s@]+$\\\")"
+    ],
+    "description": "Type alias with constraints"
+  },
+  "import": {
+    "prefix": "import",
+    "body": [
+      "from \"${1:./types.rel}\" import ${2:User}, ${3:Product}"
+    ],
+    "description": "Import statement"
+  },
+  "let": {
+    "prefix": "let",
+    "body": [
+      "let ${1:maxRetries} = ${2:3}"
+    ],
+    "description": "Variable declaration"
+  },
+  "mixin": {
+    "prefix": "mixin",
+    "body": [
+      "mixin ${1:Timestamped} {",
+      "\tcreatedAt: date",
+      "\tupdatedAt: date",
+      "}"
+    ],
+    "description": "Mixin definition"
+  },
+  "schema-mixin": {
+    "prefix": "schema-mixin",
+    "body": [
+      "define ${1:User} with ${2:Timestamped} {",
+      "\tid: number",
+      "\tname: string",
+      "\temail: email",
+      "}"
+    ],
+    "description": "Schema using mixins"
+  },
+  "validation-rule": {
+    "prefix": "validate",
+    "body": [
+      "validate ${1:field} ${2:>} ${3:value}"
+    ],
+    "description": "Validation rule"
+  },
+  "conditional-validation": {
+    "prefix": "when",
+    "body": [
+      "when ${1:status} = ${2:active} {",
+      "\t${3:priority}: high | medium | low",
+      "\t${4:assignedAt}: date",
+      "}"
+    ],
+    "description": "Conditional field definition"
+  },
+  "record-type": {
+    "prefix": "record",
+    "body": [
+      "${1:metadata}: record<string, ${2:any}>"
+    ],
+    "description": "Record type field"
+  },
+  "array-type": {
+    "prefix": "array",
+    "body": [
+      "${1:items}: ${2:ItemType}[]"
+    ],
+    "description": "Array type field"
+  },
+  "password-type": {
+    "prefix": "password",
+    "body": [
+      "password: string & minLength(8) & hasUppercase & hasLowercase & hasNumber & hasSpecialChar"
+    ],
+    "description": "Secure password field"
+  },
+  "url-field": {
+    "prefix": "url",
+    "body": [
+      "${1:website}: url"
+    ],
+    "description": "URL field"
+  },
+  "email-field": {
+    "prefix": "email",
+    "body": [
+      "${1:contact}: email"
+    ],
+    "description": "Email field"
+  },
+  "date-field": {
+    "prefix": "date",
+    "body": [
+      "${1:createdAt}: date"
+    ],
+    "description": "Date field"
+  },
+  "number-constraints": {
+    "prefix": "number-constraints",
+    "body": [
+      "${1:age}: number & min(${2:0}) & max(${3:120}) & integer"
+    ],
+    "description": "Number with constraints"
+  },
+  "string-constraints": {
+    "prefix": "string-constraints",
+    "body": [
+      "${1:name}: string & minLength(${2:1}) & maxLength(${3:100})"
+    ],
+    "description": "String with constraints"
+  },
+  "regex-constraint": {
+    "prefix": "regex",
+    "body": [
+      "${1:code}: string & matches(r\"${2:^[A-Z0-9]+}\")"
+    ],
+    "description": "Regex pattern constraint"
+  }
+}

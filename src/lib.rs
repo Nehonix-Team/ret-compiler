@@ -1,7 +1,7 @@
 /**
- * rlt - ReliantType Compiler Library
+ * rel - ReliantType Compiler Library
  *
- * This library provides the core functionality for compiling .rlt files
+ * This library provides the core functionality for compiling .rel files
  * to TypeScript interfaces and validation schemas.
  */
 
@@ -12,7 +12,7 @@ pub mod generator;
 pub mod compiler;
 
 // Re-export main types for easy usage
-pub use compiler::{rlt, rltCompiler, CompilerOptions};
+pub use compiler::{rel, relCompiler, CompilerOptions};
 pub use lexer::{Lexer, Token, TokenType};
 pub use parser::Parser;
 pub use generator::TypeScriptGenerator;

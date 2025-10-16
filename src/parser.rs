@@ -1,5 +1,5 @@
 /**
- * rlt Parser - Converts tokens to AST
+ * rel Parser - Converts tokens to AST
  */
 
 use crate::ast::*;

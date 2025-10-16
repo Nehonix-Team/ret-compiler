@@ -1,5 +1,5 @@
 /**
- * rlt AST (Abstract Syntax Tree) definitions
+ * rel AST (Abstract Syntax Tree) definitions
  */
 
 #[derive(Debug, Clone, PartialEq)]

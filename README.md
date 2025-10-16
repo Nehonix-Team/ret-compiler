@@ -1,4 +1,4 @@
-# rlt Project
+# rel Project
 
 This is a ReliantType Compiler project.
 
@@ -6,17 +6,17 @@ This is a ReliantType Compiler project.
 
 ```bash
 # Build schemas
-rlt build
+rel build
 
 # Watch for changes
-rlt watch
+rel watch
 
 # Validate schemas
-rlt check
+rel check
 ```
 
 ## Project Structure
 
-- `schemas/` - Your .rlt schema files
+- `schemas/` - Your .rel schema files
 - `generated/` - Generated TypeScript interfaces and schemas
-- `rlt.json` - Project configuration
+- `rel.json` - Project configuration

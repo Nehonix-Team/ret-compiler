@@ -1,4 +1,4 @@
-# Example rlt Schema File
+# Example rel Schema File
 
 # Define a user schema with various field types
 define User { 

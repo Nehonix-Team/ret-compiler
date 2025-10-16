@@ -1,0 +1,164 @@
+{
+  "name": "ReT",
+  "scopeName": "source.rel",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#constraints"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#identifiers"
+    },
+    {
+      "include": "#braces"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.rel",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.rel",
+          "match": "\\b(define|when|else|validate|let|enum|type|mixin|extends|with|from|import|export)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.rel",
+          "match": "\\b(string|number|boolean|date|email|url|record|array|any)\\b"
+        },
+        {
+          "name": "storage.type.rel",
+          "match": "\\b(admin|user|guest|pending|processing|completed|electronics|clothing|food)\\b"
+        }
+      ]
+    },
+    "constraints": {
+      "patterns": [
+        {
+          "name": "keyword.operator.rel",
+          "match": "\\b(min|max|matches|positive|negative|integer|float|minLength|maxLength|hasUppercase|hasLowercase|hasNumber|hasSpecialChar|between|future|past|before|after)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.rel",
+          "match": "\\b(and|or|not|in|is)\\b"
+        },
+        {
+          "name": "keyword.operator.rel",
+          "match": "(\\|\\||&&|==|!=|<=|>=|<|>|=|\\+|\\-|\\*|/|%|\\||&|!|\\?|\\:)"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.rel",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rel",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.rel",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rel",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.regexp.rel",
+          "begin": "r\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rel",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.rel",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.rel",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "braces": {
+      "patterns": [
+        {
+          "name": "punctuation.section.braces.begin.rel",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.section.braces.end.rel",
+          "match": "\\}"
+        },
+        {
+          "name": "punctuation.section.brackets.begin.rel",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.section.brackets.end.rel",
+          "match": "\\]"
+        },
+        {
+          "name": "punctuation.section.parens.begin.rel",
+          "match": "\\("
+        },
+        {
+          "name": "punctuation.section.parens.end.rel",
+          "match": "\\)"
+        }
+      ]
+    }
+  }
+}

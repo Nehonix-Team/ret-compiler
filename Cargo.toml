@@ -1,8 +1,8 @@
 [package]
-name = "rlt"
+name = "rel"
 version = "0.1.0"
 edition = "2021"
-description = "ReliantType Compiler - Compiles .rlt files to TypeScript schemas"
+description = "ReliantType Compiler - Compiles .rel files to TypeScript schemas"
 authors = ["ReliantType Team"]
 
 [dependencies]

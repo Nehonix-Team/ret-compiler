@@ -1,5 +1,5 @@
 /**
- * rlt TypeScript Code Generator
+ * rel TypeScript Code Generator
  *
  * Converts AST nodes to TypeScript interfaces and validation schemas
  */

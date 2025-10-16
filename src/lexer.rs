@@ -1,7 +1,7 @@
 /**
- * rlt Lexer - Tokenizes .rlt schema language
+ * rel Lexer - Tokenizes .rel schema language
  *
- * Based on the existing ConditionalLexer but adapted for full .rlt syntax
+ * Based on the existing ConditionalLexer but adapted for full .rel syntax
  */
 
 

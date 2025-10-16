@@ -1,8 +1,8 @@
 {
-  "name": "fsc-extension",
-  "displayName": "FSC - ReliantType Compiler",
-  "description": "VSCode extension for .fsc files with real-time type checking and syntax highlighting",
-  "version": "0.1.2",
+  "name": "retc-vscode-extension",
+  "displayName": "ReTC - ReliantType Compiler",
+  "description": "VSCode extension for .rel files with real-time type checking and syntax highlighting",
+  "version": "0.1.7",
   "publisher": "NEHONIX",
   "icon": "assets/ms-icon-144x144.png",
   "engines": {
@@ -14,7 +14,7 @@
     "Snippets"
   ],
   "keywords": [
-    "fsc",
+    "rel",
     "reliant-type",
     "schema",
     "validation",
@@ -23,106 +23,111 @@
     "real-time"
   ],
   "activationEvents": [
-    "onLanguage:fsc",
-    "onCommand:fsc.validate",
-    "onCommand:fsc.compile",
-    "onCommand:fsc.watch"
+    "onLanguage:rel",
+    "onCommand:rel.validate",
+    "onCommand:rel.compile",
+    "onCommand:rel.watch"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
       {
-        "id": "fsc",
-        "aliases": ["FSC", "fsc"],
-        "extensions": [".fsc"],
+        "id": "rel",
+        "aliases": [
+          "ReT",
+          "rel"
+        ],
+        "extensions": [
+          ".rel"
+        ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./assets/fsc-icon.svg",
-          "dark":  "./assets/fsc-icon.svg"
+          "light": "./assets/ms-icon-310x310.png",
+          "dark": "./assets/ms-icon-310x310.png"
         }
       }
     ],
     "grammars": [
       {
-        "language": "fsc",
-        "scopeName": "source.fsc",
-        "path": "./syntaxes/fsc.tmGrammar.json"
+        "language": "rel",
+        "scopeName": "source.rel",
+        "path": "./syntaxes/rel.tmGrammar.json"
       }
     ],
     "snippets": [
       {
-        "language": "fsc",
-        "path": "./snippets/fsc-snippets.json"
+        "language": "rel",
+        "path": "./snippets/rel-snippets.json"
       }
     ],
     "commands": [
       {
-        "command": "fsc.validate",
-        "title": "Validate FSC File",
-        "category": "FSC"
+        "command": "rel.validate",
+        "title": "Validate ReT File",
+        "category": "ReT"
       },
       {
-        "command": "fsc.compile",
-        "title": "Compile FSC to TypeScript",
-        "category": "FSC"
+        "command": "rel.compile",
+        "title": "Compile ReT to TypeScript",
+        "category": "ReT"
       },
       {
-        "command": "fsc.watch",
-        "title": "Watch FSC Files",
-        "category": "FSC"
+        "command": "rel.watch",
+        "title": "Watch ReT Files",
+        "category": "ReT"
       },
       {
-        "command": "fsc.createSchema",
-        "title": "Create New FSC Schema",
-        "category": "FSC"
+        "command": "rel.createSchema",
+        "title": "Create New ReT Schema",
+        "category": "ReT"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "fsc.createSchema",
+          "command": "rel.createSchema",
           "when": "explorerResourceIsFolder",
           "group": "7_modification"
         }
       ],
       "commandPalette": [
         {
-          "command": "fsc.validate",
-          "when": "resourceExtname == .fsc"
+          "command": "rel.validate",
+          "when": "resourceExtname == .rel"
         },
         {
-          "command": "fsc.compile",
-          "when": "resourceExtname == .fsc"
+          "command": "rel.compile",
+          "when": "resourceExtname == .rel"
         }
       ]
     },
     "configuration": {
-      "title": "FSC Extension",
+      "title": "ReT Extension",
       "properties": {
-        "fsc.enableRealTimeValidation": {
+        "rel.enableRealTimeValidation": {
           "type": "boolean",
           "default": true,
           "description": "Enable real-time validation as you type"
         },
-        "fsc.compilerPath": {
+        "rel.compilerPath": {
           "type": "string",
           "default": "",
-          "description": "Path to FSC compiler binary (leave empty to use bundled)"
+          "description": "Path to ReT compiler binary (leave empty to use bundled)"
         },
-        "fsc.outputDirectory": {
+        "rel.outputDirectory": {
           "type": "string",
           "default": "./generated",
           "description": "Default output directory for compiled TypeScript files"
         },
-        "fsc.enableSyntaxHighlighting": {
+        "rel.enableSyntaxHighlighting": {
           "type": "boolean",
           "default": true,
-          "description": "Enable FSC syntax highlighting"
+          "description": "Enable ReT syntax highlighting"
         },
-        "fsc.enableIntelliSense": {
+        "rel.enableIntelliSense": {
           "type": "boolean",
           "default": true,
-          "description": "Enable IntelliSense for FSC files"
+          "description": "Enable IntelliSense for ReT files"
         }
       }
     }
@@ -131,7 +136,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "build-compiler": "cd ../fsc-compiler/fsc && cargo build --release",
+    "build-compiler": "cd ../rel-compiler/rel && cargo build --release",
     "package": "vsce package",
     "publish": "vsce publish"
   },

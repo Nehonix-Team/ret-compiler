@@ -26,118 +26,159 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
 const path = __importStar(require("path"));
-const fs = __importStar(require("fs"));
 const child_process_1 = require("child_process");
 let diagnosticCollection;
-let compilerProcess = null;
+let compilerPath;
+let outputChannel;
 function activate(context) {
-    console.log('FSC Extension activated');
-    // Initialize diagnostic collection for error reporting
-    diagnosticCollection = vscode.languages.createDiagnosticCollection('fsc');
-    context.subscriptions.push(diagnosticCollection);
-    // Register commands
-    context.subscriptions.push(vscode.commands.registerCommand('fsc.validate', validateCurrentFile), vscode.commands.registerCommand('fsc.compile', compileCurrentFile), vscode.commands.registerCommand('fsc.watch', startWatchMode), vscode.commands.registerCommand('fsc.createSchema', createNewSchema));
+    diagnosticCollection = vscode.languages.createDiagnosticCollection('rel');
+    outputChannel = vscode.window.createOutputChannel('ReT Compiler');
+    // Get compiler path from settings or use bundled
+    compilerPath = getCompilerPath(context);
     // Register language features
-    context.subscriptions.push(vscode.languages.registerHoverProvider('fsc', new FSCHoverProvider()), vscode.languages.registerCompletionItemProvider('fsc', new FSCCompletionProvider(), '.', ' '));
-    // Set up real-time validation if enabled
-    const config = vscode.workspace.getConfiguration('fsc');
-    if (config.get('enableRealTimeValidation', true)) {
-        setupRealTimeValidation(context);
-    }
-    // Watch for configuration changes
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('fsc.enableRealTimeValidation')) {
-            const enabled = config.get('enableRealTimeValidation', true);
-            if (enabled) {
-                setupRealTimeValidation(context);
-            }
-            else {
-                // Stop real-time validation
-                if (compilerProcess) {
-                    compilerProcess.kill();
-                    compilerProcess = null;
-                }
-            }
-        }
-    }));
+    registerLanguageFeatures(context);
+    // Register commands
+    registerCommands(context);
+    // Set up real-time validation
+    setupRealTimeValidation(context);
+    outputChannel.appendLine('ReT VSCode Extension activated');
 }
 exports.activate = activate;
-function setupRealTimeValidation(context) {
-    // Watch for document changes
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
-        if (event.document.languageId === 'fsc') {
-            validateDocument(event.document);
-        }
-    }));
-    // Watch for document opens
-    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(document => {
-        if (document.languageId === 'fsc') {
-            validateDocument(document);
-        }
-    }));
-    // Validate all open FSC documents
-    vscode.workspace.textDocuments.forEach(document => {
-        if (document.languageId === 'fsc') {
-            validateDocument(document);
+function getCompilerPath(context) {
+    const configPath = vscode.workspace.getConfiguration('rel').get('compilerPath');
+    if (configPath) {
+        return configPath;
+    }
+    // Use bundled compiler
+    const bundledPath = path.join(context.extensionPath, 'bin', 'rel-compiler');
+    if (process.platform === 'win32') {
+        return bundledPath + '.exe';
+    }
+    return bundledPath;
+}
+function registerLanguageFeatures(context) {
+    // Register completion provider
+    const completionProvider = vscode.languages.registerCompletionItemProvider('rel', {
+        provideCompletionItems(document, position) {
+            return getCompletionItems(document, position);
         }
     });
+    // Register hover provider
+    const hoverProvider = vscode.languages.registerHoverProvider('rel', {
+        provideHover(document, position) {
+            return getHoverInfo(document, position);
+        }
+    });
+    context.subscriptions.push(completionProvider, hoverProvider);
 }
-async function validateCurrentFile() {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor || activeEditor.document.languageId !== 'fsc') {
-        vscode.window.showErrorMessage('No FSC file is currently open');
-        return;
-    }
-    await validateDocument(activeEditor.document);
-    vscode.window.showInformationMessage('FSC validation completed');
+function registerCommands(context) {
+    // Validate command
+    const validateCommand = vscode.commands.registerCommand('rel.validate', async () => {
+        const document = vscode.window.activeTextEditor?.document;
+        if (document && document.languageId === 'rel') {
+            await validateDocument(document);
+        }
+    });
+    // Compile command
+    const compileCommand = vscode.commands.registerCommand('rel.compile', async () => {
+        const document = vscode.window.activeTextEditor?.document;
+        if (document && document.languageId === 'rel') {
+            await compileDocument(document);
+        }
+    });
+    // Watch command
+    const watchCommand = vscode.commands.registerCommand('rel.watch', () => {
+        startWatchMode();
+    });
+    // Create schema command
+    const createSchemaCommand = vscode.commands.registerCommand('rel.createSchema', async (uri) => {
+        await createNewSchema(uri);
+    });
+    context.subscriptions.push(validateCommand, compileCommand, watchCommand, createSchemaCommand);
 }
-async function compileCurrentFile() {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor || activeEditor.document.languageId !== 'fsc') {
-        vscode.window.showErrorMessage('No FSC file is currently open');
-        return;
+function setupRealTimeValidation(context) {
+    const enableValidation = vscode.workspace.getConfiguration('rel').get('enableRealTimeValidation');
+    if (enableValidation) {
+        // Validate on document open
+        vscode.workspace.onDidOpenTextDocument(document => {
+            if (document.languageId === 'rel') {
+                validateDocument(document);
+            }
+        });
+        // Validate on document change
+        vscode.workspace.onDidChangeTextDocument(event => {
+            if (event.document.languageId === 'rel') {
+                // Debounce validation
+                clearTimeout(validationTimeout);
+                validationTimeout = setTimeout(() => {
+                    validateDocument(event.document);
+                }, 500);
+            }
+        });
+        // Validate on save
+        vscode.workspace.onDidSaveTextDocument(document => {
+            if (document.languageId === 'rel') {
+                validateDocument(document);
+            }
+        });
     }
-    const document = activeEditor.document;
+}
+let validationTimeout;
+async function validateDocument(document) {
     const filePath = document.uri.fsPath;
-    const outputDir = vscode.workspace.getConfiguration('fsc').get('outputDirectory', './generated');
+    const diagnostics = [];
     try {
-        await runCompiler(['build', filePath, '--output', outputDir]);
-        vscode.window.showInformationMessage(`FSC compilation completed. Output: ${outputDir}`);
+        // Run compiler in validation mode
+        const result = await runCompiler(['validate', filePath]);
+        if (result.stderr) {
+            // Parse errors from stderr
+            const errors = parseCompilerErrors(result.stderr);
+            diagnostics.push(...errors);
+        }
     }
     catch (error) {
-        vscode.window.showErrorMessage(`FSC compilation failed: ${error}`);
+        outputChannel.appendLine(`Validation error: ${error}`);
+        const errorDiagnostic = new vscode.Diagnostic(new vscode.Range(0, 0, 0, 1), `Validation failed: ${error}`, vscode.DiagnosticSeverity.Error);
+        diagnostics.push(errorDiagnostic);
+    }
+    diagnosticCollection.set(document.uri, diagnostics);
+}
+async function compileDocument(document) {
+    const filePath = document.uri.fsPath;
+    const outputDir = vscode.workspace.getConfiguration('rel').get('outputDirectory');
+    try {
+        const result = await runCompiler(['compile', filePath, '--output', outputDir]);
+        outputChannel.appendLine(result.stdout);
+        if (result.stderr) {
+            outputChannel.appendLine(`Warnings: ${result.stderr}`);
+        }
+        vscode.window.showInformationMessage('ReT compilation completed successfully');
+    }
+    catch (error) {
+        outputChannel.appendLine(`Compilation error: ${error}`);
+        vscode.window.showErrorMessage(`Compilation failed: ${error}`);
     }
 }
-async function startWatchMode() {
+function startWatchMode() {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
         vscode.window.showErrorMessage('No workspace folder found');
         return;
     }
-    const outputDir = vscode.workspace.getConfiguration('fsc').get('outputDirectory', './generated');
-    try {
-        if (compilerProcess) {
-            compilerProcess.kill();
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*.rel', false, false, false);
+    watcher.onDidChange(uri => {
+        const document = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString());
+        if (document) {
+            validateDocument(document);
         }
-        compilerProcess = (0, child_process_1.spawn)(getCompilerPath(), ['watch', workspaceFolder.uri.fsPath, '--output', outputDir], {
-            cwd: workspaceFolder.uri.fsPath,
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
-        compilerProcess.stdout.on('data', (data) => {
-            console.log(`FSC Watch: ${data.toString()}`);
-        });
-        compilerProcess.stderr.on('data', (data) => {
-            console.error(`FSC Watch Error: ${data.toString()}`);
-        });
-        compilerProcess.on('close', (code) => {
-            console.log(`FSC watch process exited with code ${code}`);
-            compilerProcess = null;
-        });
-        vscode.window.showInformationMessage('FSC watch mode started');
-    }
-    catch (error) {
-        vscode.window.showErrorMessage(`Failed to start FSC watch: ${error}`);
-    }
+    });
+    watcher.onDidCreate(uri => {
+        const document = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === uri.toString());
+        if (document) {
+            validateDocument(document);
+        }
+    });
+    vscode.window.showInformationMessage('ReT watch mode started');
 }
 async function createNewSchema(uri) {
     const schemaName = await vscode.window.showInputBox({
@@ -147,205 +188,133 @@ async function createNewSchema(uri) {
     if (!schemaName) {
         return;
     }
-    const fileName = `${schemaName}.fsc`;
-    const filePath = uri ? path.join(uri.fsPath, fileName) : path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, fileName);
-    const template = `# ${schemaName} Schema
-define ${schemaName} {
+    const folderUri = uri || vscode.workspace.workspaceFolders?.[0].uri;
+    if (!folderUri) {
+        return;
+    }
+    const fileName = `${schemaName}.rel`;
+    const fileUri = vscode.Uri.joinPath(folderUri, fileName);
+    const template = `define ${schemaName} {
   id: number
   name: string
   createdAt: date
-}
-
-export ${schemaName}
-`;
+}`;
     try {
-        await fs.promises.writeFile(filePath, template);
-        const document = await vscode.workspace.openTextDocument(filePath);
+        await vscode.workspace.fs.writeFile(fileUri, Buffer.from(template, 'utf8'));
+        const document = await vscode.workspace.openTextDocument(fileUri);
         await vscode.window.showTextDocument(document);
     }
     catch (error) {
         vscode.window.showErrorMessage(`Failed to create schema: ${error}`);
     }
 }
-async function validateDocument(document) {
-    const diagnostics = [];
-    try {
-        const content = document.getText();
-        const result = await runCompilerValidation(content);
-        // Parse compiler output for errors
-        if (result.stderr) {
-            const lines = result.stderr.split('\n');
-            for (const line of lines) {
-                if (line.includes('Error') || line.includes('error')) {
-                    const diagnostic = parseErrorLine(line, document);
-                    if (diagnostic) {
-                        diagnostics.push(diagnostic);
-                    }
-                }
-            }
+function getCompletionItems(document, position) {
+    const line = document.lineAt(position).text.substring(0, position.character);
+    const items = [];
+    // Keywords
+    const keywords = ['define', 'when', 'else', 'validate', 'let', 'enum', 'type', 'mixin', 'extends', 'with', 'from', 'import', 'export'];
+    keywords.forEach(keyword => {
+        if (keyword.startsWith(line.trim())) {
+            const item = new vscode.CompletionItem(keyword, vscode.CompletionItemKind.Keyword);
+            item.detail = `ReT keyword: ${keyword}`;
+            items.push(item);
         }
-    }
-    catch (error) {
-        // If compiler fails completely, show general error
-        const diagnostic = new vscode.Diagnostic(new vscode.Range(0, 0, 0, 1), `FSC validation failed: ${error}`, vscode.DiagnosticSeverity.Error);
-        diagnostics.push(diagnostic);
-    }
-    diagnosticCollection.set(document.uri, diagnostics);
+    });
+    // Types
+    const types = ['string', 'number', 'boolean', 'date', 'email', 'url', 'record', 'array'];
+    types.forEach(type => {
+        if (type.startsWith(line.trim())) {
+            const item = new vscode.CompletionItem(type, vscode.CompletionItemKind.TypeParameter);
+            item.detail = `ReT type: ${type}`;
+            items.push(item);
+        }
+    });
+    // Constraints
+    const constraints = ['min', 'max', 'matches', 'positive', 'negative', 'integer', 'float', 'minLength', 'maxLength', 'hasUppercase', 'hasLowercase', 'hasNumber', 'hasSpecialChar'];
+    constraints.forEach(constraint => {
+        if (constraint.startsWith(line.trim())) {
+            const item = new vscode.CompletionItem(constraint, vscode.CompletionItemKind.Function);
+            item.detail = `ReT constraint: ${constraint}`;
+            items.push(item);
+        }
+    });
+    return items;
 }
-function parseErrorLine(line, document) {
-    // Parse error format: "Error at line 5, col 10: message"
-    const match = line.match(/Error at line (\d+), col (\d+): (.+)/);
-    if (match) {
-        const lineNum = parseInt(match[1]) - 1; // Convert to 0-based
-        const colNum = parseInt(match[2]) - 1;
-        const message = match[3];
-        const range = new vscode.Range(lineNum, colNum, lineNum, colNum + 1);
-        return new vscode.Diagnostic(range, message, vscode.DiagnosticSeverity.Error);
+function getHoverInfo(document, position) {
+    const wordRange = document.getWordRangeAtPosition(position);
+    if (!wordRange) {
+        return null;
+    }
+    const word = document.getText(wordRange);
+    const hoverMap = {
+        'define': 'Define a new schema with fields and validation rules',
+        'when': 'Conditional field definition based on other field values',
+        'validate': 'Add custom validation rules to the schema',
+        'let': 'Define reusable constants and variables',
+        'string': 'Text data type',
+        'number': 'Numeric data type',
+        'boolean': 'True/false data type',
+        'date': 'Date and time data type',
+        'email': 'Email address with built-in validation',
+        'url': 'URL with built-in validation',
+        'min': 'Minimum value constraint',
+        'max': 'Maximum value constraint',
+        'matches': 'Regular expression pattern matching'
+    };
+    const info = hoverMap[word];
+    if (info) {
+        return new vscode.Hover(info);
     }
     return null;
 }
 async function runCompiler(args) {
     return new Promise((resolve, reject) => {
-        const compilerPath = getCompilerPath();
-        const process = (0, child_process_1.spawn)(compilerPath, args, { stdio: 'pipe' });
+        const compiler = (0, child_process_1.spawn)(compilerPath, args, {
+            cwd: vscode.workspace.workspaceFolders?.[0].uri.fsPath
+        });
         let stdout = '';
         let stderr = '';
-        process.stdout.on('data', (data) => {
+        compiler.stdout.on('data', (data) => {
             stdout += data.toString();
         });
-        process.stderr.on('data', (data) => {
+        compiler.stderr.on('data', (data) => {
             stderr += data.toString();
         });
-        process.on('close', (code) => {
+        compiler.on('close', (code) => {
             if (code === 0) {
                 resolve({ stdout, stderr });
             }
             else {
-                reject(new Error(stderr || `Compiler exited with code ${code}`));
+                reject(new Error(`Compiler exited with code ${code}: ${stderr}`));
             }
         });
-        process.on('error', (error) => {
+        compiler.on('error', (error) => {
             reject(error);
         });
     });
 }
-async function runCompilerValidation(content) {
-    return new Promise((resolve, reject) => {
-        const compilerPath = getCompilerPath();
-        const process = (0, child_process_1.spawn)(compilerPath, ['test-parser'], { stdio: ['pipe', 'pipe', 'pipe'] });
-        let stdout = '';
-        let stderr = '';
-        // Send content to stdin
-        process.stdin.write(content);
-        process.stdin.end();
-        process.stdout.on('data', (data) => {
-            stdout += data.toString();
-        });
-        process.stderr.on('data', (data) => {
-            stderr += data.toString();
-        });
-        process.on('close', (code) => {
-            resolve({ stdout, stderr });
-        });
-        process.on('error', (error) => {
-            reject(error);
-        });
-    });
-}
-function getCompilerPath() {
-    const config = vscode.workspace.getConfiguration('fsc');
-    const customPath = config.get('compilerPath', '');
-    if (customPath) {
-        return customPath;
-    }
-    // Try to find bundled compiler - use current extension context
-    try {
-        // Get the current extension from the global extensions API
-        const extensions = vscode.extensions;
-        if (extensions && extensions.getExtension) {
-            const extension = extensions.getExtension('NEHONIX.fsc-vscode-extension');
-            if (extension) {
-                const bundledPath = path.join(extension.extensionPath, 'bin', 'fsc');
-                if (fs.existsSync(bundledPath)) {
-                    return bundledPath;
-                }
-            }
+function parseCompilerErrors(stderr) {
+    const diagnostics = [];
+    const lines = stderr.split('\n');
+    for (const line of lines) {
+        // Parse error format: "file.rel:line:col: error: message"
+        const match = line.match(/^(.+):(\d+):(\d+):\s*(error|warning):\s*(.+)$/);
+        if (match) {
+            const [, file, lineNum, colNum, severity, message] = match;
+            const lineNumber = parseInt(lineNum) - 1;
+            const colNumber = parseInt(colNum) - 1;
+            const diagnosticSeverity = severity === 'error'
+                ? vscode.DiagnosticSeverity.Error
+                : vscode.DiagnosticSeverity.Warning;
+            const diagnostic = new vscode.Diagnostic(new vscode.Range(lineNumber, colNumber, lineNumber, colNumber + 1), message, diagnosticSeverity);
+            diagnostics.push(diagnostic);
         }
     }
-    catch (error) {
-        // Ignore errors and fall back to system PATH
-    }
-    // Fallback to system PATH
-    return 'fsc';
-}
-class FSCHoverProvider {
-    provideHover(document, position) {
-        const wordRange = document.getWordRangeAtPosition(position);
-        if (!wordRange) {
-            return null;
-        }
-        const word = document.getText(wordRange);
-        // Provide hover information for keywords and types
-        const hoverInfo = {
-            'define': 'Define a new schema with fields and validation rules',
-            'when': 'Conditional field definition based on other field values',
-            'validate': 'Add custom validation rules to fields',
-            'string': 'String type with optional constraints',
-            'number': 'Number type with optional constraints',
-            'boolean': 'Boolean type (true/false)',
-            'matches': 'Regex pattern matching constraint',
-            'minLength': 'Minimum string length constraint',
-            'maxLength': 'Maximum string length constraint',
-            'min': 'Minimum value constraint',
-            'max': 'Maximum value constraint',
-            'positive': 'Must be greater than 0',
-            'integer': 'Must be a whole number'
-        };
-        if (hoverInfo[word]) {
-            return new vscode.Hover(hoverInfo[word]);
-        }
-        return null;
-    }
-}
-class FSCCompletionProvider {
-    provideCompletionItems(document, position) {
-        const line = document.lineAt(position.line).text.substring(0, position.character);
-        const completions = [];
-        // Keywords
-        const keywords = ['define', 'when', 'else', 'validate', 'export', 'import', 'from', 'as', 'let', 'enum', 'type'];
-        for (const keyword of keywords) {
-            if (keyword.startsWith(line.trim())) {
-                const item = new vscode.CompletionItem(keyword, vscode.CompletionItemKind.Keyword);
-                item.detail = `FSC keyword: ${keyword}`;
-                completions.push(item);
-            }
-        }
-        // Types
-        const types = ['string', 'number', 'boolean', 'object', 'array', 'date', 'email', 'url', 'uuid'];
-        for (const type of types) {
-            if (type.startsWith(line.trim())) {
-                const item = new vscode.CompletionItem(type, vscode.CompletionItemKind.TypeParameter);
-                item.detail = `FSC type: ${type}`;
-                completions.push(item);
-            }
-        }
-        // Constraints
-        const constraints = ['min', 'max', 'minLength', 'maxLength', 'matches', 'contains', 'startsWith', 'endsWith', 'hasUppercase', 'hasLowercase', 'hasNumber', 'hasSpecialChar', 'between', 'positive', 'negative', 'integer', 'float'];
-        for (const constraint of constraints) {
-            if (constraint.startsWith(line.trim())) {
-                const item = new vscode.CompletionItem(constraint, vscode.CompletionItemKind.Function);
-                item.detail = `FSC constraint: ${constraint}`;
-                completions.push(item);
-            }
-        }
-        return completions;
-    }
+    return diagnostics;
 }
 function deactivate() {
-    if (compilerProcess) {
-        compilerProcess.kill();
-    }
     diagnosticCollection.dispose();
+    outputChannel.dispose();
 }
 exports.deactivate = deactivate;
 //# sourceMappingURL=extension.js.map

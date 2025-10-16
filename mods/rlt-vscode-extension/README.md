@@ -1,50 +1,57 @@
-# FSC VSCode Extension
+# ReT VSCode Extension
 
-A comprehensive VSCode extension for ReliantType Compiler (.fsc) files with real-time type checking, syntax highlighting, and IntelliSense support.
+A comprehensive VSCode extension for ReliantType Compiler (.rel) files with real-time type checking, syntax highlighting, and IntelliSense support.
 
 ## Features
 
 ### 🚀 Real-Time Type Checking
-- **Live validation** as you type using the Rust FSC compiler
+
+- **Live validation** as you type using the Rust ReT compiler
 - **Instant error reporting** with precise line and column information
 - **Syntax validation** with detailed error messages
 
 ### 🎨 Syntax Highlighting
-- **Full syntax highlighting** for .fsc files
+
+- **Full syntax highlighting** for .rel files
 - **Keyword highlighting** (define, when, validate, etc.)
 - **Type highlighting** (string, number, boolean, etc.)
 - **Constraint highlighting** (min, max, matches, etc.)
 - **Comment support** with `#` syntax
 
 ### 💡 IntelliSense & Autocompletion
+
 - **Smart autocompletion** for keywords, types, and constraints
 - **Context-aware suggestions** based on cursor position
 - **Hover information** for types and keywords
 - **Schema snippets** for common patterns
 
 ### 🛠️ Build & Watch Commands
+
 - **Compile to TypeScript** with one click
 - **Watch mode** for automatic recompilation on file changes
 - **Validate files** without generating output
 - **Create new schemas** from templates
 
 ### 📁 File Management
-- **.fsc file association** with custom icons
+
+- **.rel file association** with custom icons
 - **Language configuration** for proper indentation and brackets
 - **Snippet support** for rapid schema development
 
 ## Installation
 
 ### From Source
+
 ```bash
-cd fsc-vscode-extension
+cd rel-vscode-extension
 npm install
 npm run compile
 ```
 
 ### Packaging for Distribution
+
 ```bash
-npm run build-compiler  # Build the Rust FSC compiler
+npm run build-compiler  # Build the Rust ReT compiler
 npm run package         # Create .vsix package
 ```
 
@@ -54,42 +61,47 @@ The extension provides several configuration options in VSCode settings:
 
 ```json
 {
-  "fsc.enableRealTimeValidation": true,
-  "fsc.compilerPath": "",
-  "fsc.outputDirectory": "./generated",
-  "fsc.enableSyntaxHighlighting": true,
-  "fsc.enableIntelliSense": true
+  "rel.enableRealTimeValidation": true,
+  "rel.compilerPath": "",
+  "rel.outputDirectory": "./generated",
+  "rel.enableSyntaxHighlighting": true,
+  "rel.enableIntelliSense": true
 }
 ```
 
 ### Settings
 
-- **`fsc.enableRealTimeValidation`**: Enable/disable real-time validation as you type
-- **`fsc.compilerPath`**: Path to FSC compiler binary (leave empty to use bundled)
-- **`fsc.outputDirectory`**: Default output directory for compiled TypeScript files
-- **`fsc.enableSyntaxHighlighting`**: Enable/disable FSC syntax highlighting
-- **`fsc.enableIntelliSense`**: Enable/disable IntelliSense for FSC files
+- **`rel.enableRealTimeValidation`**: Enable/disable real-time validation as you type
+- **`rel.compilerPath`**: Path to ReT compiler binary (leave empty to use bundled)
+- **`rel.outputDirectory`**: Default output directory for compiled TypeScript files
+- **`rel.enableSyntaxHighlighting`**: Enable/disable ReT syntax highlighting
+- **`rel.enableIntelliSense`**: Enable/disable IntelliSense for ReT files
 
 ## Usage
 
 ### Creating a New Schema
+
 1. Right-click in the Explorer panel
-2. Select "FSC: Create New FSC Schema"
+2. Select "ReT: Create New ReT Schema"
 3. Enter your schema name
 4. Start editing with full IntelliSense support
 
 ### Real-Time Validation
+
 - Errors appear automatically as you type
 - Click on error squiggles for detailed information
-- Use "FSC: Validate FSC File" command for manual validation
+- Use "ReT: Validate ReT File" command for manual validation
 
 ### Compilation
-- Use "FSC: Compile FSC to TypeScript" to generate TypeScript interfaces
-- Use "FSC: Watch FSC Files" for automatic recompilation
+
+- Use "ReT: Compile ReT to TypeScript" to generate TypeScript interfaces
+- Use "ReT: Watch ReT Files" for automatic recompilation
 - Output files are placed in the configured output directory
 
 ### Snippets
+
 Use these snippets for rapid development:
+
 - `schema` - Basic schema template
 - `schema-validation` - Schema with validation rules
 - `conditional-schema` - Schema with conditional fields
@@ -103,7 +115,8 @@ Use these snippets for rapid development:
 ## Language Features
 
 ### Schema Definition
-```fsc
+
+```rel
 define User {
   id: number
   email: string & matches(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -113,7 +126,8 @@ define User {
 ```
 
 ### Conditional Fields
-```fsc
+
+```rel
 define Product {
   type: physical | digital
 
@@ -128,7 +142,8 @@ define Product {
 ```
 
 ### Validation Rules
-```fsc
+
+```rel
 define Order {
   amount: number & positive
   userId: number
@@ -143,7 +158,7 @@ define Order {
 The extension consists of:
 
 - **TypeScript Extension Host**: Main VSCode extension logic
-- **Rust FSC Compiler**: Backend compiler for validation and code generation
+- **Rust ReT Compiler**: Backend compiler for validation and code generation
 - **TextMate Grammar**: Syntax highlighting definitions
 - **Language Configuration**: Editor behavior settings
 - **Snippets**: Code templates for common patterns
@@ -151,29 +166,32 @@ The extension consists of:
 ## Development
 
 ### Building the Compiler
+
 ```bash
-cd fsc-compiler/fsc
+cd rel-compiler/rel
 cargo build --release
 ```
 
 ### Testing the Extension
+
 ```bash
-cd fsc-vscode-extension
+cd rel-vscode-extension
 npm run compile
 # Open in VSCode and use F5 to test
 ```
 
 ### File Structure
+
 ```
-fsc-vscode-extension/
+rel-vscode-extension/
 ├── src/
 │   └── extension.ts          # Main extension logic
 ├── syntaxes/
-│   └── fsc.tmGrammar.json    # Syntax highlighting
+│   └── rel.tmGrammar.json    # Syntax highlighting
 ├── snippets/
-│   └── fsc-snippets.json     # Code snippets
+│   └── rel-snippets.json     # Code snippets
 ├── assets/                   # Icons and resources
-├── bin/                      # Bundled FSC compiler
+├── bin/                      # Bundled ReT compiler
 ├── package.json              # Extension manifest
 ├── tsconfig.json            # TypeScript config
 └── language-configuration.json # Editor behavior
@@ -194,4 +212,4 @@ MIT License - see LICENSE file for details
 ## Related Projects
 
 - [ReliantType](https://github.com/Nehonix-Team/reliant-type) - Main library
-- [FSC Compiler](https://github.com/Nehonix-Team/fsc-compiler) - Rust compiler backend
+- [ReT Compiler](https://github.com/Nehonix-Team/rel-compiler) - Rust compiler backend
