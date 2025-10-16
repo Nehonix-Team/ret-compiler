@@ -223,11 +223,23 @@ impl TypeScriptGenerator {
                 let mut max_val = None;
                 let mut has_special_type = false;
                 let mut special_type = String::new();
+                let mut matches_pattern = None;
 
                 for constraint in constraints {
                     match constraint.constraint_type {
                         ConstraintType::Min => min_val = Some(self.generate_constraint_string(constraint)),
                         ConstraintType::Max => max_val = Some(self.generate_constraint_string(constraint)),
+                        ConstraintType::Matches => {
+                            // Extract regex pattern from matches constraint
+                            if let Some(expr) = &constraint.value {
+                                // For RawString, wrap with / delimiters for ReliantType regex syntax
+                                let pattern_str = match expr {
+                                    ExpressionNode::RawString(s) => format!("/{}/", s),
+                                    _ => self.generate_expression_value(&Some(expr.clone()))
+                                };
+                                matches_pattern = Some(pattern_str);
+                            }
+                        }
                         // These are standalone types in ReliantType, not constraints
                         ConstraintType::Positive => {
                             has_special_type = true;
@@ -252,7 +264,10 @@ impl TypeScriptGenerator {
                 }
 
                 // Generate proper ReliantType constraint syntax
-                if has_special_type {
+                if let Some(pattern) = matches_pattern {
+                    // Regex pattern: "string(/pattern/)"
+                    format!("\"{}({})\"", base_str, pattern)
+                } else if has_special_type {
                     // Special types like "positive", "negative", "int", "double" are standalone
                     // If there are also min/max constraints, combine them
                     if min_val.is_some() || max_val.is_some() {
