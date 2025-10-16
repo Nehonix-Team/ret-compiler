@@ -1,0 +1,17 @@
+# Test print functionality
+
+declare var message: string = "Hello from rel!"
+declare var count: number = 42
+
+print("Starting execution...")
+print("Message:", ::message)
+print("Count:", ::count)
+
+define User {
+  name: string
+  age: number
+}
+
+print("Schema defined successfully!")
+
+export User

@@ -50,6 +50,7 @@ impl Parser {
             TokenType::Type => self.parse_type_alias(),
             TokenType::Declare => self.parse_declare(),
             TokenType::At => self.parse_decorator(),
+            TokenType::Print => self.parse_print(),
             TokenType::Let => self.parse_variable(),
             TokenType::Mixin => self.parse_mixin(),
             TokenType::Identifier if self.peek().value == "validate" => self.parse_top_level_validation(),
@@ -898,6 +899,27 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
             return_type,
             body_type,
         }))
+    }
+
+    /// Parse: print(arg1, arg2, ...)
+    fn parse_print(&mut self) -> Result<ASTNode, ParseError> {
+        self.advance(); // consume 'print'
+        
+        self.consume(TokenType::LParen, "Expected '(' after 'print'")?;
+        
+        let mut arguments = Vec::new();
+        if !self.check(TokenType::RParen) {
+            loop {
+                arguments.push(self.parse_expression()?);
+                if !self.match_token(TokenType::Comma) {
+                    break;
+                }
+            }
+        }
+        
+        self.consume(TokenType::RParen, "Expected ')' after print arguments")?;
+        
+        Ok(ASTNode::Print(PrintNode { arguments }))
     }
 
     /// Parse: declare var name: type = value

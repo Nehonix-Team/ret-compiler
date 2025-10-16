@@ -31,6 +31,8 @@ pub enum TokenType {
     Fn,
     For,
     In,
+    Print,
+    Print,
 
     // Literals
     Identifier,
@@ -409,6 +411,7 @@ impl Lexer {
             "var" => TokenType::Var,
             "fn" => TokenType::Fn,
             "for" => TokenType::For,
+            "print" => TokenType::Print,
             "in" => TokenType::In,
             "true" | "false" => TokenType::Boolean,
             "null" => TokenType::Null,
@@ -475,6 +478,7 @@ impl Lexer {
             "var" => TokenType::Var,
             "fn" => TokenType::Fn,
             "for" => TokenType::For,
+            "print" => TokenType::Print,
             "in" => TokenType::In,
             "if" => TokenType::If,
             "true" | "false" => TokenType::Boolean,

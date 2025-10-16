@@ -25,6 +25,9 @@ pub enum ASTNode {
 
     // New: Loop constructs
     ForLoop(ForLoopNode),
+    
+    // New: Print statement for debugging
+    Print(PrintNode),
 
     // Schema components
     Field(FieldNode),
@@ -353,4 +356,10 @@ pub enum LoopRange {
     NumericRange { start: i64, end: i64 },  // 1..31
     Array(Vec<String>),                      // ["Mon", "Tue", ...]
     Identifier(String),                      // someArray
+}
+
+// New: Print statement node
+#[derive(Debug, Clone, PartialEq)]
+pub struct PrintNode {
+    pub arguments: Vec<ExpressionNode>,
 }
