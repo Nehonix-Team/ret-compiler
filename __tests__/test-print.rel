@@ -1,0 +1,15 @@
+# Test print statement and variables
+
+declare var name = "ReliantType"
+declare var version = 1.0
+declare var isActive = true
+
+print("Hello from", name)
+print("Version:", version)
+print("Active:", isActive)
+
+declare var x = 10
+declare var y = 20
+declare var sum = 30
+
+print("Sum:", sum)

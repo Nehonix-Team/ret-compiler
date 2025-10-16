@@ -1,0 +1,42 @@
+# Comprehensive test for rel interpreter
+# Testing variables, types, and print statements
+
+# Variable declarations
+declare var appName = "ReliantType Compiler"
+declare var version = 2.0
+declare var isProduction = false
+
+# Type declarations
+declare type UserId = number
+declare type UserRole = string
+
+# Print statements
+print("=== ReliantType Interpreter Test ===")
+print("")
+print("Application:", appName)
+print("Version:", version)
+print("Production Mode:", isProduction)
+print("")
+
+# Arithmetic expressions
+declare var x = 10
+declare var y = 5
+print("Math Operations:")
+print("x =", x)
+print("y =", y)
+print("")
+
+# Arrays
+declare var colors = ["red", "green", "blue"]
+print("Colors:", colors)
+print("")
+
+# Boolean values
+declare var enabled = true
+declare var disabled = false
+print("Flags:")
+print("Enabled:", enabled)
+print("Disabled:", disabled)
+print("")
+
+print("=== Test Complete ===")

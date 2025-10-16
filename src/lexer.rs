@@ -32,7 +32,6 @@ pub enum TokenType {
     For,
     In,
     Print,
-    Print,
 
     // Literals
     Identifier,

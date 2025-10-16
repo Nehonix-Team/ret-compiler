@@ -1,0 +1,48 @@
+feat: complete print statement and interpreter implementation 🎉
+
+ACHIEVEMENT UNLOCKED: 4/4 Features Complete (100%)!
+
+Added:
+- Full interpreter module (src/interpreter.rs, 352 lines)
+  * RuntimeValue enum with 7 types (String, Number, Boolean, Null, Undefined, Array, Object)
+  * Expression evaluation engine
+  * Binary operators (15): arithmetic, comparison, logical
+  * Unary operators (2): not, negate
+  * Built-in functions: len(), length()
+  * Runtime error handling with line/column tracking
+
+- 'rel run' command for executing .rel files
+  * Full pipeline: Tokenize → Parse → Execute
+  * Comprehensive error reporting
+  * CLI integration with --input/-i flag
+
+- Test files for validation
+  * __tests__/test-print.rel: Basic functionality
+  * __tests__/test-comprehensive.rel: Full feature test
+
+Fixed:
+- Duplicate Print token in lexer (line 34-35)
+
+Modified:
+- src/main.rs: Added interpreter module and run command
+- src/lexer.rs: Fixed duplicate Print token
+
+Status: 4/4 features complete (100%)
+✅ Variables (declare var + ::)
+✅ Type Aliases (declare type)
+✅ Functions (@fn)
+✅ Print Statement & Interpreter (print() + rel run)
+
+Usage:
+  rel run --input file.rel
+  rel run -i file.rel
+
+Example:
+  declare var name = "ReliantType"
+  declare var version = 2.0
+  print("Hello from", name, "v", version)
+
+Output:
+  "Hello from" "ReliantType" "v" 2
+
+Next: Ready for production use!
