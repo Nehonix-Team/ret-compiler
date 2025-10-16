@@ -11,6 +11,8 @@ use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::generator::TypeScriptGenerator;
 use crate::resolver::ModuleResolver;
+use crate::validation;
+use crate::colors;
 
 #[derive(Debug)]
 pub struct CompilerOptions {
@@ -62,7 +64,7 @@ impl relCompiler {
             self.compile_file(&file_path)?;
         }
 
-        println!("Compilation completed successfully!");
+        println!("\n{}", colors::success("✓ Compilation completed successfully!"));
         Ok(())
     }
 
@@ -92,11 +94,11 @@ impl relCompiler {
     }
 
     fn compile_file(&self, file_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-        println!("Compiling: {:?}", file_path);
+        println!("\n{} {}", colors::info("Compiling"), colors::path(&file_path.display().to_string()));
 
         // Read file content
         let content = fs::read_to_string(file_path)?;
-        println!("File size: {} bytes", content.len());
+        println!("  {} {} bytes", colors::dim("Size:"), content.len());
 
         // Create module resolver
         let root_dir = file_path.parent()
@@ -112,6 +114,15 @@ impl relCompiler {
         // Only includes schemas that are exported or used by exported schemas
         let ast_nodes = resolver.get_merged_ast(&dependencies, file_path)
             .map_err(|e| format!("Import/Export analysis failed: {}", e))?;
+
+        // Validate naming conventions and best practices
+        if let Err(errors) = validation::validate_ast(&ast_nodes) {
+            eprintln!("\n{}", colors::error("Validation errors:"));
+            for error in &errors {
+                eprintln!("  {} {}", colors::error("•"), error.message);
+            }
+            return Err(format!("Validation failed with {} error(s)", errors.len()).into());
+        }
 
         // Generate TypeScript
         let mut generator = TypeScriptGenerator::new();
@@ -129,7 +140,7 @@ impl relCompiler {
 
         // Write output
         fs::write(&output_path, ts_code)?;
-        println!("Generated: {:?}", output_path);
+        println!("  {} {}", colors::success("Generated"), colors::path(&output_path.display().to_string()));
 
         Ok(())
     }

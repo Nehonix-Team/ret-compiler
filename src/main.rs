@@ -5,6 +5,8 @@ mod generator;
 mod compiler;
 mod resolver;
 mod import_tracker;
+mod validation;
+mod colors;
 
 use clap::{Parser, Subcommand};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};

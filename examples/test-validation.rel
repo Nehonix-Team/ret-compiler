@@ -1,0 +1,8 @@
+# Test validation rules
+
+define product {
+  name: string
+  Price: number
+}
+
+export product

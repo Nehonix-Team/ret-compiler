@@ -1,8 +1,8 @@
-import { Test } from "./user.rel"
+import { Val } from "./val.rel"
 
 define Product {
   id: uuid
-  val: Test
+  val: Val
 }
 
 export Product
