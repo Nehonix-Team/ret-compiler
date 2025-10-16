@@ -1,0 +1,10 @@
+@fn Ranged(min: number, max: number) -> type {
+  return number & min(::min) & max(::max)
+}
+
+define Product {
+  price: Ranged(0, 10000)
+  quantity: Ranged(0, 1000)
+}
+
+export Product

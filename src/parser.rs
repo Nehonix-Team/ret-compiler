@@ -581,7 +581,12 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         // Check for :: variable reference
         if self.check(TokenType::DoubleColon) {
             self.advance(); // consume '::'
-            let var_name = self.consume_identifier("Expected variable name after '::'")?;
+            // Accept Identifier, TypeName, or Constraint as variable name
+            let var_name = if self.check(TokenType::Identifier) || self.check(TokenType::TypeName) || self.check(TokenType::Constraint) {
+                self.advance().value
+            } else {
+                return Err(self.error("Expected variable name after '::'"));
+            };
             return Ok(ExpressionNode::VariableRef(var_name));
         }
         
@@ -843,7 +848,12 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         
         if !self.check(TokenType::RParen) {
             loop {
-                let param_name = self.consume_identifier("Expected parameter name")?;
+                // Accept Identifier, TypeName, or Constraint tokens for parameter names
+                let param_name = if self.check(TokenType::Identifier) || self.check(TokenType::TypeName) || self.check(TokenType::Constraint) {
+                    self.advance().value
+                } else {
+                    return Err(self.error("Expected parameter name"));
+                };
                 self.consume(TokenType::Colon, "Expected ':' after parameter name")?;
                 let param_type = self.parse_type()?;
                 
@@ -862,13 +872,18 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         
         // Parse return type
         self.consume(TokenType::Arrow, "Expected '->' after parameters")?;
-        let return_type = self.consume_identifier("Expected return type")?;
+        // Accept "type" keyword as return type identifier
+        let return_type = if self.check(TokenType::Type) {
+            self.advance().value
+        } else {
+            self.consume_identifier("Expected return type")?
+        };
         
         // Parse body
         self.consume(TokenType::LBrace, "Expected '{' to start function body")?;
         
         // Look for "return" keyword
-        let body_type = if self.peek().value == "return" {
+        let body_type = if self.check(TokenType::Return) {
             self.advance(); // consume 'return'
             Some(self.parse_type()?)
         } else {

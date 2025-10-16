@@ -393,6 +393,10 @@ impl TypeScriptGenerator {
             TypeNode::Any => "any".to_string(),
             TypeNode::Unknown => "unknown".to_string(),
             TypeNode::Identifier(name) => name.clone(),
+            TypeNode::FunctionCall { name, arguments } => {
+                // Expand function call inline
+                self.expand_type_inline(&TypeNode::FunctionCall { name: name.clone(), arguments: arguments.clone() }).trim_matches('"').to_string()
+            }
             TypeNode::Array(inner) => format!("{}[]", self.generate_type(inner)),
             TypeNode::Union(types) => {
                 let type_strings: Vec<String> = types.iter().map(|t| self.generate_type(t)).collect();
@@ -449,6 +453,10 @@ impl TypeScriptGenerator {
             TypeNode::Any => "\"any\"".to_string(),
             TypeNode::Unknown => "\"unknown\"".to_string(),
             TypeNode::Identifier(name) => format!("\"{}\"", name),
+            TypeNode::FunctionCall { name, arguments } => {
+                // Expand function call and return as schema string
+                self.expand_type_inline(&TypeNode::FunctionCall { name: name.clone(), arguments: arguments.clone() })
+            }
             TypeNode::Array(inner) => format!("\"{}[]\"", self.generate_type_name(inner)),
             TypeNode::Union(types) => {
                 let union_parts: Vec<String> = types.iter().map(|t| {
@@ -577,6 +585,10 @@ impl TypeScriptGenerator {
             TypeNode::Any => "any".to_string(),
             TypeNode::Unknown => "unknown".to_string(),
             TypeNode::Identifier(name) => name.clone(),
+            TypeNode::FunctionCall { name, arguments } => {
+                // Expand function call for type name
+                self.expand_type_inline(&TypeNode::FunctionCall { name: name.clone(), arguments: arguments.clone() }).trim_matches('"').to_string()
+            }
             TypeNode::Array(inner) => format!("{}[]", self.generate_type_name(inner)),
             TypeNode::Union(types) => {
                 let union_parts: Vec<String> = types.iter().map(|t| self.generate_type_name(t)).collect();
