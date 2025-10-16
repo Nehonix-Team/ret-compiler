@@ -3,7 +3,7 @@
 
 define ConditionalExample {
   # Basic fields
-  role: admin | user | guest
+  role: admin | user | guest 
   age: number
   accountType: free | premium | enterprise
   
