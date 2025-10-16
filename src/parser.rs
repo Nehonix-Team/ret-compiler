@@ -364,31 +364,29 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
     self.consume(TokenType::LBrace, "Expected '{' after condition")?;
 
     // Parse multiple fields in the conditional block
-    let mut fields = Vec::new();
+    let mut then_fields = Vec::new();
     while !self.check(TokenType::RBrace) && !self.is_at_end() {
-        fields.push(self.parse_field()?);
+        then_fields.push(self.parse_field()?);
         // Optional comma between fields
         self.match_token(TokenType::Comma);
     }
 
     self.consume(TokenType::RBrace, "Expected '}' after then block")?;
 
-    // For now, we'll create a synthetic type that represents the conditional fields
-    // This needs to be handled differently in the AST
-    let then_value = if fields.len() == 1 {
+    // Create type node for then value
+    let then_value = if then_fields.len() == 1 {
         // Single field - use its type
-        fields[0].field_type.clone()
+        then_fields[0].field_type.clone()
     } else {
-        // Multiple fields - this should be handled as a conditional block, not a type
-        // For now, we'll use Object as a placeholder
+        // Multiple fields - use Object as placeholder
         TypeNode::Object
     };
 
-    let else_value = if self.match_token(TokenType::Else) {
+    let (else_value, else_fields) = if self.match_token(TokenType::Else) {
         if self.match_token(TokenType::When) {
             // else when condition - recursively parse another conditional
             let nested_conditional = self.parse_conditional()?;
-            Some(TypeNode::Conditional(Box::new(nested_conditional)))
+            (Some(TypeNode::Conditional(Box::new(nested_conditional))), Vec::new())
         } else {
             // else block - parse fields
             self.consume(TokenType::LBrace, "Expected '{' after else")?;
@@ -400,17 +398,18 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
             }
             self.consume(TokenType::RBrace, "Expected '}' after else block")?;
 
-            // For now, use Object as placeholder for else block
-            Some(TypeNode::Object)
+            (Some(TypeNode::Object), else_fields)
         }
     } else {
-        None
+        (None, Vec::new())
     };
 
     Ok(ConditionalNode {
         condition,
         then_value,
         else_value,
+        then_fields,
+        else_fields,
     })
 }
 

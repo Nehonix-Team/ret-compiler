@@ -4,6 +4,8 @@ export const ConditionalExampleSchema = Interface({
   role: "admin|user|guest",
   age: "number",
   accountType: "free|premium|enterprise",
-  // Conditional block: when role === admin { ... }
-  // Conditional block: when age >= 18 { ... }
+  adminToken: "when role === admin *? string : any?",
+  permissions: "when role === admin *? string[] : any?",
+  canVote: "when age >= 18 *? boolean : any?",
+  adultContent: "when age >= 18 *? boolean : any?",
 });

@@ -1,0 +1,36 @@
+# Advanced conditional validation test
+
+define UserPermissions {
+  # Basic fields
+  userId: uuid
+  username: string
+  role: admin | user | moderator | guest
+  age: number
+  isPremium: boolean
+  
+  # Conditional fields based on role
+  when role = admin {
+    adminPanel: boolean
+    systemSettings: record<string, any>
+    allPermissions: string[]
+  }
+  
+  when role = moderator {
+    moderationTools: boolean
+    bannedUsers: string[]
+  }
+  
+  # Conditional fields based on age
+  when age >= 18 {
+    adultContent: boolean
+    canVote: boolean
+    drinkingAge: boolean
+  }
+  
+  # Conditional fields based on premium status
+  when isPremium = true {
+    premiumFeatures: string[]
+    adFree: boolean
+    prioritySupport: boolean
+  }
+}

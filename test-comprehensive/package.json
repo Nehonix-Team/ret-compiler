@@ -1,0 +1,8 @@
+{
+  "name": "ret-compiler-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "reliant-type": "^1.0.0"
+  }
+}

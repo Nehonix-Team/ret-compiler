@@ -119,6 +119,8 @@ pub struct ConditionalNode {
     pub condition: ExpressionNode,
     pub then_value: TypeNode,
     pub else_value: Option<TypeNode>,
+    pub then_fields: Vec<FieldNode>,  // Store actual fields from then block
+    pub else_fields: Vec<FieldNode>,  // Store actual fields from else block
 }
 
 #[derive(Debug, Clone, PartialEq)]

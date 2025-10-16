@@ -389,13 +389,62 @@ impl TypeScriptGenerator {
     }
 
     fn generate_conditional_fields(&mut self, conditional: &ConditionalNode) -> String {
-        // Generate fields from conditional block with inline syntax
-        // For now, generate a comment explaining the conditional
+        // Generate fields from conditional block with inline ReliantType syntax
+        // Format: "when <condition> *? <thenType> : <elseType>"
         let indent = self.get_indent();
+        let mut output = String::new();
+        
+        // Generate condition expression
         let condition_str = self.generate_expression(&conditional.condition);
         
-        // Generate comment explaining the conditional block
-        format!("{}// Conditional block: when {} {{ ... }}\n", indent, condition_str)
+        // Generate each field from the then block with inline conditional syntax
+        for field in &conditional.then_fields {
+            let field_name = &field.name;
+            let then_type = self.generate_type_schema(&field.field_type);
+            
+            // Check if there's an else value
+            let else_type = if conditional.else_fields.is_empty() {
+                // No else block - field is optional in else case
+                format!("\"any?\"")
+            } else {
+                // Find matching field in else block
+                let else_field = conditional.else_fields.iter()
+                    .find(|f| f.name == *field_name);
+                
+                if let Some(else_f) = else_field {
+                    self.generate_type_schema(&else_f.field_type)
+                } else {
+                    format!("\"any?\"")
+                }
+            };
+            
+            // Generate inline conditional: "when condition *? thenType : elseType"
+            // Remove quotes from types for inline syntax
+            let then_clean = then_type.trim_matches('"');
+            let else_clean = else_type.trim_matches('"');
+            
+            output.push_str(&format!(
+                "{}{}: \"when {} *? {} : {}\",\n",
+                indent, field_name, condition_str, then_clean, else_clean
+            ));
+        }
+        
+        // Generate fields that only exist in else block
+        for field in &conditional.else_fields {
+            if !conditional.then_fields.iter().any(|f| f.name == field.name) {
+                let field_name = &field.name;
+                let else_type = self.generate_type_schema(&field.field_type);
+                let else_clean = else_type.trim_matches('"');
+                
+                // Field only in else: when NOT condition *? elseType : any?
+                output.push_str(&format!(
+                    "{}{}: \"when !({}) *? {} : any?\",\n",
+                    indent, field_name, condition_str, else_clean
+                ));
+            }
+        }
+        
+        output
     }
 
     fn generate_conditional_schema(&mut self, conditional: &ConditionalNode) -> String {
