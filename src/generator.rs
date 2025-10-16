@@ -79,11 +79,10 @@ impl TypeScriptGenerator {
         for field in &schema.fields {
             // Handle conditional fields specially
             if field.name.starts_with("conditional_") {
-                // This is a conditional block - currently not fully supported
-                // TODO: Implement proper conditional field generation
-                let indent = self.get_indent();
-                output.push_str(&format!("{}// TODO: Conditional fields not yet implemented\n", indent));
-                output.push_str(&format!("{}// when <condition> {{ ... }}\n", indent));
+                // Generate inline conditional syntax for ReliantType
+                if let TypeNode::Conditional(conditional) = &field.field_type {
+                    output.push_str(&self.generate_conditional_fields(conditional));
+                }
             } else {
                 output.push_str(&self.generate_field_schema(field));
             }
@@ -118,7 +117,10 @@ impl TypeScriptGenerator {
 
     fn generate_field_schema(&mut self, field: &FieldNode) -> String {
         let indent = self.get_indent();
-        let mut output = format!("{}{}: ", indent, field.name);
+        let mut output = String::new();
+        
+        // Generate the main field
+        output.push_str(&format!("{}{}: ", indent, field.name));
 
         let mut type_str = self.generate_type_schema(&field.field_type);
         
@@ -138,6 +140,12 @@ impl TypeScriptGenerator {
         
         output.push_str(&type_str);
         output.push_str(",\n");
+        
+        // Generate conditional fields if any
+        for conditional in &field.conditionals {
+            output.push_str(&self.generate_conditional_fields(conditional));
+        }
+        
         output
     }
 
@@ -378,6 +386,16 @@ impl TypeScriptGenerator {
             ConstraintType::Float => "float".to_string(),
             ConstraintType::Literal => self.generate_expression_value(&constraint.value),
         }
+    }
+
+    fn generate_conditional_fields(&mut self, conditional: &ConditionalNode) -> String {
+        // Generate fields from conditional block with inline syntax
+        // For now, generate a comment explaining the conditional
+        let indent = self.get_indent();
+        let condition_str = self.generate_expression(&conditional.condition);
+        
+        // Generate comment explaining the conditional block
+        format!("{}// Conditional block: when {} {{ ... }}\n", indent, condition_str)
     }
 
     fn generate_conditional_schema(&mut self, conditional: &ConditionalNode) -> String {

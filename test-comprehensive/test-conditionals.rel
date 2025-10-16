@@ -1,0 +1,20 @@
+# Test conditional validation features
+# Based on ReliantType V1 and V2 syntax
+
+define ConditionalExample {
+  # Basic fields
+  role: admin | user | guest
+  age: number
+  accountType: free | premium | enterprise
+  
+  # Try when blocks (currently parsed but not generated)
+  when role = admin {
+    adminToken: string
+    permissions: string[]
+  }
+  
+  when age >= 18 {
+    canVote: boolean
+    adultContent: boolean
+  }
+}
