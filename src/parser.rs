@@ -1,5 +1,15 @@
 /**
  * rel Parser - Converts tokens to AST
+ * 
+ * FILE STRUCTURE:
+ * 1. Parser struct and main parse() method
+ * 2. Schema & Field Parsing (parse_schema, parse_field, parse_mixins)
+ * 3. Type Parsing (parse_type, parse_base_type, parse_constraint)
+ * 4. Conditional & Validation Parsing
+ * 5. Expression Parsing (parse_expression, parse_logical_or/and, parse_term)
+ * 6. Statement Parsing (parse_import, parse_export, parse_enum, etc.)
+ * 7. Function & Declaration Parsing (parse_function, parse_declare, parse_print)
+ * 8. Helper Methods (consume, match_token, error, etc.)
  */
 
 use crate::ast::*;
@@ -57,6 +67,10 @@ impl Parser {
             _ => Err(self.error("Expected top-level declaration (define, import, export, enum, type, let, mixin, or validate)")),
         }
     }
+
+    // ========================================================================
+    // SECTION: Schema & Field Parsing
+    // ========================================================================
 
     fn parse_schema(&mut self) -> Result<ASTNode, ParseError> {
         self.consume(TokenType::Define, "Expected 'define'")?;
@@ -204,6 +218,10 @@ impl Parser {
             conditionals: Vec::new(),
         })
     }
+
+    // ========================================================================
+    // SECTION: Type Parsing
+    // ========================================================================
 
     fn parse_type(&mut self) -> Result<TypeNode, ParseError> {
         // Check if we start with a constraint (e.g., &literal(value))
@@ -400,6 +418,10 @@ impl Parser {
             value,
         })
     }
+    // ========================================================================
+    // SECTION: Conditional & Validation Parsing
+    // ========================================================================
+
 fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
     let condition = self.parse_expression()?;
     self.consume(TokenType::LBrace, "Expected '{' after condition")?;
@@ -525,6 +547,10 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         // Default to custom validation
         Ok(ValidationRule::Custom(format!("{:?}", left)))
     }
+
+    // ========================================================================
+    // SECTION: Expression Parsing
+    // ========================================================================
 
     fn parse_expression(&mut self) -> Result<ExpressionNode, ParseError> {
         self.parse_logical_or()
@@ -717,6 +743,10 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         Ok(operator)
     }
 
+    // ========================================================================
+    // SECTION: Statement Parsing (Import, Export, Enum, etc.)
+    // ========================================================================
+
     fn parse_import(&mut self) -> Result<ASTNode, ParseError> {
         self.consume(TokenType::Import, "Expected 'import'")?;
         let items = self.parse_import_items()?;
@@ -825,6 +855,10 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         let validation = self.parse_validation()?;
         Ok(ASTNode::ValidationStatement(validation))
     }
+
+    // ========================================================================
+    // SECTION: Function & Declaration Parsing
+    // ========================================================================
 
     /// Parse decorators (@fn, @for, etc.)
     fn parse_decorator(&mut self) -> Result<ASTNode, ParseError> {
@@ -976,6 +1010,10 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
             Err(self.error("Expected 'var' or 'type' after 'declare'"))
         }
     }
+
+    // ========================================================================
+    // SECTION: Helper Methods
+    // ========================================================================
 
     fn is_expression_start(&self) -> bool {
         matches!(

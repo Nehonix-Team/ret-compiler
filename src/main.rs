@@ -1,3 +1,17 @@
+/**
+ * rel Compiler - Main entry point
+ * 
+ * FILE STRUCTURE:
+ * 1. Module imports and CLI definition
+ * 2. Main function and command routing
+ * 3. Test Commands (test_lexer, test_parser, test_generator)
+ * 4. Project Commands (init_project)
+ * 5. Validation Commands (check_files, validate_files, perform_semantic_validation)
+ * 6. Watch Command (watch_files)
+ * 7. Run Command (run_file)
+ * 8. Helper Functions (collect_used_types, is_builtin_type)
+ */
+
 mod lexer;
 mod ast;
 mod parser;
@@ -156,6 +170,10 @@ fn main() {
     }
 }
 
+// ============================================================================
+// SECTION: Test Commands
+// ============================================================================
+
 fn test_lexer(input: &str) {
     println!("Testing lexer with input: {}", input);
     println!("Input length: {}", input.len());
@@ -274,6 +292,10 @@ fn test_generator(input: &str) {
     }
 }
 
+// ============================================================================
+// SECTION: Project Commands
+// ============================================================================
+
 fn init_project(dir: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     println!("Creating rel project structure...");
 
@@ -339,6 +361,10 @@ rel check
 
     Ok(())
 }
+
+// ============================================================================
+// SECTION: Validation Commands
+// ============================================================================
 
 fn check_files(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     println!("Checking rel files...");
@@ -416,6 +442,10 @@ fn validate_files(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     println!("✅ All files validated successfully!");
     Ok(())
 }
+
+// ============================================================================
+// SECTION: Watch Command
+// ============================================================================
 
 fn watch_files(input: &PathBuf, output: Option<&PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
     println!("Watching rel files in: {:?} for changes", input);
@@ -576,6 +606,10 @@ fn collect_used_types(type_node: &crate::ast::TypeNode, used_types: &mut std::co
     }
 }
 
+// ============================================================================
+// SECTION: Helper Functions
+// ============================================================================
+
 fn is_builtin_type(name: &str) -> bool {
     matches!(
         name,
@@ -583,6 +617,10 @@ fn is_builtin_type(name: &str) -> bool {
         "uuid" | "positive" | "negative" | "integer" | "float" | "any" | "unknown" | "null" | "undefined"
     )
 }
+
+// ============================================================================
+// SECTION: Run Command
+// ============================================================================
 
 fn run_file(input: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     println!("Running rel file: {:?}", input);

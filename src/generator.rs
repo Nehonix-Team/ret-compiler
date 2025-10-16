@@ -2,6 +2,15 @@
  * rel TypeScript Code Generator
  *
  * Converts AST nodes to ReliantType interfaces and validation schemas
+ * 
+ * FILE STRUCTURE:
+ * 1. TypeScriptGenerator struct and main generate() method
+ * 2. Type Generation (generate_type, generate_type_schema, expand_type_inline)
+ * 3. Constraint Generation (generate_constrained_type_inline)
+ * 4. Expression Generation (expression_to_string, evaluate_expression_in_context)
+ * 5. Schema Generation (generate_schema, generate_field)
+ * 6. Statement Generation (generate_enum, generate_import, generate_export, etc.)
+ * 7. Helper Methods
  */
 
 use crate::ast::*;
@@ -27,6 +36,10 @@ impl TypeScriptGenerator {
             context: CompilationContext::new(),
         }
     }
+
+    // ========================================================================
+    // SECTION: Main Generation Method
+    // ========================================================================
 
     pub fn generate(&mut self, ast: &[ASTNode]) -> String {
         // First pass: collect variables, types, schemas, and exports
@@ -181,6 +194,10 @@ impl TypeScriptGenerator {
         output
     }
 
+    // ========================================================================
+    // SECTION: Type Generation
+    // ========================================================================
+
     /// Expand a type inline - if it's a reference to another schema, inline its definition
     fn expand_type_inline(&mut self, type_node: &TypeNode) -> String {
         match type_node {
@@ -284,6 +301,10 @@ impl TypeScriptGenerator {
         }
     }
 
+    // ========================================================================
+    // SECTION: Constraint Generation
+    // ========================================================================
+
     fn generate_constrained_type_inline(&mut self, base_type: &TypeNode, constraints: &[ConstraintNode]) -> String {
         let base = match base_type {
             TypeNode::Number => "number",
@@ -344,6 +365,10 @@ impl TypeScriptGenerator {
         }
     }
 
+    // ========================================================================
+    // SECTION: Expression Generation
+    // ========================================================================
+
     fn expression_to_string(&self, expr: &ExpressionNode) -> String {
         match expr {
             ExpressionNode::Identifier(id) => id.clone(),
@@ -385,6 +410,10 @@ impl TypeScriptGenerator {
             _ => expr.clone(),
         }
     }
+
+    // ========================================================================
+    // SECTION: Schema & Field Generation
+    // ========================================================================
 
     fn generate_field(&mut self, field: &FieldNode) -> String {
         let indent = self.get_indent();
@@ -904,6 +933,10 @@ impl TypeScriptGenerator {
         }
     }
 
+    // ========================================================================
+    // SECTION: Statement Generation (Enum, Import, Export, etc.)
+    // ========================================================================
+
     fn generate_enum(&mut self, enum_node: &EnumNode) -> String {
         let mut output = String::new();
         
@@ -991,6 +1024,10 @@ impl TypeScriptGenerator {
             rule_str
         }
     }
+
+    // ========================================================================
+    // SECTION: Helper Methods
+    // ========================================================================
 
     fn get_indent(&self) -> String {
         "  ".repeat(self.indent_level)

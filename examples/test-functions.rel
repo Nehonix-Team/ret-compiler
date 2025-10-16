@@ -17,7 +17,7 @@
 define Product {
   price: Ranged(0, 10000)
   quantity: Ranged(0, 1000)
-  name: StringLength(3, 100)
+  name: StringLength(4, 100)
   description: StringLength(10, 500)
 }
 
