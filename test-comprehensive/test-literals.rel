@@ -1,13 +1,13 @@
 define LiteralValues {
   # String literals
-  role: =admin
-  environment: =production
+  role: &literal(admin)
+  environment: &literal(production)
   
   # Number literals
-  version: =1
-  apiVersion: =2.0
+  version: &literal(1)
+  apiVersion: &literal(2)
   
   # Boolean literals
-  isEnabled: =true
-  isLegacy: =false
+  isEnabled: &literal(true)
+  isLegacy: &literal(false)
 }

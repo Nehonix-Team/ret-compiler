@@ -484,7 +484,8 @@ impl Lexer {
             "min" | "max" | "minLength" | "maxLength" | "matches" | "contains" |
             "startsWith" | "endsWith" | "hasUppercase" | "hasLowercase" | "hasNumber" |
             "hasSpecialChar" | "between" | "in" | "notIn" | "exists" | "empty" |
-            "null" | "future" | "past" | "before" | "after" | "integer" | "positive" | "negative" | "float"
+            "null" | "future" | "past" | "before" | "after" | "integer" | "positive" | "negative" | "float" |
+            "literal"
         )
     }
 

@@ -203,6 +203,30 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> Result<TypeNode, ParseError> {
+        // Check if we start with a constraint (e.g., &literal(value))
+        if self.check(TokenType::Ampersand) {
+            // Parse constraints without a base type
+            let mut constraints = Vec::new();
+            while self.match_token(TokenType::Ampersand) {
+                constraints.push(self.parse_constraint()?);
+            }
+            
+            // For &literal(value), convert directly to Literal type
+            if constraints.len() == 1 {
+                if let ConstraintType::Literal = constraints[0].constraint_type {
+                    if let Some(expr) = &constraints[0].value {
+                        return Ok(TypeNode::Literal(expr.clone()));
+                    }
+                }
+            }
+            
+            // Otherwise, use Any as base type with constraints
+            return Ok(TypeNode::Constrained {
+                base_type: Box::new(TypeNode::Any),
+                constraints,
+            });
+        }
+        
         let base_type = self.parse_base_type()?;
 
         // Handle array types
@@ -318,6 +342,7 @@ impl Parser {
             "positive" => ConstraintType::Positive,
             "negative" => ConstraintType::Negative,
             "float" => ConstraintType::Float,
+            "literal" => ConstraintType::Literal,
             _ => return Err(self.error("Unknown constraint")),
         };
 

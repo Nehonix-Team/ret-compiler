@@ -257,6 +257,14 @@ impl TypeScriptGenerator {
                             has_special_type = true;
                             special_type = "double".to_string();
                         }
+                        ConstraintType::Literal => {
+                            // Handle &literal(value) - convert to =value
+                            if let Some(expr) = &constraint.value {
+                                let value_str = self.generate_expression_value(&Some(expr.clone()));
+                                // Return early with literal type
+                                return format!("\"={}\"", value_str);
+                            }
+                        }
                         _ => {
                             // Other constraints not yet handled
                         }
@@ -368,6 +376,7 @@ impl TypeScriptGenerator {
             ConstraintType::Positive => "positive".to_string(),
             ConstraintType::Negative => "negative".to_string(),
             ConstraintType::Float => "float".to_string(),
+            ConstraintType::Literal => self.generate_expression_value(&constraint.value),
         }
     }
 
@@ -415,6 +424,7 @@ impl TypeScriptGenerator {
             ConstraintType::Positive => ".positive()".to_string(),
             ConstraintType::Negative => ".negative()".to_string(),
             ConstraintType::Float => ".float()".to_string(),
+            ConstraintType::Literal => format!(".literal({})", self.generate_expression_value(&constraint.value)),
         }
     }
 

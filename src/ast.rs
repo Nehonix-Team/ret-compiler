@@ -111,6 +111,7 @@ pub enum ConstraintType {
     Positive,
     Negative,
     Float,
+    Literal,
 }
 
 #[derive(Debug, Clone, PartialEq)]
