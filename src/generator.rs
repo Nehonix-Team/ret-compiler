@@ -5,6 +5,7 @@
  */
 
 use crate::ast::*;
+use crate::context::CompilationContext;
 use std::collections::{HashMap, HashSet};
 
 pub struct TypeScriptGenerator {
@@ -13,6 +14,8 @@ pub struct TypeScriptGenerator {
     schema_definitions: HashMap<String, SchemaNode>,
     /// Set of schemas that should be exported
     exported_schemas: HashSet<String>,
+    /// Compilation context for variables, types, and functions
+    context: CompilationContext,
 }
 
 impl TypeScriptGenerator {
@@ -20,14 +23,24 @@ impl TypeScriptGenerator {
         Self { 
             indent_level: 0, 
             schema_definitions: HashMap::new(), 
-            exported_schemas: HashSet::new() 
+            exported_schemas: HashSet::new(),
+            context: CompilationContext::new(),
         }
     }
 
     pub fn generate(&mut self, ast: &[ASTNode]) -> String {
-        // First pass: collect all schema definitions and exports
+        // First pass: collect variables, types, schemas, and exports
         for node in ast {
             match node {
+                ASTNode::DeclareVar(var) => {
+                    self.context.add_variable(var.name.clone(), var.value.clone());
+                }
+                ASTNode::DeclareType(type_decl) => {
+                    self.context.add_type_alias(type_decl.name.clone(), type_decl.type_def.clone());
+                }
+                ASTNode::Function(func) => {
+                    self.context.add_function(func.name.clone(), func.clone());
+                }
                 ASTNode::Schema(schema) => {
                     self.schema_definitions.insert(schema.name.clone(), schema.clone());
                 }
@@ -295,6 +308,14 @@ impl TypeScriptGenerator {
             ExpressionNode::Number(n) => n.to_string(),
             ExpressionNode::String(s) => s.clone(),
             ExpressionNode::RawString(s) => s.clone(),
+            ExpressionNode::VariableRef(name) => {
+                // Resolve variable reference
+                if let Some(value) = self.context.get_variable(name) {
+                    self.expression_to_string(value)
+                } else {
+                    format!("/* undefined var: {} */", name)
+                }
+            }
             ExpressionNode::Boolean(b) => b.to_string(),
             _ => "".to_string(),
         }

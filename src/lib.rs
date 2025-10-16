@@ -14,6 +14,7 @@ pub mod resolver;
 pub mod import_tracker;
 pub mod validation;
 pub mod colors;
+pub mod context;
 
 // Re-export main types for easy usage
 pub use compiler::{rel, relCompiler, CompilerOptions};

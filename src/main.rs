@@ -7,6 +7,7 @@ mod resolver;
 mod import_tracker;
 mod validation;
 mod colors;
+mod context;
 
 use clap::{Parser, Subcommand};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};

@@ -1,0 +1,11 @@
+# Test basic variable functionality
+
+declare var maxAge: number = 120
+declare var minAge: number = 18
+
+define User {
+  age: number & min(::minAge) & max(::maxAge)
+  name: string
+}
+
+export User
