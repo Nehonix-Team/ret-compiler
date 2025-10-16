@@ -1,0 +1,14 @@
+# Shared base types
+
+define Address {
+  street: string
+  city: string
+  zipCode: string & matches(r"^\d{5}$")
+}
+
+define Contact {
+  email: email
+  phone: phone?
+}
+
+export Address, Contact

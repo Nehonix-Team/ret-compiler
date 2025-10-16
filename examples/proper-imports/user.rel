@@ -1,0 +1,17 @@
+# User schema that uses imported types
+
+import { Address, Contact } from "./types.rel"
+
+define User {
+  id: uuid
+  username: string
+  contact: Contact
+  address: Address
+  role: admin | user | guest
+  
+  when role = admin {
+    adminLevel: number & min(1) & max(10)
+  }
+}
+
+export User
