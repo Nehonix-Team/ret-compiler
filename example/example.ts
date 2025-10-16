@@ -17,12 +17,7 @@ export const UserSchema = Interface({
 
 export type UserRole = "admin" | "moderator" | "user" | "guest";
 
-export const UserRoleSchema = Interface({
-  value0: Make.const("admin"),
-  value1: Make.const("moderator"),
-  value2: Make.const("user"),
-  value3: Make.const("guest"),
-});
+export const UserRoleSchema = "admin|moderator|user|guest";
 
 
 export const ProductSchema = Interface({

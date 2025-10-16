@@ -600,27 +600,19 @@ impl TypeScriptGenerator {
     }
 
     fn generate_enum(&mut self, enum_node: &EnumNode) -> String {
-        let mut output = format!("export type {} = ", enum_node.name);
-
+        let mut output = String::new();
+        
+        // Generate TypeScript type
+        output.push_str(&format!("export type {} = ", enum_node.name));
         let value_strings: Vec<String> = enum_node.values.iter()
             .map(|v| format!("\"{}\"", v))
             .collect();
-
         output.push_str(&value_strings.join(" | "));
         output.push_str(";\n\n");
 
-        // Generate enum schema using Make.const for each value
-        output.push_str(&format!("export const {}Schema = Interface({{\n", enum_node.name));
-        self.indent_level += 1;
-
-        for (i, value) in enum_node.values.iter().enumerate() {
-            let indent = self.get_indent();
-            let field_name = format!("value{}", i);
-            output.push_str(&format!("{}{}: Make.const(\"{}\"),\n", indent, field_name, value));
-        }
-
-        self.indent_level -= 1;
-        output.push_str("});\n");
+        // Generate schema as a simple union type string
+        let union_str = enum_node.values.join("|");
+        output.push_str(&format!("export const {}Schema = \"{}\";\n", enum_node.name, union_str));
 
         output
     }
