@@ -1,0 +1,20 @@
+# Test function features
+
+# Simple function that generates a ranged number type
+@fn Ranged(min: number, max: number) -> type {
+  return number & min(::min) & max(::max)
+}
+
+# Function for string length constraints
+@fn StringLength(minLen: number, maxLen: number) -> type {
+  return string & minLength(::minLen) & maxLength(::maxLen)
+}
+
+define Product {
+  price: Ranged(0, 10000)
+  quantity: Ranged(0, 1000)
+  name: StringLength(3, 100)
+  description: StringLength(10, 500)
+}
+
+export Product

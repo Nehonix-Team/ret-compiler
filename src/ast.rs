@@ -70,6 +70,12 @@ pub enum TypeNode {
     // Custom types
     Identifier(String),
 
+    // Function calls (e.g., Ranged(0, 100))
+    FunctionCall {
+        name: String,
+        arguments: Vec<ExpressionNode>,
+    },
+
     // Complex types
     Union(Vec<TypeNode>),
     Generic(String, Vec<TypeNode>),

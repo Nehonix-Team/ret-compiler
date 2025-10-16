@@ -305,6 +305,22 @@ impl Parser {
                     }
                     self.consume(TokenType::GreaterThan, "Expected '>' after generic type arguments")?;
                     Ok(TypeNode::Generic(type_name, type_args))
+                } else if self.check(TokenType::LParen) {
+                    // Function call: Ranged(0, 100)
+                    self.advance(); // consume '('
+                    let mut args = Vec::new();
+                    
+                    if !self.check(TokenType::RParen) {
+                        loop {
+                            args.push(self.parse_expression()?);
+                            if !self.match_token(TokenType::Comma) {
+                                break;
+                            }
+                        }
+                    }
+                    
+                    self.consume(TokenType::RParen, "Expected ')' after function arguments")?;
+                    Ok(TypeNode::FunctionCall { name: type_name, arguments: args })
                 } else {
                     Ok(TypeNode::Identifier(type_name))
                 }
