@@ -884,7 +884,7 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         self.consume(TokenType::LBrace, "Expected '{' to start function body")?;
         
         // Parse statements in function body until we hit return or closing brace
-        // For now, we skip non-return statements (declare var, print, etc.)
+        let mut body_statements = Vec::new();
         let mut body_type = None;
         
         while !self.check(TokenType::RBrace) && !self.is_at_end() {
@@ -893,11 +893,11 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
                 body_type = Some(self.parse_type()?);
                 break; // Return must be last statement
             } else if self.check(TokenType::Declare) {
-                // Skip declare statements in function body
-                self.parse_declare()?;
+                // Parse and store declare statements
+                body_statements.push(self.parse_declare()?);
             } else if self.check(TokenType::Print) {
-                // Skip print statements in function body
-                self.parse_print()?;
+                // Parse and store print statements
+                body_statements.push(self.parse_print()?);
             } else {
                 // Skip other statements
                 self.advance();
@@ -910,6 +910,7 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
             name,
             params,
             return_type,
+            body_statements,
             body_type,
         }))
     }

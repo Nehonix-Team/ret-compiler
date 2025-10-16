@@ -7,7 +7,11 @@
 
 # Function for string length constraints
 @fn StringLength(minLen: number, maxLen: number) -> type {
-  return string & minLength(::minLen) & maxLength(::maxLen)
+  declare var len: number = minLen
+  declare var maxi: number = maxLen
+  print("minLen:", ::len)
+  print("maxLen:", ::maxi)
+  return string & minLength(::len) & maxLength(::maxi)
 }
 
 define Product {

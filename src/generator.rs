@@ -196,6 +196,15 @@ impl TypeScriptGenerator {
                             self.context.add_variable(param.name.clone(), arg.clone());
                         }
                         
+                        // Process body statements (declare var, etc.)
+                        for stmt in &func.body_statements {
+                            if let ASTNode::DeclareVar(var_node) = stmt {
+                                // Evaluate the variable's value expression with current context
+                                let value = self.evaluate_expression_in_context(&var_node.value);
+                                self.context.add_variable(var_node.name.clone(), value);
+                            }
+                        }
+                        
                         // Expand the body type (NOT recursively calling expand_type_inline)
                         let result = match body_type {
                             TypeNode::Constrained { base_type, constraints } => {
@@ -351,6 +360,29 @@ impl TypeScriptGenerator {
             }
             ExpressionNode::Boolean(b) => b.to_string(),
             _ => "".to_string(),
+        }
+    }
+
+    /// Evaluate an expression in the current context and return the resolved expression
+    fn evaluate_expression_in_context(&self, expr: &ExpressionNode) -> ExpressionNode {
+        match expr {
+            ExpressionNode::Identifier(name) => {
+                // Check if this identifier refers to a parameter/variable
+                if let Some(value) = self.context.get_variable(name) {
+                    value.clone()
+                } else {
+                    expr.clone()
+                }
+            }
+            ExpressionNode::VariableRef(name) => {
+                // Resolve variable reference
+                if let Some(value) = self.context.get_variable(name) {
+                    value.clone()
+                } else {
+                    expr.clone()
+                }
+            }
+            _ => expr.clone(),
         }
     }
 

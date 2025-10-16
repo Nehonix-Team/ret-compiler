@@ -334,6 +334,7 @@ pub struct FunctionNode {
     pub name: String,
     pub params: Vec<FunctionParam>,
     pub return_type: String,  // "type" for type-returning functions
+    pub body_statements: Vec<ASTNode>,  // Statements in function body (declare var, print, etc.)
     pub body_type: Option<TypeNode>,  // The type expression returned by the function
 }
 
