@@ -738,7 +738,6 @@ impl TypeScriptGenerator {
             ExpressionNode::Null => "null".to_string(),
             ExpressionNode::Undefined => "undefined".to_string(),
             ExpressionNode::Identifier(name) => name.clone(),
-            ExpressionNode::VariableRef(name) => format!("{{/* var: {} */}}", name),  // TODO: resolve variable
             ExpressionNode::FieldAccess(path) => path.join("."),
             ExpressionNode::FunctionCall { name, arguments } => {
                 let arg_strings: Vec<String> = arguments.iter().map(|arg| self.generate_expression(arg)).collect();
