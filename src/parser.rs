@@ -883,13 +883,26 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         // Parse body
         self.consume(TokenType::LBrace, "Expected '{' to start function body")?;
         
-        // Look for "return" keyword
-        let body_type = if self.check(TokenType::Return) {
-            self.advance(); // consume 'return'
-            Some(self.parse_type()?)
-        } else {
-            None
-        };
+        // Parse statements in function body until we hit return or closing brace
+        // For now, we skip non-return statements (declare var, print, etc.)
+        let mut body_type = None;
+        
+        while !self.check(TokenType::RBrace) && !self.is_at_end() {
+            if self.check(TokenType::Return) {
+                self.advance(); // consume 'return'
+                body_type = Some(self.parse_type()?);
+                break; // Return must be last statement
+            } else if self.check(TokenType::Declare) {
+                // Skip declare statements in function body
+                self.parse_declare()?;
+            } else if self.check(TokenType::Print) {
+                // Skip print statements in function body
+                self.parse_print()?;
+            } else {
+                // Skip other statements
+                self.advance();
+            }
+        }
         
         self.consume(TokenType::RBrace, "Expected '}' to end function body")?;
         
