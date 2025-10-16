@@ -1,0 +1,8 @@
+import { Test } from "./user.rel"
+
+define Product {
+  id: uuid
+  val: Test
+}
+
+export Product

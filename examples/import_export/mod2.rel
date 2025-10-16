@@ -1,0 +1,8 @@
+import {Product} from "./index.rel"
+
+define Mod {
+    prdt: Product
+}
+
+export Mod
+  

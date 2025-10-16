@@ -632,7 +632,12 @@ impl TypeScriptGenerator {
     }
 
     fn generate_export(&mut self, export: &ExportNode) -> String {
-        let items_str = export.items.join(", ");
+        // Export the Schema versions, not the type names
+        // e.g., "export Product" becomes "export { ProductSchema }"
+        let schema_names: Vec<String> = export.items.iter()
+            .map(|name| format!("{}Schema", name))
+            .collect();
+        let items_str = schema_names.join(", ");
         format!("export {{ {} }};", items_str)
     }
 

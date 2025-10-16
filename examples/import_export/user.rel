@@ -1,0 +1,5 @@
+define Test {
+  name: string
+}
+
+export Test

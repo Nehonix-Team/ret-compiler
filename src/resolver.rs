@@ -46,10 +46,12 @@ impl ModuleResolver {
         // Find all imports
         let imports = self.extract_imports(&ast);
         
-        // Resolve each import recursively
+        // Resolve each import recursively first
+        let mut import_paths = Vec::new();
         let mut dependencies = Vec::new();
-        for import in imports {
+        for import in &imports {
             let import_path = self.resolve_import_path(&canonical_path, &import.path)?;
+            import_paths.push(import_path.clone());
             let sub_deps = self.resolve_dependencies(&import_path)?;
             
             // Add sub-dependencies first (topological order)
@@ -59,6 +61,9 @@ impl ModuleResolver {
                 }
             }
         }
+        
+        // Verify imports after all dependencies are resolved
+        self.verify_imports(&canonical_path, &imports)?;
 
         // Add current file last
         dependencies.push(canonical_path.clone());
@@ -234,6 +239,43 @@ impl ModuleResolver {
                 }
             })
             .collect()
+    }
+
+    /// Verify that imported items are actually exported by the source file
+    fn verify_imports(&self, file_path: &Path, imports: &[ImportNode]) -> Result<(), String> {
+        for import in imports {
+            let import_path = self.resolve_import_path(file_path, &import.path)?;
+            
+            // Get the exports from the imported file
+            if let Some(imported_ast) = self.modules.get(&import_path) {
+                let mut exported_names = HashSet::new();
+                
+                for node in imported_ast {
+                    if let ASTNode::Export(export) = node {
+                        for name in &export.items {
+                            exported_names.insert(name.clone());
+                        }
+                    }
+                }
+                
+                // Check each imported item
+                for item in &import.items {
+                    if !exported_names.contains(item) {
+                        return Err(format!(
+                            "No module '{}' exported in '{}'\nAvailable exports: {}",
+                            item,
+                            import.path,
+                            if exported_names.is_empty() {
+                                "none".to_string()
+                            } else {
+                                exported_names.iter().cloned().collect::<Vec<_>>().join(", ")
+                            }
+                        ));
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 
     fn resolve_import_path(&self, current_file: &Path, import_path: &str) -> Result<PathBuf, String> {

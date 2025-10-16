@@ -119,7 +119,13 @@ impl relCompiler {
 
         // Determine output path
         let output_path = self.get_output_path(file_path)?;
-        fs::create_dir_all(output_path.parent().unwrap())?;
+        
+        // Create parent directory if it doesn't exist
+        if let Some(parent) = output_path.parent() {
+            if !parent.exists() {
+                fs::create_dir_all(parent)?;
+            }
+        }
 
         // Write output
         fs::write(&output_path, ts_code)?;
