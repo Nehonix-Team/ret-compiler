@@ -184,6 +184,33 @@ impl TypeScriptGenerator {
     /// Expand a type inline - if it's a reference to another schema, inline its definition
     fn expand_type_inline(&mut self, type_node: &TypeNode) -> String {
         match type_node {
+            TypeNode::FunctionCall { name, arguments } => {
+                // Look up the function and expand it
+                if let Some(func) = self.context.get_function(name).cloned() {
+                    if let Some(body_type) = &func.body_type {
+                        // Save current variables
+                        let old_vars = self.context.variables.clone();
+                        
+                        // Bind arguments to parameters
+                        for (param, arg) in func.params.iter().zip(arguments.iter()) {
+                            self.context.add_variable(param.name.clone(), arg.clone());
+                        }
+                        
+                        // Expand the body type (NOT recursively calling expand_type_inline)
+                        let result = match body_type {
+                            TypeNode::Constrained { base_type, constraints } => {
+                                self.generate_constrained_type_inline(base_type, constraints)
+                            }
+                            _ => self.expand_type_inline(body_type)
+                        };
+                        
+                        // Restore variables
+                        self.context.variables = old_vars;
+                        return result;
+                    }
+                }
+                format!("\"unknown\"")
+            }
             TypeNode::Identifier(name) => {
                 // First check if it's a type alias
                 if let Some(type_def) = self.context.get_type_alias(name).cloned() {
@@ -393,9 +420,9 @@ impl TypeScriptGenerator {
             TypeNode::Any => "any".to_string(),
             TypeNode::Unknown => "unknown".to_string(),
             TypeNode::Identifier(name) => name.clone(),
-            TypeNode::FunctionCall { name, arguments } => {
-                // Expand function call inline
-                self.expand_type_inline(&TypeNode::FunctionCall { name: name.clone(), arguments: arguments.clone() }).trim_matches('"').to_string()
+            TypeNode::FunctionCall { .. } => {
+                // Use generate_type_schema to avoid infinite recursion
+                self.generate_type_schema(type_node).trim_matches('"').to_string()
             }
             TypeNode::Array(inner) => format!("{}[]", self.generate_type(inner)),
             TypeNode::Union(types) => {
@@ -453,9 +480,9 @@ impl TypeScriptGenerator {
             TypeNode::Any => "\"any\"".to_string(),
             TypeNode::Unknown => "\"unknown\"".to_string(),
             TypeNode::Identifier(name) => format!("\"{}\"", name),
-            TypeNode::FunctionCall { name, arguments } => {
-                // Expand function call and return as schema string
-                self.expand_type_inline(&TypeNode::FunctionCall { name: name.clone(), arguments: arguments.clone() })
+            TypeNode::FunctionCall { .. } => {
+                // Already in schema format from expand_type_inline
+                self.expand_type_inline(type_node)
             }
             TypeNode::Array(inner) => format!("\"{}[]\"", self.generate_type_name(inner)),
             TypeNode::Union(types) => {
@@ -585,9 +612,9 @@ impl TypeScriptGenerator {
             TypeNode::Any => "any".to_string(),
             TypeNode::Unknown => "unknown".to_string(),
             TypeNode::Identifier(name) => name.clone(),
-            TypeNode::FunctionCall { name, arguments } => {
-                // Expand function call for type name
-                self.expand_type_inline(&TypeNode::FunctionCall { name: name.clone(), arguments: arguments.clone() }).trim_matches('"').to_string()
+            TypeNode::FunctionCall { .. } => {
+                // Use generate_type_schema and strip quotes
+                self.generate_type_schema(type_node).trim_matches('"').to_string()
             }
             TypeNode::Array(inner) => format!("{}[]", self.generate_type_name(inner)),
             TypeNode::Union(types) => {
