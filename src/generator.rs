@@ -5,64 +5,49 @@
  */
 
 use crate::ast::*;
+use std::collections::{HashMap, HashSet};
 
 pub struct TypeScriptGenerator {
     indent_level: usize,
+    /// Map of schema name -> schema definition for inline expansion
+    schema_definitions: HashMap<String, SchemaNode>,
+    /// Set of schemas that should be exported
+    exported_schemas: HashSet<String>,
 }
 
 impl TypeScriptGenerator {
     pub fn new() -> Self {
-        Self { indent_level: 0 }
+        Self { 
+            indent_level: 0, 
+            schema_definitions: HashMap::new(), 
+            exported_schemas: HashSet::new() 
+        }
     }
 
-    pub fn generate(&mut self, nodes: &[ASTNode]) -> String {
-        let mut output = String::new();
-        
-        // Add import statement for ReliantType Interface
-        let has_schema = nodes.iter().any(|node| matches!(node, ASTNode::Schema(_)));
-        if has_schema {
-            output.push_str("import { Interface } from 'reliant-type';\n\n");
-        }
-
-        for node in nodes {
+    pub fn generate(&mut self, ast: &[ASTNode]) -> String {
+        // First pass: collect all schema definitions and exports
+        for node in ast {
             match node {
                 ASTNode::Schema(schema) => {
-                    output.push_str(&self.generate_schema(schema));
-                    output.push_str("\n\n");
-                }
-                ASTNode::Enum(enum_node) => {
-                    output.push_str(&self.generate_enum(enum_node));
-                    output.push_str("\n\n");
-                }
-                ASTNode::TypeAlias(type_alias) => {
-                    output.push_str(&self.generate_type_alias(type_alias));
-                    output.push_str("\n\n");
-                }
-                ASTNode::Variable(variable) => {
-                    output.push_str(&self.generate_variable(variable));
-                    output.push_str("\n\n");
-                }
-                ASTNode::Mixin(mixin) => {
-                    output.push_str(&self.generate_mixin(mixin));
-                    output.push_str("\n\n");
-                }
-                ASTNode::Import(import) => {
-                    output.push_str(&self.generate_import(import));
-                    output.push_str("\n");
+                    self.schema_definitions.insert(schema.name.clone(), schema.clone());
                 }
                 ASTNode::Export(export) => {
-                    output.push_str(&self.generate_export(export));
-                    output.push_str("\n");
+                    for name in &export.items {
+                        self.exported_schemas.insert(name.clone());
+                    }
                 }
-                ASTNode::Comment(comment) => {
-                    output.push_str(&self.generate_comment(comment));
-                    output.push_str("\n");
-                }
-                ASTNode::Validation(validation) => {
-                    output.push_str(&self.generate_validation(validation));
-                    output.push_str("\n");
-                }
-                _ => {} // TODO: Skip other node types for now
+                _ => {}
+            }
+        }
+
+        let mut output = String::from("import { Interface } from 'reliant-type';\n\n");
+
+        // Second pass: only generate exported schemas with inline expansion
+        let exported_list: Vec<String> = self.exported_schemas.iter().cloned().collect();
+        for schema_name in exported_list {
+            if let Some(schema) = self.schema_definitions.get(&schema_name).cloned() {
+                output.push_str(&self.generate_schema_inline(&schema));
+                output.push_str("\n\n");
             }
         }
 
@@ -92,6 +77,180 @@ impl TypeScriptGenerator {
         output.push_str("});\n");
 
         output
+    }
+
+    /// Generate schema with inline expansion of imported types
+    fn generate_schema_inline(&mut self, schema: &SchemaNode) -> String {
+        let mut output = String::new();
+
+        // Use the schema name as-is, no "Schema" suffix
+        output.push_str(&format!("export const {} = Interface({{\n", schema.name));
+        self.indent_level += 1;
+
+        for field in &schema.fields {
+            output.push_str(&self.generate_field_inline(field));
+        }
+
+        self.indent_level -= 1;
+        output.push_str("});");
+
+        output
+    }
+
+    /// Generate a field with inline type expansion
+    fn generate_field_inline(&mut self, field: &FieldNode) -> String {
+        let indent = "  ".repeat(self.indent_level);
+        let mut output = String::new();
+
+        // Generate the field with inline expanded type
+        let type_str = self.expand_type_inline(&field.field_type);
+        let optional = if field.optional { "?" } else { "" };
+        
+        output.push_str(&format!("{}{}{}: {},\n", indent, field.name, optional, type_str));
+
+        // Handle conditionals
+        for conditional in &field.conditionals {
+            for then_field in &conditional.then_fields {
+                output.push_str(&self.generate_field_inline(then_field));
+            }
+            for else_field in &conditional.else_fields {
+                output.push_str(&self.generate_field_inline(else_field));
+            }
+        }
+
+        output
+    }
+
+    /// Expand a type inline - if it's a reference to another schema, inline its definition
+    fn expand_type_inline(&mut self, type_node: &TypeNode) -> String {
+        match type_node {
+            TypeNode::Identifier(name) => {
+                // Check if this is a reference to another schema
+                if let Some(schema) = self.schema_definitions.get(name).cloned() {
+                    // Inline expand the schema
+                    let mut output = String::from("{\n");
+                    self.indent_level += 1;
+                    
+                    for field in &schema.fields {
+                        output.push_str(&self.generate_field_inline(field));
+                    }
+                    
+                    self.indent_level -= 1;
+                    let indent = "  ".repeat(self.indent_level);
+                    output.push_str(&format!("{}}}", indent));
+                    output
+                } else {
+                    // It's a primitive type
+                    format!("\"{}\"", name)
+                }
+            }
+            TypeNode::String => "\"string\"".to_string(),
+            TypeNode::Number => "\"number\"".to_string(),
+            TypeNode::Boolean => "\"boolean\"".to_string(),
+            TypeNode::Array(inner) => {
+                let inner_type = self.expand_type_inline(inner);
+                format!("{}[]", inner_type)
+            }
+            TypeNode::Union(types) => {
+                let type_strs: Vec<String> = types.iter()
+                    .map(|t| {
+                        match t {
+                            TypeNode::Identifier(name) => name.clone(),
+                            _ => self.expand_type_inline(t).trim_matches('"').to_string()
+                        }
+                    })
+                    .collect();
+                format!("\"{}\"", type_strs.join("|"))
+            }
+            TypeNode::Constrained { base_type, constraints } => {
+                self.generate_constrained_type_inline(base_type, constraints)
+            }
+            TypeNode::InlineObject(fields) => {
+                let mut output = String::from("{\n");
+                self.indent_level += 1;
+                
+                for field in fields {
+                    output.push_str(&self.generate_field_inline(field));
+                }
+                
+                self.indent_level -= 1;
+                let indent = "  ".repeat(self.indent_level);
+                output.push_str(&format!("{}}}", indent));
+                output
+            }
+            _ => self.generate_type(type_node)
+        }
+    }
+
+    fn generate_constrained_type_inline(&mut self, base_type: &TypeNode, constraints: &[ConstraintNode]) -> String {
+        let base = match base_type {
+            TypeNode::Number => "number",
+            TypeNode::String => "string",
+            TypeNode::Array(_) => return self.expand_type_inline(base_type),
+            _ => return self.expand_type_inline(base_type),
+        };
+
+        // Check for special number types
+        if base == "number" {
+            for constraint in constraints {
+                match constraint.constraint_type {
+                    ConstraintType::Positive => return "\"positive\"".to_string(),
+                    ConstraintType::Negative => return "\"negative\"".to_string(),
+                    ConstraintType::Integer => return "\"int\"".to_string(),
+                    ConstraintType::Float => return "\"float\"".to_string(),
+                    _ => {}
+                }
+            }
+        }
+
+        // Handle min/max constraints
+        let mut min_val = None;
+        let mut max_val = None;
+        let mut pattern = None;
+
+        for constraint in constraints {
+            match &constraint.constraint_type {
+                ConstraintType::Min => min_val = constraint.value.clone(),
+                ConstraintType::Max => max_val = constraint.value.clone(),
+                ConstraintType::MinLength => min_val = constraint.value.clone(),
+                ConstraintType::MaxLength => max_val = constraint.value.clone(),
+                ConstraintType::Matches => pattern = constraint.value.clone(),
+                _ => {}
+            }
+        }
+
+        if let Some(pat) = pattern {
+            let pat_str = self.expression_to_string(&pat);
+            return format!("\"{}({})\"", base, pat_str);
+        }
+
+        match (min_val, max_val) {
+            (Some(min), Some(max)) => {
+                let min_str = self.expression_to_string(&min);
+                let max_str = self.expression_to_string(&max);
+                format!("\"{}({},{})\"", base, min_str, max_str)
+            },
+            (Some(min), None) => {
+                let min_str = self.expression_to_string(&min);
+                format!("\"{}({},)\"", base, min_str)
+            },
+            (None, Some(max)) => {
+                let max_str = self.expression_to_string(&max);
+                format!("\"{}(,{})\"", base, max_str)
+            },
+            (None, None) => format!("\"{}\"", base),
+        }
+    }
+
+    fn expression_to_string(&self, expr: &ExpressionNode) -> String {
+        match expr {
+            ExpressionNode::Identifier(id) => id.clone(),
+            ExpressionNode::Number(n) => n.to_string(),
+            ExpressionNode::String(s) => s.clone(),
+            ExpressionNode::RawString(s) => s.clone(),
+            ExpressionNode::Boolean(b) => b.to_string(),
+            _ => "".to_string(),
+        }
     }
 
     fn generate_field(&mut self, field: &FieldNode) -> String {
@@ -632,12 +791,8 @@ impl TypeScriptGenerator {
     }
 
     fn generate_export(&mut self, export: &ExportNode) -> String {
-        // Export the Schema versions, not the type names
-        // e.g., "export Product" becomes "export { ProductSchema }"
-        let schema_names: Vec<String> = export.items.iter()
-            .map(|name| format!("{}Schema", name))
-            .collect();
-        let items_str = schema_names.join(", ");
+        // This method is no longer used - exports are handled inline
+        let items_str = export.items.join(", ");
         format!("export {{ {} }};", items_str)
     }
 

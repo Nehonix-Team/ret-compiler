@@ -1,5 +1,18 @@
 define Test {
   name: string
+  id: uuid
+  createdAt: date
+  updatedAt: date
+  deletedAt: date
+  deleted: boolean
+  isActive: boolean
+
+  # Conditionnal fields
+  when isActive {
+    status: active 
+  } else {
+    status: inactive
+  }
 }
 
 export Test
