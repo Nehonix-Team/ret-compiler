@@ -48,6 +48,7 @@ impl Parser {
             TokenType::Export => self.parse_export(),
             TokenType::Enum => self.parse_enum(),
             TokenType::Type => self.parse_type_alias(),
+            TokenType::Declare => self.parse_declare(),
             TokenType::Let => self.parse_variable(),
             TokenType::Mixin => self.parse_mixin(),
             TokenType::Identifier if self.peek().value == "validate" => self.parse_top_level_validation(),
@@ -560,6 +561,13 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
     }
 
     fn parse_term(&mut self) -> Result<ExpressionNode, ParseError> {
+        // Check for :: variable reference
+        if self.check(TokenType::DoubleColon) {
+            self.advance(); // consume '::'
+            let var_name = self.consume_identifier("Expected variable name after '::'")?;
+            return Ok(ExpressionNode::VariableRef(var_name));
+        }
+        
         match self.peek().token_type {
             TokenType::String => {
                 let value = self.advance().value;
@@ -793,6 +801,47 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         self.consume_identifier("Expected 'validate'")?; // consume 'validate'
         let validation = self.parse_validation()?;
         Ok(ASTNode::ValidationStatement(validation))
+    }
+
+    /// Parse: declare var name: type = value
+    fn parse_declare(&mut self) -> Result<ASTNode, ParseError> {
+        self.advance(); // consume 'declare'
+        
+        if self.check(TokenType::Var) {
+            self.advance(); // consume 'var'
+            
+            let name = self.consume_identifier("Expected variable name")?;
+            
+            // Optional type annotation
+            let var_type = if self.match_token(TokenType::Colon) {
+                Some(self.parse_type()?)
+            } else {
+                None
+            };
+            
+            // Require assignment
+            self.consume(TokenType::Equals, "Expected '=' in variable declaration")?;
+            let value = self.parse_expression()?;
+            
+            Ok(ASTNode::DeclareVar(DeclareVarNode {
+                name,
+                var_type,
+                value,
+            }))
+        } else if self.check(TokenType::Type) {
+            self.advance(); // consume 'type'
+            
+            let name = self.consume_identifier("Expected type name")?;
+            self.consume(TokenType::Equals, "Expected '=' in type declaration")?;
+            let type_def = self.parse_type()?;
+            
+            Ok(ASTNode::DeclareType(DeclareTypeNode {
+                name,
+                type_def,
+            }))
+        } else {
+            Err(self.error("Expected 'var' or 'type' after 'declare'"))
+        }
     }
 
     fn is_expression_start(&self) -> bool {

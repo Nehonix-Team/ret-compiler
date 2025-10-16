@@ -273,7 +273,14 @@ impl Lexer {
             '$' => self.add_token(TokenType::Dollar, "$"),
             '^' => self.add_token(TokenType::Caret, "^"),
             '?' => self.add_token(TokenType::Question, "?"),
-            ':' => self.add_token(TokenType::Colon, ":"),
+            ':' => {
+                if self.peek() == Some(':') {
+                    self.advance();
+                    self.add_token(TokenType::DoubleColon, "::");
+                } else {
+                    self.add_token(TokenType::Colon, ":");
+                }
+            }
             ',' => self.add_token(TokenType::Comma, ","),
             ';' => self.add_token(TokenType::Semicolon, ";"),
             '{' => self.add_token(TokenType::LBrace, "{"),
@@ -397,6 +404,11 @@ impl Lexer {
             "import" => TokenType::Import,
             "as" => TokenType::As,
             "let" => TokenType::Let,
+            "declare" => TokenType::Declare,
+            "var" => TokenType::Var,
+            "fn" => TokenType::Fn,
+            "for" => TokenType::For,
+            "in" => TokenType::In,
             "true" | "false" => TokenType::Boolean,
             "null" => TokenType::Null,
             "undefined" => TokenType::Undefined,
@@ -457,6 +469,11 @@ impl Lexer {
             "import" => TokenType::Import,
             "as" => TokenType::As,
             "let" => TokenType::Let,
+            "declare" => TokenType::Declare,
+            "var" => TokenType::Var,
+            "fn" => TokenType::Fn,
+            "for" => TokenType::For,
+            "in" => TokenType::In,
             "if" => TokenType::If,
             "true" | "false" => TokenType::Boolean,
             "null" => TokenType::Null,
