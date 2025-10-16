@@ -1,0 +1,9 @@
+# Base types that can be imported by other schemas
+
+define BaseEntity {
+  id: uuid
+  createdAt: date
+  updatedAt: date
+}
+
+export BaseEntity

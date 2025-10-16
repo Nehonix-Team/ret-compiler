@@ -1,0 +1,23 @@
+# Product schema that imports User
+
+import { User } from "./user.rel"
+
+define Product {
+  id: uuid
+  name: string
+  price: number & positive
+  category: electronics | clothing | books
+  
+  # Reference to user (owner)
+  ownerId: uuid
+  
+  when category = electronics {
+    warranty: number
+    specs: record<string, string>
+  } else when category = clothing {
+    size: S | M | L | XL
+    material: string
+  }
+}
+
+export Product

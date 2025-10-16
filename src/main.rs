@@ -3,6 +3,7 @@ mod ast;
 mod parser;
 mod generator;
 mod compiler;
+mod resolver;
 
 use clap::{Parser, Subcommand};
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};

@@ -1,0 +1,22 @@
+# User schema that imports BaseEntity
+
+import { BaseEntity } from "./base.rel"
+
+define User {
+  # Inherit base fields (conceptually - actual implementation pending)
+  id: uuid
+  createdAt: date
+  updatedAt: date
+  
+  # User-specific fields
+  email: email
+  username: string & minLength(3) & maxLength(20)
+  role: admin | user | moderator | guest
+  
+  when role = admin {
+    adminToken: string
+    permissions: string[]
+  }
+}
+
+export User

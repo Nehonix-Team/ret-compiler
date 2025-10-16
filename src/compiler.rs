@@ -10,6 +10,7 @@ use crate::ast::*;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::generator::TypeScriptGenerator;
+use crate::resolver::ModuleResolver;
 
 #[derive(Debug)]
 pub struct CompilerOptions {
@@ -97,17 +98,18 @@ impl relCompiler {
         let content = fs::read_to_string(file_path)?;
         println!("File size: {} bytes", content.len());
 
-        // Tokenize
-        let lexer = Lexer::new(&content);
-        let tokens = lexer.tokenize().map_err(|errors| {
-            format!("Tokenization failed: {:?}", errors)
-        })?;
+        // Create module resolver
+        let root_dir = file_path.parent()
+            .ok_or("Cannot determine root directory")?
+            .to_path_buf();
+        let mut resolver = ModuleResolver::new(root_dir);
 
-        // Parse
-        let mut parser = Parser::new(tokens);
-        let ast_nodes = parser.parse().map_err(|errors| {
-            format!("Parsing failed: {:?}", errors)
-        })?;
+        // Resolve all dependencies (including imports)
+        let dependencies = resolver.resolve_dependencies(file_path)
+            .map_err(|e| format!("Dependency resolution failed: {}", e))?;
+
+        // Get merged AST with all dependencies in correct order
+        let ast_nodes = resolver.get_merged_ast(&dependencies);
 
         // Generate TypeScript
         let mut generator = TypeScriptGenerator::new();
