@@ -1,8 +1,17 @@
-import { Val } from "./val.rel"
+import { Test } from "./user.rel"
 
 define Product {
   id: uuid
-  val: Val
+  val: Test
 }
 
 export Product
+
+
+declare var test: OptionalType = Value # OptionalType = Test | null
+
+#  to access/read type variable values, we'll use this "type" keyword
+
+@fn(params) -> type{
+
+}

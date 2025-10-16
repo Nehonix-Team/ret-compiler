@@ -16,6 +16,16 @@ pub enum ASTNode {
     Mixin(MixinNode),
     ValidationStatement(ValidationNode),
 
+    // New: Variable and type declarations
+    DeclareVar(DeclareVarNode),
+    DeclareType(DeclareTypeNode),
+
+    // New: Function declarations
+    Function(FunctionNode),
+
+    // New: Loop constructs
+    ForLoop(ForLoopNode),
+
     // Schema components
     Field(FieldNode),
     Conditional(Box<ConditionalNode>),
@@ -172,8 +182,9 @@ pub enum ExpressionNode {
     Null,
     Undefined,
 
-    // Identifiers and field access
+    // Identifiers and references
     Identifier(String),
+    VariableRef(String),  // ::variableName
     FieldAccess(Vec<String>), // e.g., ["user", "profile", "name"]
 
     // Method calls and function calls
@@ -291,4 +302,49 @@ pub struct ParseError {
 #[derive(Debug, Clone, PartialEq)]
 pub struct CommentNode {
     pub text: String,
+}
+
+// New: Variable declaration node
+#[derive(Debug, Clone, PartialEq)]
+pub struct DeclareVarNode {
+    pub name: String,
+    pub var_type: Option<TypeNode>,  // Optional type annotation
+    pub value: ExpressionNode,
+}
+
+// New: Type declaration node
+#[derive(Debug, Clone, PartialEq)]
+pub struct DeclareTypeNode {
+    pub name: String,
+    pub type_def: TypeNode,
+}
+
+// New: Function declaration node
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionNode {
+    pub name: String,
+    pub params: Vec<FunctionParam>,
+    pub return_type: String,  // "type" for type-returning functions
+    pub body: Vec<ASTNode>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionParam {
+    pub name: String,
+    pub param_type: TypeNode,
+}
+
+// New: For loop node
+#[derive(Debug, Clone, PartialEq)]
+pub struct ForLoopNode {
+    pub variable: String,
+    pub range: LoopRange,
+    pub body: Vec<FieldNode>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum LoopRange {
+    NumericRange { start: i64, end: i64 },  // 1..31
+    Array(Vec<String>),                      // ["Mon", "Tue", ...]
+    Identifier(String),                      // someArray
 }

@@ -1,3 +1,5 @@
-define Val {
+define val {
     name: string
 }
+
+export val

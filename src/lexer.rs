@@ -9,18 +9,28 @@
 pub enum TokenType {
     // Keywords
     Define,
-    When,
-    Else,
-    Extends,
-    Mixin,
-    With,
-    Enum,
-    Type,
+    Import,
     Export,
     From,
-    Import,
+    When,
+    Else,
+    Mixin,
+    Extends,
+    With,
     As,
+    Extend,
+    Type,
+    Enum,
     Let,
+    Const,
+    Return,
+    
+    // New keywords
+    Declare,
+    Var,
+    Fn,
+    For,
+    In,
 
     // Literals
     Identifier,
@@ -46,6 +56,8 @@ pub enum TokenType {
     Not,
     Ampersand, // & for constraint chaining
     Pipe, // | for unions
+    DoubleColon,    // ::
+    DotDot,         // ..
     Question, // ? for optional
     Colon,
     Dot,
