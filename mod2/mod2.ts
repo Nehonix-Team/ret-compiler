@@ -11,8 +11,7 @@ export const Mod = Interface({
       deletedAt: "date",
       deleted: "boolean",
       isActive: "boolean",
-      status: "active",
-      status: "inactive",
+      status: "when isActive *? =active : =inactive",
     },
   },
 });

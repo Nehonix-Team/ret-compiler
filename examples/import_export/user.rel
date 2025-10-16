@@ -9,9 +9,9 @@ define Test {
 
   # Conditionnal fields
   when isActive {
-    status: active 
+    status: &literal(active) 
   } else {
-    status: inactive
+    status: &literal(inactive)
   }
 }
 

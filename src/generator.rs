@@ -102,19 +102,66 @@ impl TypeScriptGenerator {
         let indent = "  ".repeat(self.indent_level);
         let mut output = String::new();
 
-        // Generate the field with inline expanded type
-        let type_str = self.expand_type_inline(&field.field_type);
-        let optional = if field.optional { "?" } else { "" };
-        
-        output.push_str(&format!("{}{}{}: {},\n", indent, field.name, optional, type_str));
-
-        // Handle conditionals
-        for conditional in &field.conditionals {
-            for then_field in &conditional.then_fields {
-                output.push_str(&self.generate_field_inline(then_field));
+        // Check if this field has conditionals - handle them specially
+        if !field.conditionals.is_empty() {
+            // This is a regular field, generate it normally
+            let type_str = self.expand_type_inline(&field.field_type);
+            let optional = if field.optional { "?" } else { "" };
+            output.push_str(&format!("{}{}{}: {},\n", indent, field.name, optional, type_str));
+            
+            // Generate conditional fields using ReliantType syntax
+            for conditional in &field.conditionals {
+                output.push_str(&self.generate_conditional_fields_inline(conditional));
             }
-            for else_field in &conditional.else_fields {
-                output.push_str(&self.generate_field_inline(else_field));
+        } else {
+            // Regular field without conditionals
+            let type_str = self.expand_type_inline(&field.field_type);
+            let optional = if field.optional { "?" } else { "" };
+            output.push_str(&format!("{}{}{}: {},\n", indent, field.name, optional, type_str));
+        }
+
+        output
+    }
+
+    /// Generate conditional fields using ReliantType inline syntax
+    fn generate_conditional_fields_inline(&mut self, conditional: &ConditionalNode) -> String {
+        let indent = "  ".repeat(self.indent_level);
+        let mut output = String::new();
+
+        // Generate condition expression
+        let condition_str = self.generate_expression(&conditional.condition);
+
+        // Generate then fields
+        for then_field in &conditional.then_fields {
+            let type_str = self.expand_type_inline(&then_field.field_type);
+            let optional_marker = if then_field.optional { "?" } else { "" };
+            
+            // ReliantType conditional syntax: "when condition *? type : else_type"
+            if !conditional.else_fields.is_empty() {
+                // Find matching else field
+                let else_field = conditional.else_fields.iter()
+                    .find(|f| f.name == then_field.name);
+                
+                if let Some(else_f) = else_field {
+                    let else_type_str = self.expand_type_inline(&else_f.field_type);
+                    output.push_str(&format!(
+                        "{}{}{}: \"when {} *? {} : {}\",\n",
+                        indent, then_field.name, optional_marker, condition_str, 
+                        type_str.trim_matches('"'), else_type_str.trim_matches('"')
+                    ));
+                } else {
+                    output.push_str(&format!(
+                        "{}{}{}: \"when {} *? {} : any?\",\n",
+                        indent, then_field.name, optional_marker, condition_str, 
+                        type_str.trim_matches('"')
+                    ));
+                }
+            } else {
+                output.push_str(&format!(
+                    "{}{}{}: \"when {} *? {} : any?\",\n",
+                    indent, then_field.name, optional_marker, condition_str, 
+                    type_str.trim_matches('"')
+                ));
             }
         }
 
