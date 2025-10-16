@@ -49,6 +49,7 @@ impl Parser {
             TokenType::Enum => self.parse_enum(),
             TokenType::Type => self.parse_type_alias(),
             TokenType::Declare => self.parse_declare(),
+            TokenType::At => self.parse_decorator(),
             TokenType::Let => self.parse_variable(),
             TokenType::Mixin => self.parse_mixin(),
             TokenType::Identifier if self.peek().value == "validate" => self.parse_top_level_validation(),
@@ -817,6 +818,71 @@ fn parse_conditional(&mut self) -> Result<ConditionalNode, ParseError> {
         self.consume_identifier("Expected 'validate'")?; // consume 'validate'
         let validation = self.parse_validation()?;
         Ok(ASTNode::ValidationStatement(validation))
+    }
+
+    /// Parse decorators (@fn, @for, etc.)
+    fn parse_decorator(&mut self) -> Result<ASTNode, ParseError> {
+        self.advance(); // consume '@'
+        
+        if self.check(TokenType::Fn) {
+            return self.parse_function();
+        }
+        
+        Err(self.error("Expected 'fn' after '@'"))
+    }
+    
+    /// Parse: @fn Name(params) -> type { return TypeExpr }
+    fn parse_function(&mut self) -> Result<ASTNode, ParseError> {
+        self.advance(); // consume 'fn'
+        
+        let name = self.consume_identifier("Expected function name")?;
+        
+        // Parse parameters
+        self.consume(TokenType::LParen, "Expected '(' after function name")?;
+        let mut params = Vec::new();
+        
+        if !self.check(TokenType::RParen) {
+            loop {
+                let param_name = self.consume_identifier("Expected parameter name")?;
+                self.consume(TokenType::Colon, "Expected ':' after parameter name")?;
+                let param_type = self.parse_type()?;
+                
+                params.push(FunctionParam {
+                    name: param_name,
+                    param_type,
+                });
+                
+                if !self.match_token(TokenType::Comma) {
+                    break;
+                }
+            }
+        }
+        
+        self.consume(TokenType::RParen, "Expected ')' after parameters")?;
+        
+        // Parse return type
+        self.consume(TokenType::Arrow, "Expected '->' after parameters")?;
+        let return_type = self.consume_identifier("Expected return type")?;
+        
+        // Parse body
+        self.consume(TokenType::LBrace, "Expected '{' to start function body")?;
+        
+        // Look for "return" keyword
+        let body_type = if self.peek().value == "return" {
+            self.advance(); // consume 'return'
+            Some(self.parse_type()?)
+        } else {
+            None
+        };
+        
+        self.consume(TokenType::RBrace, "Expected '}' to end function body")?;
+        
+        Ok(ASTNode::Function(FunctionNode {
+            name,
+            params,
+            return_type,
+            body_type,
+        }))
     }
 
     /// Parse: declare var name: type = value

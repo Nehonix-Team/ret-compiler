@@ -331,7 +331,7 @@ pub struct FunctionNode {
     pub name: String,
     pub params: Vec<FunctionParam>,
     pub return_type: String,  // "type" for type-returning functions
-    pub body: Vec<ASTNode>,
+    pub body_type: Option<TypeNode>,  // The type expression returned by the function
 }
 
 #[derive(Debug, Clone, PartialEq)]
