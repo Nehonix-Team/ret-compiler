@@ -176,6 +176,17 @@ impl TypeScriptGenerator {
                 let value_str = self.generate_expression_value(&Some(expr.clone()));
                 format!("={}", value_str)
             }
+            TypeNode::InlineObject(fields) => {
+                // Generate nested object type
+                let mut obj_str = String::from("{\n");
+                self.indent_level += 1;
+                for field in fields {
+                    obj_str.push_str(&self.generate_field(field));
+                }
+                self.indent_level -= 1;
+                obj_str.push_str(&format!("{}}}", self.get_indent()));
+                obj_str
+            }
         }
     }
 
@@ -308,6 +319,17 @@ impl TypeScriptGenerator {
                 let value_str = self.generate_expression_value(&Some(expr.clone()));
                 format!("\"={}\"", value_str)
             }
+            TypeNode::InlineObject(fields) => {
+                // Generate nested object schema
+                let mut obj_str = String::from("{\n");
+                self.indent_level += 1;
+                for field in fields {
+                    obj_str.push_str(&self.generate_field_schema(field));
+                }
+                self.indent_level -= 1;
+                obj_str.push_str(&format!("{}}}", self.get_indent()));
+                obj_str
+            }
         }
     }
 
@@ -351,6 +373,7 @@ impl TypeScriptGenerator {
                 let value_str = self.generate_expression_value(&Some(expr.clone()));
                 format!("={}", value_str)
             }
+            TypeNode::InlineObject(_) => "object".to_string(),
         }
     }
 

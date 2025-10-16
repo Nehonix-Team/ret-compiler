@@ -18,7 +18,7 @@ pub enum ASTNode {
 
     // Schema components
     Field(FieldNode),
-    Conditional(ConditionalNode),
+    Conditional(Box<ConditionalNode>),
     Validation(ValidationNode),
     Comment(CommentNode),
 }
@@ -75,6 +75,9 @@ pub enum TypeNode {
     
     // Literal/Constant values
     Literal(ExpressionNode),
+    
+    // Nested inline objects
+    InlineObject(Vec<FieldNode>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

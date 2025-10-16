@@ -271,6 +271,11 @@ impl Parser {
             return Ok(TypeNode::Literal(literal_expr));
         }
         
+        // Check for inline object syntax { field: type, ... }
+        if self.check(TokenType::LBrace) {
+            return self.parse_inline_object();
+        }
+        
         // Accept both Identifier and TypeName tokens
         let type_name = if self.check(TokenType::TypeName) {
             self.advance().value
@@ -304,6 +309,23 @@ impl Parser {
                 }
             }
         }
+    }
+    
+    fn parse_inline_object(&mut self) -> Result<TypeNode, ParseError> {
+        self.consume(TokenType::LBrace, "Expected '{'")?;
+        
+        let mut fields = Vec::new();
+        while !self.check(TokenType::RBrace) && !self.is_at_end() {
+            let field = self.parse_field()?;
+            fields.push(field);
+            
+            // Optional comma between fields
+            self.match_token(TokenType::Comma);
+        }
+        
+        self.consume(TokenType::RBrace, "Expected '}' after inline object")?;
+        
+        Ok(TypeNode::InlineObject(fields))
     }
 
     fn parse_constraint(&mut self) -> Result<ConstraintNode, ParseError> {
