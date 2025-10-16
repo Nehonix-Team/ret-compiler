@@ -5,17 +5,13 @@
  */
 
 use clap::{Parser, Subcommand};
-use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
-use std::fs;
+use notify::Watcher;
 use std::path::PathBuf;
-use std::sync::mpsc::channel;
 
 use crate::lexer;
 use crate::parser;
 use crate::generator;
 use crate::compiler;
-use crate::interpreter;
-use crate::colors;
 
 #[derive(Parser)]
 #[command(name = "rel")]

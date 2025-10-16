@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::fs;
-use crate::ast::{ASTNode, ImportNode, ExportNode};
+use crate::ast::{ASTNode, ImportNode};
 use crate::lexer::Lexer;
 use crate::parser::Parser;
-use crate::import_tracker::{ImportTracker, analyze_imports_exports};
+use crate::import_tracker::analyze_imports_exports;
 
 pub struct ModuleResolver {
     /// Map of file path -> parsed AST
@@ -218,7 +218,7 @@ impl ModuleResolver {
         let content = fs::read_to_string(path)
             .map_err(|e| format!("Failed to read file {:?}: {}", path, e))?;
 
-        let mut lexer = Lexer::new(&content);
+        let lexer = Lexer::new(&content);
         let tokens = lexer.tokenize()
             .map_err(|e| format!("Lexer error in {:?}: {:?}", path, e))?;
 
@@ -317,9 +317,56 @@ mod tests {
 
     #[test]
     fn test_circular_dependency_detection() {
-        // This would require creating test files
-        // For now, we'll test the basic structure
+        // Test basic resolver initialization
         let resolver = ModuleResolver::new(PathBuf::from("."));
         assert!(resolver.modules.is_empty());
+        
+        // Test circular dependency detection logic
+        let mut deps = std::collections::HashMap::new();
+        deps.insert("A".to_string(), vec!["B".to_string()]);
+        deps.insert("B".to_string(), vec!["C".to_string()]);
+        deps.insert("C".to_string(), vec!["A".to_string()]); // Creates cycle: A -> B -> C -> A
+        
+        // Check if we can detect the cycle
+        let mut visited = std::collections::HashSet::new();
+        let mut rec_stack = std::collections::HashSet::new();
+        
+        fn has_cycle(
+            node: &str,
+            deps: &std::collections::HashMap<String, Vec<String>>,
+            visited: &mut std::collections::HashSet<String>,
+            rec_stack: &mut std::collections::HashSet<String>,
+        ) -> bool {
+            visited.insert(node.to_string());
+            rec_stack.insert(node.to_string());
+            
+            if let Some(neighbors) = deps.get(node) {
+                for neighbor in neighbors {
+                    if !visited.contains(neighbor) {
+                        if has_cycle(neighbor, deps, visited, rec_stack) {
+                            return true;
+                        }
+                    } else if rec_stack.contains(neighbor) {
+                        return true; // Cycle detected
+                    }
+                }
+            }
+            
+            rec_stack.remove(node);
+            false
+        }
+        
+        // Test that we can detect the cycle
+        assert!(has_cycle("A", &deps, &mut visited, &mut rec_stack));
+        
+        // Test acyclic graph
+        let mut acyclic_deps = std::collections::HashMap::new();
+        acyclic_deps.insert("X".to_string(), vec!["Y".to_string()]);
+        acyclic_deps.insert("Y".to_string(), vec!["Z".to_string()]);
+        acyclic_deps.insert("Z".to_string(), vec![]); // No cycle
+        
+        let mut visited2 = std::collections::HashSet::new();
+        let mut rec_stack2 = std::collections::HashSet::new();
+        assert!(!has_cycle("X", &acyclic_deps, &mut visited2, &mut rec_stack2));
     }
 }

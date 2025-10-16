@@ -2,6 +2,40 @@
  * rel AST (Abstract Syntax Tree) definitions
  */
 
+/// Source location information for AST nodes
+#[derive(Debug, Clone, PartialEq)]
+pub struct SourceLocation {
+    pub line: usize,
+    pub column: usize,
+    pub file_path: Option<String>,
+}
+
+impl SourceLocation {
+    pub fn new(line: usize, column: usize) -> Self {
+        Self {
+            line,
+            column,
+            file_path: None,
+        }
+    }
+    
+    pub fn with_file(line: usize, column: usize, file_path: String) -> Self {
+        Self {
+            line,
+            column,
+            file_path: Some(file_path),
+        }
+    }
+    
+    pub fn unknown() -> Self {
+        Self {
+            line: 0,
+            column: 0,
+            file_path: None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ASTNode {
     // Schema definition
@@ -44,6 +78,7 @@ pub struct SchemaNode {
     pub mixins: Vec<String>,
     pub generics: Vec<String>, // Generic type parameters like <T, U>
     pub validations: Vec<ValidationNode>, // Top-level validations
+    pub location: SourceLocation, // Source location for error reporting
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -55,6 +90,7 @@ pub struct FieldNode {
     pub computed_value: Option<ExpressionNode>, // For computed fields like tax: number = subtotal * taxRate
     pub validations: Vec<ValidationNode>,
     pub conditionals: Vec<ConditionalNode>,
+    pub location: SourceLocation, // Source location for error reporting
 }
 
 #[derive(Debug, Clone, PartialEq)]

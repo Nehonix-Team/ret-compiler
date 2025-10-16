@@ -193,7 +193,14 @@ impl Interpreter {
             }
             
             ExpressionNode::FieldAccess(path) => {
-                // For now, just return the path as a string
+                // Try to resolve the field access from variables
+                if path.len() == 1 {
+                    // Simple variable access
+                    if let Some(value) = self.variables.get(&path[0]) {
+                        return Ok(value.clone());
+                    }
+                }
+                // For nested access or unresolved, return as string representation
                 Ok(RuntimeValue::String(path.join(".")))
             }
             
@@ -202,9 +209,37 @@ impl Interpreter {
                 self.evaluate_function_call(name, arguments)
             }
             
-            ExpressionNode::MethodCall { field, method, arguments } => {
-                // For now, return a placeholder
-                Ok(RuntimeValue::String(format!("{}.{}(...)", field.join("."), method)))
+            ExpressionNode::MethodCall { field, method, arguments: _ } => {
+                // Evaluate method calls on objects
+                // For now, we support basic string methods
+                if field.is_empty() {
+                    // No object, just method name - treat as function call
+                    return Ok(RuntimeValue::String(format!("{}()", method)));
+                }
+                
+                // Try to get the object
+                let obj_name = &field[0];
+                if let Some(obj_value) = self.variables.get(obj_name) {
+                    // Apply method based on type
+                    match (obj_value, method.as_str()) {
+                        (RuntimeValue::String(s), "length") => {
+                            Ok(RuntimeValue::Number(s.len() as f64))
+                        }
+                        (RuntimeValue::String(s), "toUpperCase") => {
+                            Ok(RuntimeValue::String(s.to_uppercase()))
+                        }
+                        (RuntimeValue::String(s), "toLowerCase") => {
+                            Ok(RuntimeValue::String(s.to_lowercase()))
+                        }
+                        _ => {
+                            // Unknown method, return string representation
+                            Ok(RuntimeValue::String(format!("{}.{}()", field.join("."), method)))
+                        }
+                    }
+                } else {
+                    // Object not found, return string representation
+                    Ok(RuntimeValue::String(format!("{}.{}()", field.join("."), method)))
+                }
             }
             
             ExpressionNode::Range { start, end } => {

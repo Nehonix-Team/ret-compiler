@@ -152,10 +152,11 @@ fn perform_semantic_validation(ast_nodes: &[ast::ASTNode]) -> Result<(), Vec<ast
                         errors.push(ast::ParseError {
                             message: format!("Duplicate field name '{}' in schema '{}'", field.name, schema.name),
                             position: 0,
-                            line: 0, // TODO: Track actual line numbers in AST nodes
-                            column: 0,
+                            // Use actual line numbers from AST node location
+                            line: field.location.line,
+                            column: field.location.column,
                             context: Some(format!("Field '{}' already defined in schema '{}'", field.name, schema.name)),
-                            file_path: None,
+                            file_path: field.location.file_path.clone(),
                         });
                     }
 

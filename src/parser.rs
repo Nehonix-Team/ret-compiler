@@ -14,6 +14,7 @@
 
 use crate::ast::*;
 use crate::lexer::{Token, TokenType};
+use crate::ast::SourceLocation;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -73,6 +74,7 @@ impl Parser {
     // ========================================================================
 
     fn parse_schema(&mut self) -> Result<ASTNode, ParseError> {
+        let start_token = self.peek().clone();
         self.consume(TokenType::Define, "Expected 'define'")?;
 
         let name = self.consume_identifier("Expected schema name")?;
@@ -116,6 +118,7 @@ impl Parser {
                     computed_value: None,
                     validations: Vec::new(),
                     conditionals: Vec::new(),
+                    location: SourceLocation::unknown(),
                 };
                 fields.push(conditional_field);
             } else {
@@ -134,6 +137,7 @@ impl Parser {
             mixins,
             generics,
             validations: Vec::new(), // Will be populated later
+            location: SourceLocation::new(start_token.line, start_token.column),
         }))
     }
 
@@ -158,6 +162,7 @@ impl Parser {
             return self.parse_conditional_field();
         }
 
+        let start_token = self.peek().clone();
         let name = self.consume_identifier("Expected field name")?;
         self.consume(TokenType::Colon, "Expected ':' after field name")?;
 
@@ -200,10 +205,12 @@ impl Parser {
             computed_value,
             validations,
             conditionals,
+            location: SourceLocation::new(start_token.line, start_token.column),
         })
     }
 
     fn parse_conditional_field(&mut self) -> Result<FieldNode, ParseError> {
+        let start_token = self.peek().clone();
         // Parse the conditional
         let conditional = self.parse_conditional()?;
 
@@ -216,6 +223,7 @@ impl Parser {
             computed_value: None,
             validations: Vec::new(),
             conditionals: Vec::new(),
+            location: SourceLocation::new(start_token.line, start_token.column),
         })
     }
 
